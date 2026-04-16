@@ -11,6 +11,12 @@ const registerSchema = new mongoose.Schema(
     otp: {
       type: String,
     },
+    dialCode: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
     otpExpires: {
       type: Date,
     },

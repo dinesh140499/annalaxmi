@@ -5,29 +5,32 @@ const sendMail = require("../utils/sendMail");
 
 exports.login = async (req, res) => {
   try {
-    const { phoneNo, dialCode } = req.body;
+    const { phoneNo, dialCode, country } = req.body;
 
-    const fullPhone = `+${dialCode}${phoneNo}`;
-
-    console.log(fullPhone);
-
-    // if (!dialCode) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Dial Code Is Mandatory",
-    //   });
-    // }
-
-    if (!fullPhone) {
+    if (!phoneNo) {
       return res.status(400).json({
         success: false,
-        message: "Phone number is required",
+        message: "PhoneNo Is Mandatory",
+      });
+    }
+
+    if (!dialCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Dial Code Is Mandatory",
+      });
+    }
+
+    if (!country) {
+      return res.status(400).json({
+        success: false,
+        message: "Country is required",
       });
     }
 
     const generatedOtp = otpGenerator();
 
-    let user = await Register.findOne({ phoneNo: fullPhone });
+    let user = await Register.findOne({ phoneNo });
 
     // ✅ Case 1: User exists and verified
     if (user && user.isVerified) {
@@ -45,8 +48,10 @@ exports.login = async (req, res) => {
     // ✅ Case 3: New user → create
     else {
       user = await Register.create({
-        phoneNo: fullPhone,
+        phoneNo,
         otp: generatedOtp,
+        dialCode,
+        country
       });
     }
 
@@ -58,7 +63,7 @@ exports.login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `OTP sent to ${fullPhone}`,
+      message: `OTP sent to ${phoneNo}`,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -96,7 +101,7 @@ exports.verifyOtp = async (req, res, next) => {
     }
 
     const isValid = await user.compareOtp(otp);
-
+    console.log(isValid)
     if (!isValid) {
       return res.status(400).json({
         message: "Invalid OTP",
@@ -107,7 +112,7 @@ exports.verifyOtp = async (req, res, next) => {
     user.otp = undefined;
     await user.save();
 
-    return res.status(400).json({
+    return res.status(200).json({
       message: "Otp Verifed Successfully",
     });
   } catch (error) {
