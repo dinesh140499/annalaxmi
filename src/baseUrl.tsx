@@ -21,6 +21,7 @@ export const apiCall = async (
     data?: any,
     config?: AxiosRequestConfig
 ) => {
+    console.log(base,method,url,data,config)
     const instance = createAxiosInstance(base);
 
     try {
