@@ -7,24 +7,10 @@ exports.login = async (req, res) => {
   try {
     const { phoneNo, dialCode, country } = req.body;
 
-    if (!phoneNo) {
+    if (!phoneNo || !dialCode || !country) {
       return res.status(400).json({
         success: false,
-        message: "PhoneNo Is Mandatory",
-      });
-    }
-
-    if (!dialCode) {
-      return res.status(400).json({
-        success: false,
-        message: "Dial Code Is Mandatory",
-      });
-    }
-
-    if (!country) {
-      return res.status(400).json({
-        success: false,
-        message: "Country is required",
+        message: "All fields are required",
       });
     }
 
@@ -32,7 +18,6 @@ exports.login = async (req, res) => {
 
     let user = await Register.findOne({ phoneNo });
 
-    // ✅ Case 1: User exists and verified
     if (user && user.isVerified) {
       return res.status(409).json({
         success: false,
@@ -40,26 +25,19 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ Case 2: User exists but not verified → update OTP
     if (user) {
       user.otp = generatedOtp;
       await user.save();
-    }
-    // ✅ Case 3: New user → create
-    else {
+    } else {
       user = await Register.create({
         phoneNo,
         otp: generatedOtp,
         dialCode,
-        country
+        country,
       });
     }
 
-    sendMail(
-      "dinesh.kumar@gtftechnologies.com",
-      "Hello",
-      `Otp is ${generatedOtp}`,
-    );
+    sendMail(process.env.TEST_EMAIL, "Hello", `Otp is ${generatedOtp}`);
 
     return res.status(200).json({
       success: true,
@@ -78,16 +56,17 @@ exports.verifyOtp = async (req, res, next) => {
   try {
     const { phoneNo, otp } = req.body;
 
-    if (!otp) {
+    if (!phoneNo || !otp) {
       return res.status(400).json({
         success: false,
-        message: "Enter Valid Otp",
+        message: "Phone number and OTP are required",
       });
     }
+
     let user = await Register.findOne({ phoneNo });
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "User Not Found",
       });
@@ -100,16 +79,25 @@ exports.verifyOtp = async (req, res, next) => {
       });
     }
 
+    if (user.otpExpiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
     const isValid = await user.compareOtp(otp);
-    console.log(isValid)
+
     if (!isValid) {
       return res.status(400).json({
+        success: false,
         message: "Invalid OTP",
       });
     }
 
     user.isVerified = true;
     user.otp = undefined;
+    user.otpExpiresAt = undefined;
     await user.save();
 
     return res.status(200).json({

@@ -8,17 +8,18 @@ const registerSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    otp: {
-      type: String,
-    },
     dialCode: {
       type: String,
     },
     country: {
       type: String,
     },
-    otpExpires: {
+    otp: {
+      type: String,
+    },
+    otpExpiresAt: {
       type: Date,
+      default: Date.now() + 5 * 60 * 1000,
     },
     isVerified: {
       type: Boolean,

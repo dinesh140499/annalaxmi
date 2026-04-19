@@ -1,40 +1,5 @@
-require("dotenv").config();
-require("./utils/conn")();
+const app = require("./src/app");
 
-const express = require("express");
-const cors = require("cors");
-
-const loginRoute = require("./routes/login.route");
-
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-let allowOrigin = ["http://localhost:5173"];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-
-      if (allowOrigin.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  }),
-);
-
-// Routes
-app.use("/api/v1", loginRoute);
-
-app.get("/", (req, res) => {
-  console.log(Math.floor(1000 + Math.random() * 9000));
-  res.send("API running...");
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
-
-module.exports = app; // ✅ correct
