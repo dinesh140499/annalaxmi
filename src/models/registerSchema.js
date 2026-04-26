@@ -7,19 +7,22 @@ const registerSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     dialCode: {
       type: String,
+      required: true,
     },
     country: {
       type: String,
+      required: true,
     },
     otp: {
       type: String,
     },
-    otpExpiresAt: {
+    otpExpires: {
       type: Date,
-      default: Date.now() + 5 * 60 * 1000,
+      index: { expires: 0 },
     },
     isVerified: {
       type: Boolean,
@@ -33,11 +36,12 @@ const registerSchema = new mongoose.Schema(
 
 registerSchema.pre("save", async function () {
   if (!this.otp || !this.isModified("otp")) return;
+
   this.otp = await bcrypt.hash(this.otp, 10);
 });
 
-registerSchema.methods.compareOtp = async function (enteredOtp) {
-  return await bcrypt.compare(enteredOtp, this.otp);
+registerSchema.methods.compareOtp = function (enteredOtp) {
+  return bcrypt.compare(enteredOtp, this.otp);
 };
 
 module.exports = mongoose.model("user", registerSchema);
