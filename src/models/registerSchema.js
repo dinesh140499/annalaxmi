@@ -19,7 +19,6 @@ const registerSchema = new mongoose.Schema(
     },
     otpExpiresAt: {
       type: Date,
-      default: Date.now() + 5 * 60 * 1000,
     },
     isVerified: {
       type: Boolean,
@@ -36,8 +35,11 @@ registerSchema.pre("save", async function () {
   this.otp = await bcrypt.hash(this.otp, 10);
 });
 
+// registerSchema.preve
+
 registerSchema.methods.compareOtp = async function (enteredOtp) {
   return await bcrypt.compare(enteredOtp, this.otp);
 };
+
 
 module.exports = mongoose.model("user", registerSchema);

@@ -14,22 +14,22 @@ exports.login = async (req, res) => {
       });
     }
 
-    const generatedOtp = otpGenerator();
-
-    let user = await Register.findOne({ phoneNo });
-
-    if (user && user.isVerified) {
+    let existingUser  = await Register.findOne({ phoneNo });
+    
+    if (existingUser?.isVerified) {
       return res.status(409).json({
         success: false,
         message: "This number is already registered",
       });
     }
 
-    if (user) {
-      user.otp = generatedOtp;
-      await user.save();
+    const generatedOtp = otpGenerator();
+
+    if (existingUser ) {
+      existingUser.otp = generatedOtp;
+      await existingUser.save();
     } else {
-      user = await Register.create({
+       await Register.create({
         phoneNo,
         otp: generatedOtp,
         dialCode,
@@ -41,7 +41,7 @@ exports.login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `OTP sent to ${phoneNo}`,
+      message: `OTP sent to ${phoneNo.splice(0,6,"*")}`,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -100,8 +100,11 @@ exports.verifyOtp = async (req, res, next) => {
     user.otpExpiresAt = undefined;
     await user.save();
 
+    sendMail(process.env.TEST_EMAIL, `Hurray🎉 Account Registered Successfully`);
+
     return res.status(200).json({
-      message: "Otp Verifed Successfully",
+      success: true,
+      message: "OTP verified successfully",
     });
   } catch (error) {
     console.error("Login error:", error);
