@@ -1,47 +1,56 @@
 const Register = require("../models/registerSchema");
 const otpGenerator = require("../utils/otpGenerator");
 const sendMail = require("../utils/sendMail");
+const jwt = require("jsonwebtoken");
 // const sendMail = require("../utils/sendMail");
 
 exports.login = async (req, res) => {
   try {
     const { phoneNo, dialCode, country } = req.body;
 
-    if (!phoneNo || !dialCode || !country) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-    }
+    const fullPhone = `${dialCode}${phoneNo}`;
 
-    let existingUser  = await Register.findOne({ phoneNo });
-    
-    if (existingUser?.isVerified) {
-      return res.status(409).json({
+    let user = await Register.findOne({ phoneNo: fullPhone });
+
+    // ⛔ Cooldown check (prevents spam)
+    if (user && user.otpExpires > Date.now() - 60 * 1000) {
+      return res.status(429).json({
         success: false,
-        message: "This number is already registered",
+        message: "Please wait before requesting another OTP",
       });
     }
 
     const generatedOtp = otpGenerator();
 
-    if (existingUser ) {
-      existingUser.otp = generatedOtp;
-      await existingUser.save();
+    if (user) {
+      user.otp = generatedOtp;
+      user.otpExpires = Date.now() + 5 * 60 * 1000;
+      await user.save();
     } else {
-       await Register.create({
-        phoneNo,
-        otp: generatedOtp,
+      user = await Register.create({
+        phoneNo: fullPhone,
         dialCode,
         country,
+        otp: generatedOtp,
+        otpExpires: Date.now() + 5 * 60 * 1000,
       });
     }
 
-    sendMail(process.env.TEST_EMAIL, "Hello", `Otp is ${generatedOtp}`);
+    // try {
+    //   await sendMail(
+    //     process.env.TEST_EMAIL,
+    //     "OTP Verification",
+    //     `Your OTP is ${generatedOtp}`,
+    //   );
+    // } catch (err) {
+    //   console.error("Mail error:", err);
+    // }
+
 
     return res.status(200).json({
       success: true,
-      message: `OTP sent to ${phoneNo.splice(0,6,"*")}`,
+      message: "OTP sent successfully",
+      generatedOtp
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -51,7 +60,6 @@ exports.login = async (req, res) => {
     });
   }
 };
-
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { phoneNo, otp } = req.body;
@@ -79,7 +87,7 @@ exports.verifyOtp = async (req, res, next) => {
       });
     }
 
-    if (user.otpExpiresAt < Date.now()) {
+    if (user.otpExpires < Date.now()) {
       return res.status(400).json({
         success: false,
         message: "OTP expired",
@@ -97,14 +105,21 @@ exports.verifyOtp = async (req, res, next) => {
 
     user.isVerified = true;
     user.otp = undefined;
-    user.otpExpiresAt = undefined;
+    user.otpExpires = undefined;
     await user.save();
 
-    sendMail(process.env.TEST_EMAIL, `Hurray🎉 Account Registered Successfully`);
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
 
     return res.status(200).json({
       success: true,
-      message: "OTP verified successfully",
+      message: "Otp Verifed Successfully",
+      token,
     });
   } catch (error) {
     console.error("Login error:", error);

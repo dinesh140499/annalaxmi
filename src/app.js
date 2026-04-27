@@ -4,7 +4,8 @@ require("./config/db")();
 const express = require("express");
 const cors = require("cors");
 
-const loginRoute = require("./routes/login.route");
+const loginRoute = require("./routes/auth.route");
+const userRoute = require("./routes/user.route");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(
 
 // Routes
 app.use("/api/v1", loginRoute);
+app.use("/api/v1/user", userRoute);
 
 app.get("/", (req, res) => {
   console.log(Math.floor(1000 + Math.random() * 9000));
