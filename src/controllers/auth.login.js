@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
     const { phoneNo, dialCode, country } = req.body;
 
     const fullPhone = `${dialCode}${phoneNo}`;
-
+    
     let user = await Register.findOne({ phoneNo: fullPhone });
 
     // ⛔ Cooldown check (prevents spam)
@@ -27,6 +27,8 @@ exports.login = async (req, res) => {
       user.otpExpires = Date.now() + 5 * 60 * 1000;
       await user.save();
     } else {
+    console.log("else: ",user)
+
       user = await Register.create({
         phoneNo: fullPhone,
         dialCode,
@@ -46,11 +48,10 @@ exports.login = async (req, res) => {
     //   console.error("Mail error:", err);
     // }
 
-
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
-      generatedOtp
+      generatedOtp,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -107,13 +108,13 @@ exports.verifyOtp = async (req, res, next) => {
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
-
+    console.log("get user :",user._id)
     const token = jwt.sign(
       {
         id: user._id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "1h" },
     );
 
     return res.status(200).json({
