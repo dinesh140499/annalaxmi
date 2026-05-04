@@ -1,4 +1,4 @@
-const Register = require("../models/registerSchema");
+const Register = require("../models/userSchema");
 const otpGenerator = require("../utils/otpGenerator");
 const sendMail = require("../utils/sendMail");
 const jwt = require("jsonwebtoken");
@@ -13,7 +13,7 @@ exports.login = async (req, res) => {
     let user = await Register.findOne({ phoneNo: fullPhone });
 
     // ⛔ Cooldown check (prevents spam)
-    if (user && user.otpExpires && user.otpExpires > Date.now() - 60 * 1000) {
+    if (user && user.otpExpires > Date.now() - 60 * 1000) {
       return res.status(429).json({
         success: false,
         message: "Please wait before requesting another OTP",
@@ -27,7 +27,6 @@ exports.login = async (req, res) => {
       user.otpExpires = Date.now() + 5 * 60 * 1000;
       await user.save();
     } else {
-
       user = await Register.create({
         phoneNo: fullPhone,
         dialCode,
@@ -105,12 +104,11 @@ exports.verifyOtp = async (req, res, next) => {
     }
 
     user.isVerified = true;
-    user.otp = null;
-    user.otpExpires = null;
+    user.otp = undefined;
+    user.otpExpires = undefined;
     await user.save();
-   
 
-    const accessToken = jwt.sign(
+    const token = jwt.sign(
       {
         id: user._id,
       },
@@ -128,7 +126,6 @@ exports.verifyOtp = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -137,9 +134,4 @@ exports.verifyOtp = async (req, res, next) => {
       message: "Internal server error",
     });
   }
-};
-
-exports.logout = (req, res, next) => {
-  const cookie = req.cookies;
-  console.log(cookie);
 };

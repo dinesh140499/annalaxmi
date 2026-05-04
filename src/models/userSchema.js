@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const registerSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     phoneNo: {
       type: String,
@@ -43,15 +43,15 @@ const registerSchema = new mongoose.Schema(
   },
 );
 
-registerSchema.pre("save", async function () {
+userSchema.pre("save", async function () {
   if (!this.otp || !this.isModified("otp")) return;
 
   this.otp = await bcrypt.hash(this.otp, 10);
 });
 
-registerSchema.methods.compareOtp = function (enteredOtp) {
+userSchema.methods.compareOtp = function (enteredOtp) {
   return bcrypt.compare(enteredOtp, this.otp);
 };
 
 
-module.exports = mongoose.model("user", registerSchema);
+module.exports = mongoose.model("user", userSchema);
