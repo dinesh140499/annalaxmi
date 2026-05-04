@@ -27,6 +27,7 @@ exports.login = async (req, res) => {
       user.otpExpires = Date.now() + 5 * 60 * 1000;
       await user.save();
     } else {
+
       user = await Register.create({
         phoneNo: fullPhone,
         dialCode,
@@ -107,25 +108,27 @@ exports.verifyOtp = async (req, res, next) => {
     user.otp = null;
     user.otpExpires = null;
     await user.save();
+   
 
     const accessToken = jwt.sign(
       {
         id: user._id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "1h" },
     );
 
-    res.cookie("token", accessToken, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: false, // true in production (HTTPS)
+      sameSite: "Strict",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       success: true,
-      message: "Otp Verifed Successfully",
-      accessToken,
+      message: "Login successful",
+      token,
     });
   } catch (error) {
     console.error("Login error:", error);

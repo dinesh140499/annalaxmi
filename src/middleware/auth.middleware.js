@@ -1,25 +1,39 @@
 const jwt = require("jsonwebtoken");
+const Register = require("../models/registerSchema");
 
-exports.protect = (req, res, next) => {
+exports.protect = async (req, res, next) => {
   try {
-    // console.log("middleware : ", req.headers.authorization);
+    const token = req.cookies.token;
 
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: "Not authorized",
       });
     }
-    
-    const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach user
+
+    const user = await Register.findById(decoded.id).select("-otp");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    req.user = user;
 
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
+
     return res.status(401).json({
       success: false,
       message: "Invalid token",
