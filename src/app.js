@@ -3,6 +3,7 @@ require("./config/db")();
 
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const loginRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
@@ -10,6 +11,7 @@ const userRoute = require("./routes/user.route");
 const app = express();
 
 // Middleware
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

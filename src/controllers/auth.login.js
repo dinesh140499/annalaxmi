@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
     const { phoneNo, dialCode, country } = req.body;
 
     const fullPhone = `${dialCode}${phoneNo}`;
-    
+
     let user = await Register.findOne({ phoneNo: fullPhone });
 
     // ⛔ Cooldown check (prevents spam)
@@ -27,7 +27,6 @@ exports.login = async (req, res) => {
       user.otpExpires = Date.now() + 5 * 60 * 1000;
       await user.save();
     } else {
-    console.log("else: ",user)
 
       user = await Register.create({
         phoneNo: fullPhone,
@@ -61,6 +60,7 @@ exports.login = async (req, res) => {
     });
   }
 };
+
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { phoneNo, otp } = req.body;
@@ -108,7 +108,8 @@ exports.verifyOtp = async (req, res, next) => {
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
-    console.log("get user :",user._id)
+   
+
     const token = jwt.sign(
       {
         id: user._id,
@@ -117,9 +118,16 @@ exports.verifyOtp = async (req, res, next) => {
       { expiresIn: "1h" },
     );
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "Strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
     return res.status(200).json({
       success: true,
-      message: "Otp Verifed Successfully",
+      message: "Login successful",
       token,
     });
   } catch (error) {
