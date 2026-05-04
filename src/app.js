@@ -39,4 +39,4 @@ app.get("/", (req, res) => {
   res.send("API running...");
 });
 
-module.exports = app; // ✅ correct
+module.exports = app;

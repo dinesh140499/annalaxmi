@@ -22,7 +22,7 @@ const registerSchema = new mongoose.Schema(
     },
     otpExpires: {
       type: Date,
-      index: { expires: 0 },
+      // index: { expires: 0 },
     },
     isVerified: {
       type: Boolean,

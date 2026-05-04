@@ -13,7 +13,7 @@ exports.login = async (req, res) => {
     let user = await Register.findOne({ phoneNo: fullPhone });
 
     // ⛔ Cooldown check (prevents spam)
-    if (user && user.otpExpires > Date.now() - 60 * 1000) {
+    if (user && user.otpExpires && user.otpExpires > Date.now() - 60 * 1000) {
       return res.status(429).json({
         success: false,
         message: "Please wait before requesting another OTP",
@@ -46,11 +46,10 @@ exports.login = async (req, res) => {
     //   console.error("Mail error:", err);
     // }
 
-
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
-      generatedOtp
+      generatedOtp,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -60,6 +59,7 @@ exports.login = async (req, res) => {
     });
   }
 };
+
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { phoneNo, otp } = req.body;
@@ -104,22 +104,28 @@ exports.verifyOtp = async (req, res, next) => {
     }
 
     user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
+    user.otp = null;
+    user.otpExpires = null;
     await user.save();
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       {
         id: user._id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "15m" },
     );
+
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
 
     return res.status(200).json({
       success: true,
       message: "Otp Verifed Successfully",
-      token,
+      accessToken,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -128,4 +134,9 @@ exports.verifyOtp = async (req, res, next) => {
       message: "Internal server error",
     });
   }
+};
+
+exports.logout = (req, res, next) => {
+  const cookie = req.cookies;
+  console.log(cookie);
 };
