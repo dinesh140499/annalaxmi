@@ -1,29 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, type ReactNode } from "react";
-import { get } from "../baseUrl";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-const ProtectedPage = ({ children }: { children: ReactNode }) => {
-  const navigate = useNavigate();
+type ReactType = {
+  children: React.ReactNode;
+};
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => get("default", "user/profile"),
-    retry: false, 
-  });
+const ProtectedPage = ({
+  children,
+  allowedRoles = ["user"],
+}: {
+  children: ReactType;
+  allowedRoles?: string[];
+}) => {
+  const { data, isPending, isError } = useAuth();
 
-  useEffect(() => {
-    if (isError || data?.success === false) {
-      navigate("/login");
-    }
-  }, [isError, data, navigate]);
+  if (isPending) return <div>Loading...</div>;
 
-  // ✅ Show loading state
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isError || !data?.user) {
+    return <Navigate to="/login" replace />;
   }
 
-  // ✅ If authenticated → render children
+  if (!allowedRoles.includes(data.user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 };
 

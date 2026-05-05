@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
             {
                 path: 'account',
                 element: (
-                    <ProtectedPage>
+                    <ProtectedPage >
                         <Account />
                     </ProtectedPage>
                 ),
