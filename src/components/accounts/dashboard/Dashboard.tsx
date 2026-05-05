@@ -10,12 +10,12 @@ const Dashboard = () => {
 
   const { data: profileData, error, isLoading, isError, refetch, } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: () => get("default", "customer/get_customer_profile", {
+    queryFn: () => get("default", "user/profile", {
       headers: {
         Authorization: token ? `Bearer ${token}` : ``
       }
-    }),
-
+    },),
+    retry: false, 
   });
 
   const handleViewDetails = (orderId: number) => {
@@ -73,7 +73,7 @@ const Dashboard = () => {
             <div className="max-h-[400px] overflow-y-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <tbody>
-                  {Array.from({ length: 100 }).map((_, i) => (
+                  {Array.from({ length: 100 })?.map((_, i) => (
                     <RecentOrder
                       key={i}
                       orderId={1000 + i}

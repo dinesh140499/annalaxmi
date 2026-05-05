@@ -1,18 +1,30 @@
-import {type ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, type ReactNode } from "react";
+import { get } from "../baseUrl";
+import { useNavigate } from "react-router-dom";
 
-type Props = {
-    children: ReactNode;
-};
+const ProtectedPage = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
 
-const ProtectedPage = ({ children }: Props) => {
-    const token = localStorage.getItem('token');
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => get("default", "user/profile"),
+    retry: false, 
+  });
 
-    if (!token) {
-        return <Navigate to="/login" replace  />;
+  useEffect(() => {
+    if (isError || data?.success === false) {
+      navigate("/login");
     }
+  }, [isError, data, navigate]);
 
-    return <>{children}</>;
+  // ✅ Show loading state
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // ✅ If authenticated → render children
+  return <>{children}</>;
 };
 
 export default ProtectedPage;

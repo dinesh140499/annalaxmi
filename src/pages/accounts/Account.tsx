@@ -8,6 +8,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FaToggleOff } from "react-icons/fa";
 import { FaToggleOn } from "react-icons/fa";
 import { useState } from "react";
+import { Outlet } from "react-router-dom";
 
 const tabs = [
   {
@@ -76,6 +77,11 @@ const Account = () => {
             }}
             heading="Navigation"
           />
+
+           {/* ✅ THIS IS THE MOST IMPORTANT PART */}
+           {/* <div className="lg:ml-[25%] w-full p-4">
+            <Outlet />
+          </div> */}
 
         </div>
       </div>
