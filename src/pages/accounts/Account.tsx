@@ -49,7 +49,7 @@ const Account = () => {
   return (
     <>
       <Breadcrumbs />
-      <div className={`max-w-[90%] w-full  mx-auto lg:relative   lg:h-[70vh]  lg:max-w-[95%] my-5 ${mobileMenuToggle ? 'h-[50vh]':'h-[40vh]'}`}>
+      <div className={`max-w-[90%] w-full  mx-auto lg:relative lg:h-[70vh]  lg:max-w-[95%] my-5 ${mobileMenuToggle ? 'h-[50vh]':'h-[40vh]'}`}>
         <div className="h-full relative">
           {mobileMenuToggle ?
             <button className="absolute z-[60] top-2 right-2  text-2xl block lg:hidden" onClick={() => setMobileMenuToggle(false)}>
@@ -79,9 +79,9 @@ const Account = () => {
           />
 
            {/* ✅ THIS IS THE MOST IMPORTANT PART */}
-           {/* <div className="lg:ml-[25%] w-full p-4">
+           <div className="lg:ml-[25%] w-full p-4">
             <Outlet />
-          </div> */}
+          </div>
 
         </div>
       </div>
