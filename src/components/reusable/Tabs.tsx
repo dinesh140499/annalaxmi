@@ -5,9 +5,9 @@ interface ClassName {
   grand?: string;
   parent?: string;
   child?: string;
-  element?: string;
   icon?: string;
   headingCls?: string;
+  element?:string
 }
 
 interface TabsBtn {
