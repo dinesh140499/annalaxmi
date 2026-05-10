@@ -31,7 +31,7 @@ const Login = () => {
       phoneNo: string;
       dialCode: string;
       country: string;
-    }) => post("default", "/login", payload),
+    }) => post("default", "auth/login", payload),
 
     onSuccess: () => {
       setToggleOtp(true);

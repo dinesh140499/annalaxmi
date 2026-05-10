@@ -21,7 +21,7 @@ const Otp = ({ phoneNo }: PhoneProps) => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   const mutation = useMutation({
-    mutationFn: (payload: PhoneType) => post("default", "/verify-otp", payload),
+    mutationFn: (payload: PhoneType) => post("default", "auth/verify-otp", payload),
     onSuccess: (data) => {
       console.log("Success data:", data);
       navigate("/account/dashboard");

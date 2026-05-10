@@ -70,7 +70,7 @@ const Dashboard = () => {
               </thead>
             </table>
             {/* Scrollable body in a separate container */}
-            <div className="max-h-[400px] overflow-y-auto">
+            <div className="max-h-[400px] overflow-y-auto your-scroll-area">
               <table className="w-full text-sm text-left border-collapse">
                 <tbody>
                   {Array.from({ length: 100 })?.map((_, i) => (

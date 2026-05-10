@@ -21,15 +21,22 @@ interface TabsItem {
   heading?: string;
   tabsNameArr: TabsBtn[];
   className?: ClassName;
+  children?: React.ReactNode;
 }
 
-const Tabs: React.FC<TabsItem> = ({ tabsNameArr, className, heading }) => {
-
+const Tabs: React.FC<TabsItem> = ({
+  tabsNameArr,
+  className,
+  heading,
+  children,
+}) => {
   return (
     <div className={className?.parent}>
       <div className={className?.grand}>
         {heading && (
-          <h1 className={`text-[#1A1A1A] text-lg font-bold px-3 pb-3 ${className?.headingCls}`}>
+          <h1
+            className={`text-[#1A1A1A] text-lg font-bold px-3 pb-3 ${className?.headingCls}`}
+          >
             {heading}
           </h1>
         )}
@@ -40,7 +47,8 @@ const Tabs: React.FC<TabsItem> = ({ tabsNameArr, className, heading }) => {
             key={index}
             end={tab.link === "/"}
             className={({ isActive }) =>
-              `${className?.child} ${tab?.elemCss} ${isActive ? "bg-[#EDF2EE] text-[black]" : ""
+              `${className?.child} ${tab?.elemCss} ${
+                isActive ? "bg-[#EDF2EE] text-[black]" : ""
               }`
             }
           >
@@ -48,8 +56,9 @@ const Tabs: React.FC<TabsItem> = ({ tabsNameArr, className, heading }) => {
               <>
                 {tab.icon && (
                   <span
-                    className={`mr-2 ${className?.icon} ${isActive ? "text-black" : "text-[#999]"
-                      }`}
+                    className={`mr-2 ${className?.icon} ${
+                      isActive ? "text-black" : "text-[#999]"
+                    }`}
                   >
                     {tab.icon}
                   </span>
@@ -59,11 +68,10 @@ const Tabs: React.FC<TabsItem> = ({ tabsNameArr, className, heading }) => {
             )}
           </NavLink>
         ))}
-
       </div>
 
       <div className={`${className?.element} w-full`}>
-        <Outlet />
+        {children || <Outlet />}
       </div>
     </div>
   );
