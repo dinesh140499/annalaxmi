@@ -52,7 +52,6 @@ exports.login = async (req, res) => {
       generatedOtp,
     });
   } catch (error) {
-    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -61,7 +60,6 @@ exports.login = async (req, res) => {
 };
 
 exports.verifyOtp = async (req, res, next) => {
-  const ONE_HOUR = 60 * 60 * 1000;
   try {
     const { phoneNo, otp } = req.body;
 
@@ -114,14 +112,14 @@ exports.verifyOtp = async (req, res, next) => {
         id: user._id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: ONE_HOUR },
+      { expiresIn: process.env.JWT_EXPIRES },
     );
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
+      secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
-      maxAge: ONE_HOUR
+      maxAge: Number(process.env.COOKIE_EXPIRY)
     });
 
     return res.status(200).json({
@@ -140,7 +138,6 @@ exports.verifyOtp = async (req, res, next) => {
     });
   }
 };
-
 
 exports.logout = (req, res) => {
   res.clearCookie("token");

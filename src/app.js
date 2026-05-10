@@ -33,7 +33,7 @@ app.use(
 );
 
 // Routes
-app.use("/api/v1", loginRoute);
+app.use("/api/v1/auth", loginRoute);
 app.use("/api/v1/user", userRoute);
 
 app.get("/", (req, res) => {

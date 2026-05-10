@@ -7,7 +7,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
+    },
+    firstname: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    lastname: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    email: {
+      type: String,
+      trim: true,
+      unique: true,
     },
     dialCode: {
       type: String,
@@ -17,6 +31,39 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+    cart: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+        quantity: {
+          type: Number,
+          default: 1,
+        },
+      },
+    ],
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+
     otp: {
       type: String,
     },
@@ -24,19 +71,6 @@ const userSchema = new mongoose.Schema(
       type: Date,
       // index: { expires: 0 },
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    avatar:{
-      type:String,
-      default:""
-    },
-    role:{
-      type:String,
-      enum:["user","admin"],
-      default:"user"
-    }
   },
   {
     timestamps: true,
@@ -52,6 +86,5 @@ userSchema.pre("save", async function () {
 userSchema.methods.compareOtp = function (enteredOtp) {
   return bcrypt.compare(enteredOtp, this.otp);
 };
-
 
 module.exports = mongoose.model("user", userSchema);

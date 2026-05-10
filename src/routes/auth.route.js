@@ -7,6 +7,6 @@ const router = express.Router();
 
 router.post("/login", validate(loginSchema), login);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);
-router.post("/logout", validate(verifyOtpSchema), logout);
+router.get("/logout", logout);
 
 module.exports = router;
