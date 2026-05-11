@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { post } from "../../baseUrl";
 import ErrorMsg from "../../components/reusable/ErrorMsg";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../features/authSlice";
 
 type PhoneProps = {
   phoneNo?: string;
@@ -15,15 +17,18 @@ type PhoneType = {
 
 const Otp = ({ phoneNo }: PhoneProps) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const dispatch = useDispatch();
   const [resendTimer, setResendTimer] = useState(50);
   const navigate = useNavigate();
 
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   const mutation = useMutation({
-    mutationFn: (payload: PhoneType) => post("default", "auth/verify-otp", payload),
+    mutationFn: (payload: PhoneType) =>
+      post("default", "auth/verify-otp", payload),
     onSuccess: (data) => {
       console.log("Success data:", data);
+      dispatch(setUser(data.user));
       navigate("/account/dashboard");
     },
     onError: (error) => {

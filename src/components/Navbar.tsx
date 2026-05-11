@@ -10,12 +10,14 @@ import ShopCard from "./common/ShopCard";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { type SubMenuProps } from "./SubMenu";
 import SearchFilter from "./reusable/SearchFilter";
-import { useAuth } from "../hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { get } from "../baseUrl";
 
 const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
   const queryClient = useQueryClient();
+  const { user } = useSelector(
+  (state: RootState) => state.auth
+);
   const navigate = useNavigate();
   const logoutMutation = useMutation({
     mutationFn: () => get("default", "auth/logout"),
@@ -29,7 +31,6 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
     },
   });
   const dispatch = useDispatch();
-  const { data } = useAuth();
   const cart = useSelector((state: RootState) => state.common.button.cart);
 
   const handleToggleCart = () => {
@@ -81,15 +82,15 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
 
                   <div>
                     <p className="text-[13px]">
-                      {data?.user ? "Welcome" : "Account:"}
+                      {user ? "Welcome" : "Account:"}
                     </p>
 
-                    {data?.user ? (
+                    {user ? (
                       <Link
                         to={"/account"}
                         className="text-[13px] text-[#006039]"
                       >
-                        {data.user.phoneNo}
+                        {user.phoneNo}
                       </Link>
                     ) : (
                       <Link
@@ -102,7 +103,7 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-5">
-                  {data?.user ? (
+                  {user ? (
                     <button
                       onClick={() => logoutMutation.mutate()}
                       className="flex items-center gap-3 cursor-pointer"
