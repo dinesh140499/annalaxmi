@@ -1,20 +1,17 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 
 const PublicRoute = () => {
-  const { data, isPending } = useAuth();
+  const { user, loading } = useSelector(
+    (state: RootState) => state.auth
+  );
 
-  if (isPending) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
-  // ✅ If user already logged in
-  if (data?.user) {
-    return <Navigate to="/account/dashboard" replace />;
-  }
-
-  // ✅ If not logged in
-  return <Outlet />;
+  return user ? <Navigate to="/account/dashboard" replace /> : <Outlet />;
 };
 
 export default PublicRoute;
