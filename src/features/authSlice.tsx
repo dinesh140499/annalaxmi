@@ -1,13 +1,15 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type User = {
+type UserType = {
   _id: string;
-  phoneNo: string;
-  role?: string;
+  role: string;
+  firstname?: string;
+  lastname?: string;
+  phoneNo?: string;
 };
 
 type AuthState = {
-  user: User | null;
+  user: UserType | null;
   loading: boolean;
 };
 
@@ -20,19 +22,17 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: (state, action) => {
+    setUser: (state, action: PayloadAction<UserType | null>) => {
       state.user = action.payload;
       state.loading = false;
     },
-    clearUser: (state) => {
+    logoutUser: (state) => {
       state.user = null;
       state.loading = false;
-    },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
     },
   },
 });
 
-export const { setUser, clearUser, setLoading } = authSlice.actions;
+export const { setUser, logoutUser } = authSlice.actions;
+
 export default authSlice.reducer;

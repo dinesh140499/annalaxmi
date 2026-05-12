@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useDispatch } from "react-redux";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
@@ -24,6 +25,26 @@ const AuthProvider = ({ children }: any) => {
       dispatch(clearUser());
     }
   }, [data, isPending, isError, dispatch]);
+=======
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
+import { setUser, logoutUser } from "../features/authSlice";
+
+const AuthProvider = ({ children }: any) => {
+  const dispatch = useDispatch();
+  const { data, isError } = useAuth();
+
+  useEffect(() => {
+    if (data?.user) {
+      dispatch(setUser(data.user));
+    }
+
+    if (isError) {
+      dispatch(logoutUser());
+    }
+  }, [data, isError, dispatch]);
+>>>>>>> 8ae99ce3c50b4bb96ec777714b9561ebcbaacfa8
 
   return children;
 };

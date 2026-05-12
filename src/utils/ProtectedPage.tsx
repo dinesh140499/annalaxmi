@@ -1,5 +1,4 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 
@@ -15,6 +14,12 @@ const ProtectedPage = ({
   }
 
   if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  console.log("role: ", user.role);
+
+  if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
 
