@@ -10,6 +10,8 @@ const userRoute = require("./routes/user.route");
 
 const app = express();
 
+app.use("/uploads", express.static("uploads"));
+
 // Middleware
 app.use(cookieParser());
 app.use(express.json());

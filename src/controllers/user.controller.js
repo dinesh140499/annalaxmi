@@ -8,10 +8,15 @@ exports.profile = (req, res) => {
 };
 
 exports.editProfile = async (req, res) => {
-  console.log(req.user._id);
-
   try {
-    const { firstname, lastname, email, avatar } = req.body;
+    const { firstname, lastname, email } = req.body;
+
+    let avatar = "";
+
+    if (req.file) {
+      avatar = `/uploads/${req.file.filename}`;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -19,13 +24,13 @@ exports.editProfile = async (req, res) => {
           firstname,
           lastname,
           email,
-          avatar,
+          ...(avatar && { avatar }),
         },
       },
       {
         new: true,
         runValidators: true,
-      },
+      }
     ).select("-otp");
 
     return res.status(200).json({
