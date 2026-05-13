@@ -6,7 +6,7 @@ export const useAuth = (enabled=true) => {
     queryKey: ["profile"],
     queryFn: () => get("default", "user/profile"),
     retry: false,
-    enabled:true,
+    enabled,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // cache for 5 min
   });

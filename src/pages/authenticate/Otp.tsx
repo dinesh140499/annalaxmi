@@ -27,7 +27,6 @@ const Otp = ({ phoneNo }: PhoneProps) => {
     mutationFn: (payload: PhoneType) =>
       post("default", "auth/verify-otp", payload),
     onSuccess: (data) => {
-      console.log("Success data:", data);
       dispatch(setUser(data.user));
       navigate("/account/dashboard");
     },

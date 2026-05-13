@@ -1,13 +1,16 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useAuth } from "../hooks/useAuth";
-import { setUser, logoutUser } from "../features/authSlice";
+import { setUser, logoutUser, setLoading } from "../features/authSlice";
 
 const AuthProvider = ({ children }: any) => {
   const dispatch = useDispatch();
-  const { data, isError } = useAuth();
+
+  const { data, isLoading, isError } = useAuth();
 
   useEffect(() => {
+    dispatch(setLoading(isLoading));
+
     if (data?.user) {
       dispatch(setUser(data.user));
     }
@@ -15,7 +18,7 @@ const AuthProvider = ({ children }: any) => {
     if (isError) {
       dispatch(logoutUser());
     }
-  }, [data, isError, dispatch]);
+  }, [data, isError, isLoading, dispatch]);
 
   return children;
 };

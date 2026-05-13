@@ -9,13 +9,7 @@ const PublicRoute = () => {
     return <div>Loading...</div>;
   }
 
-  // ✅ If user already logged in
-  if (user) {
-    return <Navigate to="/account/dashboard" replace />;
-  }
-
-  // ✅ If not logged in
-  return <Outlet />;
+  return user ? <Navigate to="/account/dashboard" replace /> : <Outlet />;
 };
 
 export default PublicRoute;
