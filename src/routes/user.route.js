@@ -6,6 +6,7 @@ const {validate} = require("../middleware/validate.middleware");
 const {
   profile,
   editProfile,
+  billingAddress
 } = require("../controllers/user.controller");
 
 const { upload } = require("../utils/upload");
@@ -22,6 +23,13 @@ router.post(
   upload.single("avatar"),
   validate(userSchema),
   editProfile
+);
+
+router.post(
+  "/address",
+  protect,
+  // validate(userSchema),
+  billingAddress
 );
 
 module.exports = router;

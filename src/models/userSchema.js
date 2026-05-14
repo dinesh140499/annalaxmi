@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const addressSchema = require("./addressSchema.js");
 
 const userSchema = new mongoose.Schema(
   {
@@ -40,6 +41,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    addresses: [addressSchema],
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

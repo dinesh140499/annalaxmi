@@ -1,5 +1,6 @@
 require("dotenv").config();
 require("./config/db")();
+const path = require("path");
 
 const express = require("express");
 const cors = require("cors");
@@ -10,7 +11,12 @@ const userRoute = require("./routes/user.route");
 
 const app = express();
 
-app.use("/uploads", express.static("uploads"));
+console.log(process.cwd())
+
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "src/uploads"))
+);
 
 // Middleware
 app.use(cookieParser());
@@ -39,7 +45,6 @@ app.use("/api/v1/auth", loginRoute);
 app.use("/api/v1/user", userRoute);
 
 app.get("/", (req, res) => {
-  console.log(Math.floor(1000 + Math.random() * 9000));
   res.send("API running...");
 });
 

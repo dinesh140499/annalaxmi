@@ -47,3 +47,19 @@ exports.editProfile = async (req, res) => {
     });
   }
 };
+
+exports.billingAddress=async(req,res)=>{
+  const {firstname,lastname,company_name,street_adrs,country,states,zip_code}=req.body
+
+ const updatedUser= await User.findByIdAndUpdate(req.user._id,{
+    $set:{
+      firstname,lastname,company_name,street_adrs,country,states,zip_code
+    }
+  },{new:true,runValidators:true}).select("-otp")
+
+  return res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    updatedUser
+  });
+}

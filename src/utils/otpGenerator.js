@@ -3,3 +3,5 @@ const otpGenerator = () => {
 };
 
 module.exports = otpGenerator;
+
+
