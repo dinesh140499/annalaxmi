@@ -27,13 +27,13 @@ const Setting = () => {
 };
 
 const Profile = () => {
-  const [accInput, setAccInput] = useState<AccountType>({
-    fname: "",
-    lname: "",
-    avatar: "",
-    email: "",
-  });
   const { user, loading } = useSelector((state: RootState) => state.auth);
+  const [accInput, setAccInput] = useState<AccountType>({
+    fname: user?.firstname ?? "",
+    lname: user?.lastname ?? "",
+    avatar: user?.avatar ?? "",
+    email: user?.email ?? "",
+  });
   const mutation = useMutation({
     mutationFn: (payload: {
       firstname: string;
@@ -61,11 +61,9 @@ const Profile = () => {
     });
   };
 
-  console.log(accInput)
+  console.log(accInput);
 
   const handleSave = () => {
-    alert();
-
     const { fname, lname, email, avatar } = accInput;
     mutation.mutate({
       firstname: fname,
@@ -123,22 +121,25 @@ const Profile = () => {
             value={accInput.email}
           />
         </div>
-        <div className="px-4 mb-5">
+        {/* <div className="px-4 mb-5">
           <label htmlFor="phone" className="block text-sm mb-2">
             Phone
           </label>
           <InputField
             inputType="tel"
-            id="email"
-            name="email"
-            onChange={handleSave}
+            id="phone"
+            name="phone"
+            onChange={handleInputAccount}
             className="py-2 w-full text-sm"
             placeholder="(603) 555-0123"
           />
-        </div>
+        </div> */}
         <div className="px-4">
-          <button className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer">
-            Save Changes
+          <button
+            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer"
+            onClick={handleSave}
+          >
+            {loading ? loading : "Save Changes"}
           </button>
         </div>
       </div>
@@ -160,7 +161,7 @@ const Profile = () => {
   );
 };
 
-const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
+const BillingAddress = () => {
   return (
     <div className="mt-5">
       <div className="rounded-md border border-[#E6E6E6]  py-5 ">
@@ -176,7 +177,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
               inputType="text"
               id="fname"
               name="fname"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -188,7 +189,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
               inputType="text"
               id="lname"
               name="lname"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -200,7 +201,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
               inputType="text"
               id="company-name"
               name="company-name"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -213,7 +214,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
             inputType="text"
             id="street"
             name="street"
-            onChange={handleInputBilling}
+            onChange={()=>"hello"}
             className="py-2 w-full text-sm"
           />
         </div>
@@ -229,7 +230,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
               ]}
               name="country"
               id="country"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
             />
           </div>
           <div className="mb-4 w-full">
@@ -242,7 +243,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
                 { optVal: "Mumbai", optValName: "Mumbai" },
               ]}
               name="states"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
               id="states"
             />
           </div>
@@ -254,7 +255,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
               inputType="text"
               id="zip-code"
               name="zip-code"
-              onChange={handleInputBilling}
+              onChange={()=>"hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -269,7 +270,7 @@ const BillingAddress = ({ handleInputBilling }: BillingAddressProps) => {
   );
 };
 
-const ChangePassword = ({ handleChangePassword }: ChangePasswordProps) => {
+const ChangePassword = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
