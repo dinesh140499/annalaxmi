@@ -1,7 +1,7 @@
 import InputField from "../../reusable/InputField";
 import profileDummy from "../../../assets/images/profile.jpg";
 import SelectInput from "../../reusable/SelectInput";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
 import type { RootState } from "../../../store/store";
@@ -27,28 +27,45 @@ const Setting = () => {
 };
 
 const Profile = () => {
-  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [accInput, setAccInput] = useState<AccountType>({
-    fname: user?.firstname ?? "",
-    lname: user?.lastname ?? "",
-    avatar: user?.avatar ?? "",
-    email: user?.email ?? "",
+    fname: "",
+    lname: "",
+    email: "",
+    avatar: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setAccInput({
+        fname: user.firstname || "",
+        lname: user.lastname || "",
+        email: user.email || "",
+        avatar: user.avatar || "",
+      });
+    }
+
+    console.log(user?.avatar);
+  }, [user]);
+
   const mutation = useMutation({
-    mutationFn: (payload: {
-      firstname: string;
-      lastname: string;
-      email: string;
-      avatar: string;
-    }) => post("default", "user/edit-profile", payload),
+    mutationFn: async (formData: FormData) =>
+      post("default", "user/edit-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }),
     onSuccess: () => {
-      alert("Updated");
+      alert("Profile updated successfully");
     },
-    onError: (err) => {
-      console.error("Login Error", err);
-      alert(err.message);
+    onError: (err: any) => {
+      console.error(err);
+      alert(err?.response?.data?.message || "Something went wrong");
     },
   });
+
+  console.log(user);
 
   const handleInputAccount = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,16 +78,32 @@ const Profile = () => {
     });
   };
 
-  console.log(accInput);
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setSelectedFile(file);
+    setAccInput((prev) => {
+      return {
+        ...prev,
+        avatar: URL.createObjectURL(file),
+      };
+    });
+  };
 
   const handleSave = () => {
-    const { fname, lname, email, avatar } = accInput;
-    mutation.mutate({
-      firstname: fname,
-      lastname: lname,
-      email: email,
-      avatar: avatar,
-    });
+    const formData = new FormData();
+
+    formData.append("firstname", accInput.fname);
+    formData.append("lastname", accInput.lname);
+    formData.append("email", accInput.email);
+
+    if (selectedFile) {
+      formData.append("avatar", selectedFile);
+    }
+
+    mutation.mutate(formData);
   };
 
   return (
@@ -136,18 +169,25 @@ const Profile = () => {
         </div> */}
         <div className="px-4">
           <button
-            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer"
+            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer disabled:opacity-50"
             onClick={handleSave}
+            disabled={mutation.isPending}
           >
-            {loading ? loading : "Save Changes"}
+            {mutation.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
       <div className="flex-1/3">
         <img
-          src={accInput.avatar ? accInput.avatar : profileDummy}
-          alt=""
-          className="h-50 w-50 rounded-full object-cover mx-auto"
+          src={
+            accInput.avatar
+              ? accInput.avatar.startsWith("blob:")
+                ? accInput.avatar
+                : `${import.meta.env.VITE_API_URL}${accInput.avatar}`
+              : profileDummy
+          }
+          alt="profile"
+          className="h-[200px] w-[200px] rounded-full object-cover mx-auto"
         />
         <label
           htmlFor="fileupload"
@@ -155,7 +195,13 @@ const Profile = () => {
         >
           Choose Image
         </label>
-        <input type="file" className="hidden" id="fileupload" />
+        <input
+          type="file"
+          className="hidden"
+          id="fileupload"
+          accept="image/*"
+          onChange={handleImageChange}
+        />
       </div>
     </div>
   );
@@ -177,7 +223,7 @@ const BillingAddress = () => {
               inputType="text"
               id="fname"
               name="fname"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -189,7 +235,7 @@ const BillingAddress = () => {
               inputType="text"
               id="lname"
               name="lname"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -201,7 +247,7 @@ const BillingAddress = () => {
               inputType="text"
               id="company-name"
               name="company-name"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -214,7 +260,7 @@ const BillingAddress = () => {
             inputType="text"
             id="street"
             name="street"
-            onChange={()=>"hello"}
+            onChange={() => "hello"}
             className="py-2 w-full text-sm"
           />
         </div>
@@ -230,7 +276,7 @@ const BillingAddress = () => {
               ]}
               name="country"
               id="country"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
             />
           </div>
           <div className="mb-4 w-full">
@@ -243,7 +289,7 @@ const BillingAddress = () => {
                 { optVal: "Mumbai", optValName: "Mumbai" },
               ]}
               name="states"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
               id="states"
             />
           </div>
@@ -255,7 +301,7 @@ const BillingAddress = () => {
               inputType="text"
               id="zip-code"
               name="zip-code"
-              onChange={()=>"hello"}
+              onChange={() => "hello"}
               className="py-2 w-full text-sm"
             />
           </div>
@@ -290,7 +336,7 @@ const ChangePassword = () => {
             inputType={showOldPassword ? "text" : "password"}
             id="old-password"
             name="old-password"
-            onChange={handleChangePassword}
+            onChange={() => ""}
             className="py-2 w-full text-sm pr-10"
             placeholder="Enter your old password"
           />
@@ -317,7 +363,7 @@ const ChangePassword = () => {
               inputType={showNewPassword ? "text" : "password"}
               id="new-password"
               name="new-password"
-              onChange={handleChangePassword}
+              onChange={() => ""}
               className="py-2 w-full text-sm pr-10"
               placeholder="Enter new password"
             />
@@ -343,7 +389,7 @@ const ChangePassword = () => {
               inputType={showConfirmPassword ? "text" : "password"}
               id="confirm-password"
               name="confirm-password"
-              onChange={handleChangePassword}
+              onChange={() => ""}
               className="py-2 w-full text-sm pr-10"
               placeholder="Re-enter new password"
             />

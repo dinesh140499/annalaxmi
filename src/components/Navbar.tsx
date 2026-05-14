@@ -90,7 +90,7 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
                         to={"/account"}
                         className="text-[13px] text-[#006039]"
                       >
-                        {user.phoneNo}
+                        {user?.firstname}
                       </Link>
                     ) : (
                       <Link
