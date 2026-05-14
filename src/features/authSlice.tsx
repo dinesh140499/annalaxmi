@@ -5,6 +5,8 @@ type UserType = {
   role: string;
   firstname?: string;
   lastname?: string;
+  email?: string;
+  avatar?: string;
   phoneNo?: string;
 };
 
