@@ -30,7 +30,7 @@ exports.editProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     ).select("-otp");
 
     return res.status(200).json({
@@ -48,18 +48,47 @@ exports.editProfile = async (req, res) => {
   }
 };
 
-exports.billingAddress=async(req,res)=>{
-  const {firstname,lastname,company_name,street_adrs,country,states,zip_code}=req.body
+exports.billingAddress = async (req, res) => {
+  try {
+    const {
+      firstname,
+      lastname,
+      company_name,
+      street,
+      country,
+      states,
+      zip_code,
+    } = req.body;
 
- const updatedUser= await User.findByIdAndUpdate(req.user._id,{
-    $set:{
-      firstname,lastname,company_name,street_adrs,country,states,zip_code
-    }
-  },{new:true,runValidators:true}).select("-otp")
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $push: {
+          addresses: {
+            firstname,
+            lastname,
+            company_name,
+            street,
+            country,
+            states,
+            zip_code,
+          },
+        },
+      },
+      { new: true, runValidators: true },
+    ).select("-otp");
 
-  return res.status(200).json({
-    success: true,
-    message: "Profile updated successfully",
-    updatedUser
-  });
-}
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

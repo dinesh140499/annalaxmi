@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       unique: true,
+      sparse: true,
+      lowercase: true,
     },
     dialCode: {
       type: String,
