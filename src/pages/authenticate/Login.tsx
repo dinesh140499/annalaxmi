@@ -35,10 +35,11 @@ const Login = () => {
 
     onSuccess: () => {
       setToggleOtp(true);
+      console.error("Login Success", mutation.error?.message);
     },
 
     onError: (err) => {
-      console.error("Login Error", err);
+      console.error("Login Error", err?.message);
       setToggleOtp(false);
     },
   });
@@ -104,7 +105,7 @@ const Login = () => {
                   <p className="text-gray-400">Sending OTP...</p>
                 )}
 
-                {mutation.isError && (
+                {mutation.error && (
                   <ErrorMsg
                     message={
                       mutation.error instanceof Error
