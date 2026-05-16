@@ -17,14 +17,18 @@ import Dashboard from "../components/accounts/dashboard/Dashboard";
 import OrderHistory from "../components/accounts/order-history/OrderHistory";
 import OrderDetails from "../components/accounts/order-history/OrderDetails";
 import Setting from "../components/accounts/setting/Setting";
-import Otp from "../pages/authenticate/Otp";
 import ProtectedPage from "../utils/ProtectedPage";
 import PublicRoute from "../utils/PublicRoute";
+import AuthProvider from "../components/AuthProvider";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    ),
     errorElement: <PageNotFound />,
     children: [
       { index: true, element: <Home /> },
@@ -34,10 +38,6 @@ export const router = createBrowserRouter([
           {
             path: "login",
             element: <Login />,
-          },
-          {
-            path: "otp",
-            element: <Otp />,
           },
         ],
       },

@@ -1,26 +1,32 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store/store";
+import { useAuth } from "../hooks/useAuth";
+import { useEffect } from "react";
+import { setUser, logoutUser } from "../features/authSlice";
 
-const ProtectedPage = ({
-  allowedRoles = ["user"],
-}: {
-  allowedRoles?: string[];
-}) => {
-  const { user, loading } = useSelector((state: RootState) => state.auth);
+const ProtectedPage = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  if (loading) {
+  const { data, isLoading, isError } = useAuth(true);
+
+  useEffect(() => {
+    if (data?.user) {
+      dispatch(setUser(data.user));
+    }
+
+    if (isError) {
+      dispatch(logoutUser());
+    }
+  }, [data, isError, dispatch]);
+
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (!user && !data?.user) {
     return <Navigate to="/login" replace />;
-  }
-
-  console.log("role: ", user.role);
-
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

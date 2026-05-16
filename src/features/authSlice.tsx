@@ -5,6 +5,8 @@ type UserType = {
   role: string;
   firstname?: string;
   lastname?: string;
+  email?: string;
+  avatar?: string;
   phoneNo?: string;
 };
 
@@ -30,9 +32,12 @@ const authSlice = createSlice({
       state.user = null;
       state.loading = false;
     },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
   },
 });
 
-export const { setUser, logoutUser } = authSlice.actions;
+export const { setUser, logoutUser, setLoading } = authSlice.actions;
 
 export default authSlice.reducer;

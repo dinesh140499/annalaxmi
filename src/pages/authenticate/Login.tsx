@@ -18,8 +18,11 @@ type PhoneData = {
   countryCode: string;
 };
 
+type AuthStep = "phone" | "otp";
+
 const Login = () => {
-  const [toggleOtp, setToggleOtp] = useState(false);
+  const [step, setStep] = useState<AuthStep>("phone");
+
   const [phoneInput, setPhoneInput] = useState<PhoneInputState>({
     phone: "",
     country: "in",
@@ -34,26 +37,23 @@ const Login = () => {
     }) => post("default", "auth/login", payload),
 
     onSuccess: () => {
-      setToggleOtp(true);
-      console.error("Login Success", mutation.error?.message);
+      setStep("otp");
     },
 
     onError: (err) => {
-      console.error("Login Error", err?.message);
-      setToggleOtp(false);
+      console.error("Login Error", err);
+      setStep("phone");
     },
   });
 
   const handleSendCode = () => {
-    // ✅ Basic validation
     if (!phoneInput.phone || phoneInput.phone.length < 10) {
       alert("Enter valid phone number");
       return;
     }
-
-    // ✅ Send clean payload
+    
     mutation.mutate({
-      phoneNo: phoneInput.phone.replace(phoneInput.dialCode, ""), // remove dial code if needed
+      phoneNo: phoneInput.phone.replace(phoneInput.dialCode, ""),
       dialCode: phoneInput.dialCode,
       country: phoneInput.country,
     });
@@ -63,7 +63,7 @@ const Login = () => {
     <>
       <Breadcrumbs />
 
-      {toggleOtp ? (
+      {step === "otp" ? (
         <Otp phoneNo={phoneInput.phone} />
       ) : (
         <div className="max-w-[90%] w-full lg:max-w-[95%] mx-auto min-h-[40vh] lg:min-h-[50vh] flex justify-center items-center">
@@ -95,11 +95,13 @@ const Login = () => {
                   outline: "none",
                   marginLeft: "10px",
                 }}
-                buttonStyle={{ border: "none", backgroundColor: "#F0F5FA" }}
+                buttonStyle={{
+                  border: "none",
+                  backgroundColor: "#F0F5FA",
+                }}
                 containerStyle={{ width: "100%" }}
               />
 
-              {/* ✅ Status messages */}
               <div className="text-center my-3 mb-5">
                 {mutation.isPending && (
                   <p className="text-gray-400">Sending OTP...</p>
