@@ -1,29 +1,14 @@
 import { IoMdCloseCircleOutline } from "react-icons/io";
 import InputField from "../../reusable/InputField";
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { put } from "../../../baseUrl";
-import ErrorMsg from "../../reusable/ErrorMsg";
+// import { useMutation } from "@tanstack/react-query";
+// import { put } from "../../../baseUrl";
+// import ErrorMsg from "../../reusable/ErrorMsg";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 type EditType = {
   setEditModal: (value: boolean) => void;
-  refetchProfile: () => void;
-  profileData: {
-    data: {
-      customerProfile: {
-        fullname: string;
-        phone: string;
-        email: string;
-        dob: string;
-        address: string[]; // ✅ Keep this as array
-        profilePic: string;
-        role: string;
-        formattedAddress?: string;
-      };
-    };
-  };
 };
 
 type UpdateProfileResponse = {
@@ -46,7 +31,7 @@ type InputFieldType = {
   formattedAddress: string;
 };
 
-const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) => {
+const EditProfile = ({ setEditModal }: EditType) => {
   const token = localStorage.getItem("token");
 
   const [file, setFile] = useState<File | null>(null);
@@ -68,48 +53,7 @@ const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) =>
     formattedAddress: "",
   });
 
-  useEffect(() => {
-    const customer = profileData?.data?.customerProfile;
-    if (customer) {
-      setInputField({
-        fullname: customer.fullname || "",
-        phone: customer.phone || "",
-        email: customer.email || "",
-        dob: customer.dob || "",
-        address: customer.address || [],
-        formattedAddress: customer.formattedAddress || "",
-      });
 
-      // ✅ convert array to comma-separated string
-      setAddressInput(customer.address?.join(", ") || "");
-
-      setPhoneInput((prev) => ({
-        ...prev,
-        phone: customer.phone || "",
-      }));
-    }
-  }, [profileData]);
-
-  const { mutate, isPending, isError, error } = useMutation<
-    UpdateProfileResponse,
-    Error,
-    FormData
-  >({
-    mutationFn: (formData) =>
-      put("default", "/customer/update_customer_profile", formData, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }),
-    onSuccess: (data) => {
-      alert(data.message || "Profile updated successfully.");
-      refetchProfile();
-      setEditModal(false);
-    },
-    onError: (err) => {
-      console.error("Upload failed:", err.message);
-    },
-  });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -157,7 +101,6 @@ const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) =>
       formData.append("address", addr);
     });
 
-    mutate(formData);
   };
 
 
@@ -197,9 +140,9 @@ const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) =>
             className="hidden"
             onChange={handleFileUpload}
           />
-          {isPending ? (
-            <p className="mt-3 text-sm italic text-gray-400">Loading..</p>
-          ) : (
+          
+            {/* <p className="mt-3 text-sm italic text-gray-400">Loading..</p> */}
+           (
             <>
               {fileName && <p className="text-xs mt-2 text-gray-700">Selected: {fileName}</p>}
               {file && (
@@ -210,7 +153,7 @@ const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) =>
                 />
               )}
             </>
-          )}
+          )
         </div>
 
         {/* Form Fields */}
@@ -258,19 +201,19 @@ const EditProfile = ({ setEditModal, refetchProfile, profileData }: EditType) =>
         <div className="mt-5">
           <button
             className="bg-black text-white text-sm rounded-md py-2 px-5 block ml-auto"
-            disabled={isPending}
+            // disabled={isPending}
             onClick={handleSubmit}
           >
-            {isPending ? "Uploading..." : "Update"}
+            {/* {isPending ? "Uploading..." : "Update"} */}
           </button>
         </div>
 
         {/* Error */}
-        {isError && (
-          <div className="mt-2">
+       
+          {/* <div className="mt-2">
             <ErrorMsg message={error instanceof Error ? error.message : "Something went wrong"} />
-          </div>
-        )}
+          </div> */}
+        
       </div>
     </div>
   );

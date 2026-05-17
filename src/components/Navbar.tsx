@@ -15,9 +15,7 @@ import { get } from "../baseUrl";
 
 const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
   const queryClient = useQueryClient();
-  const { user } = useSelector(
-  (state: RootState) => state.auth
-);
+  const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const logoutMutation = useMutation({
     mutationFn: () => get("default", "auth/logout"),
@@ -41,7 +39,7 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
     <>
       <div>
         <span className="text-sm bg-yellow text-green py-2 w-full block text-center font-light">
-          Store Location: Lincoln- 344, Illinois, Chicago, USA
+          Sarojini, Delhi, India
         </span>
         <nav className="max-w-[95%] w-full mx-auto ">
           <div className="flex items-center gap-10 w-full flex-col-reverse lg:flex-row">

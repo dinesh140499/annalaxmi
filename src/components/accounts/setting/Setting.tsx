@@ -10,28 +10,33 @@ import { useMutation } from "@tanstack/react-query";
 import { post } from "../../../baseUrl";
 
 type AccountType = {
-  fname: string;
-  lname: string;
+  firstname: string;
+  lastname: string;
   email: string;
   avatar: string;
 };
 
+type UserProps = {
+  user: RootState["auth"]["user"];
+};
+
 const Setting = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
+
   return (
     <>
-      <Profile />
-      <BillingAddress />
-      <ChangePassword />
+      <Profile user={user} />
+      <BillingAddress user={user} />
+      <ChangePassword user={user} />
     </>
   );
 };
 
-const Profile = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+const Profile = ({ user }: UserProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [accInput, setAccInput] = useState<AccountType>({
-    fname: "",
-    lname: "",
+    firstname: "",
+    lastname: "",
     email: "",
     avatar: "",
   });
@@ -39,8 +44,8 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setAccInput({
-        fname: user.firstname || "",
-        lname: user.lastname || "",
+        firstname: user.firstname || "",
+        lastname: user.lastname || "",
         email: user.email || "",
         avatar: user.avatar || "",
       });
@@ -48,6 +53,14 @@ const Profile = () => {
 
     console.log(user?.avatar);
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (accInput.avatar.startsWith("blob:")) {
+        URL.revokeObjectURL(accInput.avatar);
+      }
+    };
+  }, [accInput.avatar]);
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) =>
@@ -61,13 +74,11 @@ const Profile = () => {
     },
     onError: (err: any) => {
       console.error(err);
-      alert(err?.response?.data?.message || "Something went wrong");
+      alert(typeof err === "string" ? err : "Something went wrong");
     },
   });
 
-  console.log(user);
-
-  const handleInputAccount = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBillInputAccount = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     setAccInput((prev) => {
@@ -95,8 +106,8 @@ const Profile = () => {
   const handleSave = () => {
     const formData = new FormData();
 
-    formData.append("firstname", accInput.fname);
-    formData.append("lastname", accInput.lname);
+    formData.append("firstname", accInput.firstname);
+    formData.append("lastname", accInput.lastname);
     formData.append("email", accInput.email);
 
     if (selectedFile) {
@@ -113,31 +124,31 @@ const Profile = () => {
           Account Settings
         </h1>
         <div className="px-4 mb-4">
-          <label htmlFor="fname" className="block text-sm mb-2">
+          <label htmlFor="firstname" className="block text-sm mb-2">
             First Name
           </label>
           <InputField
             inputType="text"
-            id="fname"
-            name="fname"
-            onChange={handleInputAccount}
+            id="firstname"
+            name="firstname"
+            onChange={handleBillInputAccount}
             className="py-2 w-full text-sm"
             placeholder="Dianne"
-            value={accInput.fname}
+            value={accInput.firstname}
           />
         </div>
         <div className="px-4 mb-4">
-          <label htmlFor="lname" className="block text-sm mb-2">
+          <label htmlFor="lastname" className="block text-sm mb-2">
             Last Name
           </label>
           <InputField
             inputType="text"
-            id="lname"
-            name="lname"
-            onChange={handleInputAccount}
+            id="lastname"
+            name="lastname"
+            onChange={handleBillInputAccount}
             className="py-2 w-full text-sm"
             placeholder="Russell"
-            value={accInput.lname}
+            value={accInput.lastname}
           />
         </div>
         <div className="px-4 mb-4">
@@ -148,7 +159,7 @@ const Profile = () => {
             inputType="text"
             id="email"
             name="email"
-            onChange={handleInputAccount}
+            onChange={handleBillInputAccount}
             className="py-2 w-full text-sm"
             placeholder="dianne.russell@gmail.com"
             value={accInput.email}
@@ -162,7 +173,7 @@ const Profile = () => {
             inputType="tel"
             id="phone"
             name="phone"
-            onChange={handleInputAccount}
+            onChange={handleBillInputAccount}
             className="py-2 w-full text-sm"
             placeholder="(603) 555-0123"
           />
@@ -207,7 +218,28 @@ const Profile = () => {
   );
 };
 
-const BillingAddress = () => {
+const BillingAddress = ({ user }: UserProps) => {
+  const [billInput, setBillInput] = useState({
+    firstname: "",
+    lastname: "",
+    company_name: "",
+    street: "",
+    country: "",
+    states: "",
+    zip_code: "",
+  });
+  console.log("billing", user);
+  const handleBillInput = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+
+    setBillInput((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <div className="mt-5">
       <div className="rounded-md border border-[#E6E6E6]  py-5 ">
@@ -216,39 +248,42 @@ const BillingAddress = () => {
         </h1>
         <div className="flex items-center gap-3 w-full">
           <div className="ps-3 mb-4 w-full">
-            <label htmlFor="fname" className="block text-sm mb-2">
+            <label htmlFor="firstname" className="block text-sm mb-2">
               First Name
             </label>
             <InputField
               inputType="text"
-              id="fname"
-              name="fname"
-              onChange={() => "hello"}
+              id="firstname"
+              name="firstname"
+              onChange={handleBillInput}
               className="py-2 w-full text-sm"
+              value={billInput.firstname}
             />
           </div>
           <div className="mb-4 w-full">
-            <label htmlFor="lname" className="block text-sm mb-2">
+            <label htmlFor="lastname" className="block text-sm mb-2">
               Last Name
             </label>
             <InputField
               inputType="text"
-              id="lname"
-              name="lname"
-              onChange={() => "hello"}
+              id="lastname"
+              name="lastname"
+              onChange={handleBillInput}
               className="py-2 w-full text-sm"
+              value={billInput.lastname}
             />
           </div>
           <div className="mb-4 w-full pr-3">
-            <label htmlFor="company-name" className="block text-sm mb-2">
+            <label htmlFor="company_name" className="block text-sm mb-2">
               Company Name <span className="text-[#666666]">(Optional)</span>
             </label>
             <InputField
               inputType="text"
-              id="company-name"
-              name="company-name"
-              onChange={() => "hello"}
+              id="company_name"
+              name="company_name"
+              onChange={handleBillInput}
               className="py-2 w-full text-sm"
+              value={billInput.company_name}
             />
           </div>
         </div>
@@ -260,7 +295,7 @@ const BillingAddress = () => {
             inputType="text"
             id="street"
             name="street"
-            onChange={() => "hello"}
+            onChange={handleBillInput}
             className="py-2 w-full text-sm"
           />
         </div>
@@ -276,11 +311,12 @@ const BillingAddress = () => {
               ]}
               name="country"
               id="country"
-              onChange={() => "hello"}
+              onChange={handleBillInput}
+              value={billInput.country}
             />
           </div>
           <div className="mb-4 w-full">
-            <label htmlFor="lname" className="block text-sm mb-2">
+            <label htmlFor="lastname" className="block text-sm mb-2">
               States
             </label>
             <SelectInput
@@ -289,20 +325,22 @@ const BillingAddress = () => {
                 { optVal: "Mumbai", optValName: "Mumbai" },
               ]}
               name="states"
-              onChange={() => "hello"}
+              onChange={handleBillInput}
               id="states"
+              value={billInput.states}
             />
           </div>
           <div className="mb-4 w-full pr-3">
-            <label htmlFor="zip-code" className="block text-sm mb-2">
+            <label htmlFor="zip_code" className="block text-sm mb-2">
               Zip Code
             </label>
             <InputField
               inputType="text"
-              id="zip-code"
-              name="zip-code"
-              onChange={() => "hello"}
+              id="zip_code"
+              name="zip_code"
+              onChange={handleBillInput}
               className="py-2 w-full text-sm"
+              value={billInput.zip_code}
             />
           </div>
         </div>
@@ -316,7 +354,7 @@ const BillingAddress = () => {
   );
 };
 
-const ChangePassword = () => {
+const ChangePassword = ({ user }: UserProps) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

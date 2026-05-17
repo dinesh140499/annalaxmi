@@ -1,22 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { get } from "../../../baseUrl";
-import ErrorMsg from "../../reusable/ErrorMsg";
 import EditProfile from "./EditProfile";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store/store";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
-  const token = localStorage.getItem('token')
-  const [editModal, setEditModal] = useState<boolean>(false)
-
-  const { data: profileData, error, isLoading, isError, refetch, } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => get("default", "user/profile", {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : ``
-      }
-    },),
-    retry: false, 
-  });
+  const [editModal, setEditModal] = useState<boolean>(false);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
 
   const handleViewDetails = (orderId: number) => {
     alert(`Viewing details for order #${orderId}`);
@@ -25,33 +15,33 @@ const Dashboard = () => {
   return (
     <>
       <div className="lg:flex gap-5 mb-6">
-        {isLoading && <h1 className="text-center block mx-auto">Loading...</h1>}
-        {isError && <ErrorMsg message={error.message} />}
-        {!isLoading && !isError && profileData && (
+        {loading && <h1 className="text-center block mx-auto">Loading...</h1>}
+        {!loading && (
           <>
             <ProfileCard
-              name={profileData?.data?.customerProfile?.fullname}
-              profileImg={profileData?.data?.customerProfile?.profilePic}
-              role={profileData?.data?.customerProfile?.role}
-              setEditModal={setEditModal}
-
-            />
-            <BillingAddress
-              name={profileData?.data?.customerProfile?.fullname}
-              address={
-                profileData?.data?.customerProfile?.address?.length
-                  ? profileData.data.customerProfile.address.join(", ")
-                  : "N/A"
-              }
-
-              email={profileData?.data?.customerProfile?.email}
-              phone={profileData?.data?.customerProfile?.phone || "N/A"}
+              fullname={`${user?.firstname || ""} ${user?.lastname || ""}`}
+              profileImg={`${import.meta.env.VITE_API_URL}${user?.avatar}`}
+              role={user?.role || "user"}
               setEditModal={setEditModal}
             />
+            {user?.addresses.map((address) => {
+              const { country, states, zip_code, street, type } = address;
+              const fulladdress = `${street} ${states} - ${zip_code}, ${country}`;
+              return (
+                <BillingAddress
+                  key={address._id}
+                  name={address.firstname}
+                  address={fulladdress}
+                  email={address.email || ""}
+                  phone={address.phoneNo || ""}
+                  type={address.type}
+                  setEditModal={setEditModal}id=""
+                />
+              );
+            })}
           </>
         )}
       </div>
-
 
       {/* Recent Order History */}
       <div className="rounded-md border border-[#E6E6E6] px-4 py-5">
@@ -60,12 +50,14 @@ const Dashboard = () => {
           <div className="min-w-[800px]">
             <table className="w-full text-sm text-left border-collapse">
               <thead className="bg-gray-100">
-                <tr >
+                <tr>
                   <th className="py-2 px-4 uppercase text-sm">Order ID</th>
                   <th className="py-2 px-4 uppercase text-sm">Date</th>
                   <th className="py-2 px-4 uppercase text-sm">Status</th>
                   <th className="py-2 px-4 uppercase text-sm">Total</th>
-                  <th className="py-2 px-4 uppercase text-sm text-center">Action</th>
+                  <th className="py-2 px-4 uppercase text-sm text-center">
+                    Action
+                  </th>
                 </tr>
               </thead>
             </table>
@@ -97,7 +89,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {editModal && <EditProfile setEditModal={setEditModal} refetchProfile={refetch} profileData={profileData} />}
+      {editModal && (
+        <EditProfile
+          setEditModal={setEditModal}
+        />
+      )}
     </>
   );
 };
@@ -105,7 +101,7 @@ const Dashboard = () => {
 // Props Types
 type ProfileType = {
   profileImg: string;
-  name: string;
+  fullname?: string;
   role: string;
   setEditModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -115,7 +111,9 @@ type BillingType = {
   address: string;
   email: string;
   phone: string;
+  type: string;
   setEditModal: React.Dispatch<React.SetStateAction<boolean>>;
+  id: string;
 };
 
 type RecentOrderType = {
@@ -128,7 +126,12 @@ type RecentOrderType = {
 };
 
 // Components
-const ProfileCard = ({ name, profileImg, role, setEditModal, }: ProfileType) => (
+const ProfileCard = ({
+  fullname,
+  profileImg,
+  role,
+  setEditModal,
+}: ProfileType) => (
   <div className="lg:flex-1 rounded-md border border-[#E6E6E6] h-[250px] flex justify-center items-center">
     <div className="px-3 py-5 text-center">
       <img
@@ -137,19 +140,33 @@ const ProfileCard = ({ name, profileImg, role, setEditModal, }: ProfileType) => 
         alt="profile"
         title="profile"
       />
-      <h1 className="text-lg capitalize font-semibold mt-3">{name}</h1>
+      <h1 className="text-lg capitalize font-semibold mt-3">{fullname}</h1>
       <p className="text-[#808080] text-[13px] capitalize">{role}</p>
-      <button className="text-green text-sm mt-3 cursor-pointer" onClick={() => setEditModal(true)}>
+      <Link to={'/account/settings'}
+        className="text-green text-sm mt-3 cursor-pointer"
+        // onClick={() => setEditModal(true)}
+        
+      >
         Edit Profile
-      </button>
+      </Link>
     </div>
   </div>
 );
 
-const BillingAddress = ({ address, email, name, phone, setEditModal }: BillingType) => (
+const BillingAddress = ({
+  address,
+  email,
+  name,
+  phone,
+  type,
+  setEditModal,
+}: BillingType) => (
   <div className="lg:flex-1 h-[250px] rounded-md border border-[#E6E6E6] flex items-center mt-5 lg:mt-0">
     <div className="px-3 py-5">
       <h3 className="text-sm text-[#999999] uppercase">Billing Address</h3>
+      <h3 className="text-md text-[#1A1A1A] uppercase mt-3 font-bold underline">
+        {type}
+      </h3>
       <h1 className="font-semibold text-md mt-3 capitalize">{name}</h1>
       <p className="text-[#666666] text-sm mt-1 capitalize">{address}</p>
       <a
@@ -164,30 +181,43 @@ const BillingAddress = ({ address, email, name, phone, setEditModal }: BillingTy
       >
         {phone}
       </a>
-      <button className="text-green text-sm mt-3 cursor-pointer" onClick={()=>setEditModal(true)}>
+      <Link to={'/account/settings'}
+        className="text-green text-sm mt-3 cursor-pointer"
+        // onClick={() => setEditModal(true)}
+      >
         Edit Billing Info
-      </button>
+      </Link>
     </div>
   </div>
 );
 
-const RecentOrder = ({ date, orderId, status, total, viewDetail, totalProduct }: RecentOrderType) => (
+const RecentOrder = ({
+  date,
+  orderId,
+  status,
+  total,
+  viewDetail,
+  totalProduct,
+}: RecentOrderType) => (
   <tr className="border-b hover:bg-gray-50 ">
     <td className="py-2 px-4 w-1/5">#{orderId}</td>
     <td className="py-2 px-4 w-1/5">{date}</td>
     <td className="py-2 px-4 w-1/5">
       <span
-        className={`inline-block px-2 py-1 text-xs rounded-full font-medium ${status === "Completed"
-          ? "bg-green-100 text-green-800"
-          : status === "On The Way"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-blue-100 text-green"
-          }`}
+        className={`inline-block px-2 py-1 text-xs rounded-full font-medium ${
+          status === "Completed"
+            ? "bg-green-100 text-green-800"
+            : status === "On The Way"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-blue-100 text-green"
+        }`}
       >
         {status}
       </span>
     </td>
-    <td className="py-2 px-4 w-1/5 font-medium text-[#1A1A1A]">₹{total} ({Math.floor(Math.random() * totalProduct)} Products)</td>
+    <td className="py-2 px-4 w-1/5 font-medium text-[#1A1A1A]">
+      ₹{total} ({Math.floor(Math.random() * totalProduct)} Products)
+    </td>
     <td className="py-2 px-4 w-1/5 text-center">
       <button
         onClick={viewDetail}

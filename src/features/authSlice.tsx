@@ -1,5 +1,18 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+type BillingType = {
+  firstname: string;
+  company_name: string;
+  street: string;
+  country: string;
+  states: string;
+  zip_code: string;
+  phoneNo: string;
+  email: string;
+  type: string;
+  _id?: string;
+};
+
 type UserType = {
   _id: string;
   role: string;
@@ -8,16 +21,19 @@ type UserType = {
   email?: string;
   avatar?: string;
   phoneNo?: string;
+  addresses: BillingType[];
 };
 
 type AuthState = {
   user: UserType | null;
   loading: boolean;
+  error: string | null;
 };
 
 const initialState: AuthState = {
   user: null,
   loading: true,
+  error: null,
 };
 
 const authSlice = createSlice({
@@ -35,9 +51,13 @@ const authSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
   },
 });
 
-export const { setUser, logoutUser, setLoading } = authSlice.actions;
+export const { setUser, logoutUser, setLoading, setError } = authSlice.actions;
 
 export default authSlice.reducer;
