@@ -70,7 +70,7 @@ const Profile = ({ user }: UserProps) => {
         },
       }),
     onSuccess: () => {
-      alert("Profile updated successfully");
+      alert("Profile Updated Successfully");
     },
     onError: (err: any) => {
       console.error(err);
@@ -218,8 +218,22 @@ const Profile = ({ user }: UserProps) => {
   );
 };
 
-const BillingAddress = ({ user }: UserProps) => {
-  const [billInput, setBillInput] = useState({
+type BillingType = {
+  firstname: string;
+  lastname: string;
+  company_name: string;
+  street: string;
+  country: string;
+  states: string;
+  zip_code: string;
+};
+
+type BillingProps = {
+  user: RootState["auth"]["user"];
+};
+
+const BillingAddress = ({ user }: BillingProps) => {
+  const [billInput, setBillInput] = useState<BillingType>({
     firstname: "",
     lastname: "",
     company_name: "",
@@ -228,9 +242,25 @@ const BillingAddress = ({ user }: UserProps) => {
     states: "",
     zip_code: "",
   });
-  console.log("billing", user);
+
+  useEffect(() => {
+    if (user?.addresses?.length) {
+      const address = user.addresses[0];
+
+      setBillInput({
+        firstname: address.firstname || "",
+        lastname: address.lastname || "",
+        company_name: address.company_name || "",
+        street: address.street || "",
+        country: address.country || "",
+        states: address.states || "",
+        zip_code: address.zip_code || "",
+      });
+    }
+  }, [user]);
+
   const handleBillInput = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
@@ -240,70 +270,100 @@ const BillingAddress = ({ user }: UserProps) => {
     }));
   };
 
+  const mutation = useMutation({
+    mutationFn: async () => {
+      return await post("default", "user/address", billInput, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+
+    onSuccess: () => {
+      alert("Billing Address Updated Successfully");
+    },
+
+    onError: (err: any) => {
+      console.log(err);
+      alert(err?.message || "Something went wrong");
+    },
+  });
+
   return (
     <div className="mt-5">
-      <div className="rounded-md border border-[#E6E6E6]  py-5 ">
+      <div className="rounded-md border border-[#E6E6E6] py-5">
         <h1 className="font-bold text-md px-4 pb-3 border-b border-[#E5E5E5] mb-5">
           Billing Address
         </h1>
+
         <div className="flex items-center gap-3 w-full">
           <div className="ps-3 mb-4 w-full">
             <label htmlFor="firstname" className="block text-sm mb-2">
               First Name
             </label>
+
             <InputField
               inputType="text"
               id="firstname"
               name="firstname"
+              value={billInput.firstname}
               onChange={handleBillInput}
               className="py-2 w-full text-sm"
-              value={billInput.firstname}
             />
           </div>
+
           <div className="mb-4 w-full">
             <label htmlFor="lastname" className="block text-sm mb-2">
               Last Name
             </label>
+
             <InputField
               inputType="text"
               id="lastname"
               name="lastname"
+              value={billInput.lastname}
               onChange={handleBillInput}
               className="py-2 w-full text-sm"
-              value={billInput.lastname}
             />
           </div>
+
           <div className="mb-4 w-full pr-3">
             <label htmlFor="company_name" className="block text-sm mb-2">
-              Company Name <span className="text-[#666666]">(Optional)</span>
+              Company Name
             </label>
+
             <InputField
               inputType="text"
               id="company_name"
               name="company_name"
+              value={billInput.company_name}
               onChange={handleBillInput}
               className="py-2 w-full text-sm"
-              value={billInput.company_name}
             />
           </div>
         </div>
+
         <div className="px-4 mb-5">
           <label htmlFor="street" className="block text-sm mb-2">
             Street Address
           </label>
+
           <InputField
             inputType="text"
             id="street"
             name="street"
+            value={billInput.street}
             onChange={handleBillInput}
             className="py-2 w-full text-sm"
           />
         </div>
+
         <div className="flex items-center gap-3 w-full">
           <div className="ps-3 mb-4 w-full">
             <label htmlFor="country" className="block text-sm mb-2">
               Country / Region
             </label>
+
             <SelectInput
               arrItem={[
                 { optVal: "US", optValName: "US" },
@@ -311,42 +371,51 @@ const BillingAddress = ({ user }: UserProps) => {
               ]}
               name="country"
               id="country"
-              onChange={handleBillInput}
               value={billInput.country}
+              onChange={handleBillInput}
             />
           </div>
+
           <div className="mb-4 w-full">
-            <label htmlFor="lastname" className="block text-sm mb-2">
+            <label htmlFor="states" className="block text-sm mb-2">
               States
             </label>
+
             <SelectInput
               arrItem={[
                 { optVal: "Delhi", optValName: "Delhi" },
                 { optVal: "Mumbai", optValName: "Mumbai" },
               ]}
               name="states"
-              onChange={handleBillInput}
               id="states"
               value={billInput.states}
+              onChange={handleBillInput}
             />
           </div>
+
           <div className="mb-4 w-full pr-3">
             <label htmlFor="zip_code" className="block text-sm mb-2">
               Zip Code
             </label>
+
             <InputField
               inputType="text"
               id="zip_code"
               name="zip_code"
+              value={billInput.zip_code}
               onChange={handleBillInput}
               className="py-2 w-full text-sm"
-              value={billInput.zip_code}
             />
           </div>
         </div>
+
         <div className="px-4">
-          <button className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer">
-            Save Changes
+          <button
+            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer disabled:opacity-50"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
