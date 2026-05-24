@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const addressSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
     firstname: {
       type: String,
       required: true,
@@ -11,6 +16,7 @@ const addressSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    phone: String,
     company_name: {
       type: String,
       default: "",
@@ -20,11 +26,15 @@ const addressSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    country: {
+    city: {
       type: String,
       required: true,
     },
-    states: {
+    state: {
+      type: String,
+      required: true,
+    },
+    country: {
       type: String,
       required: true,
     },
@@ -32,13 +42,18 @@ const addressSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    landmark: String,
     type: {
       type: String,
       enum: ["home", "office", "other"],
       default: "home",
     },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true, _id: true },
 );
 
-module.exports = addressSchema;
+module.exports = mongoose.model("Address", addressSchema);

@@ -6,8 +6,9 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
-const loginRoute = require("./routes/auth.route");
+const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
+const addressRoute = require("./routes/address.route");
 
 const app = express();
 
@@ -41,8 +42,9 @@ app.use(
 );
 
 // Routes
-app.use("/api/v1/auth", loginRoute);
+app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/user", userRoute);
+app.use("/api/v1/user", addressRoute);
 
 app.get("/", (req, res) => {
   res.send("API running...");

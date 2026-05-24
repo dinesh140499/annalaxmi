@@ -1,3 +1,4 @@
+const Address = require("../models/addressSchema");
 const User = require("../models/userSchema");
 
 exports.profile = (req, res) => {
@@ -50,38 +51,43 @@ exports.editProfile = async (req, res) => {
 
 exports.billingAddress = async (req, res) => {
   try {
+    const userId = req.user.id;
+
     const {
       firstname,
       lastname,
       company_name,
       street,
+      phone,
+      city,
       country,
-      states,
+      state,
       zip_code,
+      landmark,
+      type
     } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $push: {
-          addresses: {
-            firstname,
-            lastname,
-            company_name,
-            street,
-            country,
-            states,
-            zip_code,
-          },
-        },
-      },
-      { new: true, runValidators: true },
-    ).select("-otp");
+    const newAddress = {
+      user:userId,
+      firstname,
+      lastname,
+      company_name,
+      street,
+      phone,
+      city,
+      country,
+      state,
+      zip_code,
+      landmark,
+      type
+    };
 
-    return res.status(200).json({
+    const address = await Address.create(newAddress);
+
+    return res.status(201).json({
       success: true,
-      message: "Profile updated successfully",
-      updatedUser,
+      message: "Address added successfully",
+      address: address,
     });
   } catch (error) {
     console.log(error);

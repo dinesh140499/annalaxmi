@@ -43,7 +43,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    addresses: [addressSchema],
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
