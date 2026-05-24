@@ -32,8 +32,6 @@ type InputFieldType = {
 };
 
 const EditProfile = ({ setEditModal }: EditType) => {
-  const token = localStorage.getItem("token");
-
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [addressInput, setAddressInput] = useState<string>(""); // ✅ for user input

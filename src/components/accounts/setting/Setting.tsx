@@ -1,6 +1,5 @@
 import InputField from "../../reusable/InputField";
 import profileDummy from "../../../assets/images/profile.jpg";
-import SelectInput from "../../reusable/SelectInput";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
@@ -8,6 +7,7 @@ import type { RootState } from "../../../store/store";
 import { useSelector } from "react-redux";
 import { useMutation } from "@tanstack/react-query";
 import { post } from "../../../baseUrl";
+import Alert from "../../common/Alert";
 
 type AccountType = {
   firstname: string;
@@ -26,13 +26,17 @@ const Setting = () => {
   return (
     <>
       <Profile user={user} />
-      <BillingAddress user={user} />
       <ChangePassword user={user} />
     </>
   );
 };
 
 const Profile = ({ user }: UserProps) => {
+  const [alertData, setAlertData] = useState({
+    message: "",
+    variant: "", // success | error
+    show: false,
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [accInput, setAccInput] = useState<AccountType>({
     firstname: "",
@@ -50,8 +54,6 @@ const Profile = ({ user }: UserProps) => {
         avatar: user.avatar || "",
       });
     }
-
-    console.log(user?.avatar);
   }, [user]);
 
   useEffect(() => {
@@ -69,12 +71,20 @@ const Profile = ({ user }: UserProps) => {
           "Content-Type": "multipart/form-data",
         },
       }),
-    onSuccess: () => {
-      alert("Profile Updated Successfully");
+    onSuccess: (data: any) => {
+      setAlertData({
+        message: data?.message || "Profile Updated Successfully",
+        variant: "success" as const,
+        show: true,
+      });
     },
     onError: (err: any) => {
       console.error(err);
-      alert(typeof err === "string" ? err : "Something went wrong");
+      setAlertData({
+        message: err?.response?.data?.message || "Something went wrong",
+        variant: "error" as const,
+        show: true,
+      });
     },
   });
 
@@ -118,54 +128,58 @@ const Profile = ({ user }: UserProps) => {
   };
 
   return (
-    <div className="lg:flex items-center mb-5">
-      <div className="rounded-md border border-[#E6E6E6]  py-5 flex-1/2">
-        <h1 className="font-bold text-md px-4 pb-3 border-b border-[#E5E5E5] mb-5">
-          Account Settings
-        </h1>
-        <div className="px-4 mb-4">
-          <label htmlFor="firstname" className="block text-sm mb-2">
-            First Name
-          </label>
-          <InputField
-            inputType="text"
-            id="firstname"
-            name="firstname"
-            onChange={handleBillInputAccount}
-            className="py-2 w-full text-sm"
-            placeholder="Dianne"
-            value={accInput.firstname}
-          />
-        </div>
-        <div className="px-4 mb-4">
-          <label htmlFor="lastname" className="block text-sm mb-2">
-            Last Name
-          </label>
-          <InputField
-            inputType="text"
-            id="lastname"
-            name="lastname"
-            onChange={handleBillInputAccount}
-            className="py-2 w-full text-sm"
-            placeholder="Russell"
-            value={accInput.lastname}
-          />
-        </div>
-        <div className="px-4 mb-4">
-          <label htmlFor="email" className="block text-sm mb-2">
-            Email
-          </label>
-          <InputField
-            inputType="text"
-            id="email"
-            name="email"
-            onChange={handleBillInputAccount}
-            className="py-2 w-full text-sm"
-            placeholder="dianne.russell@gmail.com"
-            value={accInput.email}
-          />
-        </div>
-        {/* <div className="px-4 mb-5">
+    <>
+      {alertData.show && (
+        <Alert message={alertData.message} variant={"success"} />
+      )}
+      <div className="lg:flex items-center mb-5">
+        <div className="rounded-md border border-[#E6E6E6]  py-5 flex-1/2">
+          <h1 className="font-bold text-md px-4 pb-3 border-b border-[#E5E5E5] mb-5">
+            Account Settings
+          </h1>
+          <div className="px-4 mb-4">
+            <label htmlFor="firstname" className="block text-sm mb-2">
+              First Name
+            </label>
+            <InputField
+              inputType="text"
+              id="firstname"
+              name="firstname"
+              onChange={handleBillInputAccount}
+              className="py-2 w-full text-sm"
+              placeholder="Dianne"
+              value={accInput.firstname}
+            />
+          </div>
+          <div className="px-4 mb-4">
+            <label htmlFor="lastname" className="block text-sm mb-2">
+              Last Name
+            </label>
+            <InputField
+              inputType="text"
+              id="lastname"
+              name="lastname"
+              onChange={handleBillInputAccount}
+              className="py-2 w-full text-sm"
+              placeholder="Russell"
+              value={accInput.lastname}
+            />
+          </div>
+          <div className="px-4 mb-4">
+            <label htmlFor="email" className="block text-sm mb-2">
+              Email
+            </label>
+            <InputField
+              inputType="text"
+              id="email"
+              name="email"
+              onChange={handleBillInputAccount}
+              className="py-2 w-full text-sm"
+              placeholder="dianne.russell@gmail.com"
+              value={accInput.email}
+            />
+          </div>
+          {/* <div className="px-4 mb-5">
           <label htmlFor="phone" className="block text-sm mb-2">
             Phone
           </label>
@@ -178,250 +192,48 @@ const Profile = ({ user }: UserProps) => {
             placeholder="(603) 555-0123"
           />
         </div> */}
-        <div className="px-4">
-          <button
-            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer disabled:opacity-50"
-            onClick={handleSave}
-            disabled={mutation.isPending}
+          <div className="px-4">
+            <button
+              className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer disabled:opacity-50"
+              onClick={handleSave}
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+        <div className="flex-1/3">
+          <img
+            src={
+              accInput.avatar
+                ? accInput.avatar.startsWith("blob:")
+                  ? accInput.avatar
+                  : `${import.meta.env.VITE_API_URL}${accInput.avatar}`
+                : profileDummy
+            }
+            alt="profile"
+            className="h-[200px] w-[200px] rounded-full object-cover mx-auto"
+          />
+          <label
+            htmlFor="fileupload"
+            className="cursor-pointer w-[150px] text-center mx-auto block border-[2px] border-[#00603A] rounded-full text-sm text-[#00603A] duration-300 py-3 px-5 mt-5 hover:bg-[#00603A] hover:text-white"
           >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </div>
-      <div className="flex-1/3">
-        <img
-          src={
-            accInput.avatar
-              ? accInput.avatar.startsWith("blob:")
-                ? accInput.avatar
-                : `${import.meta.env.VITE_API_URL}${accInput.avatar}`
-              : profileDummy
-          }
-          alt="profile"
-          className="h-[200px] w-[200px] rounded-full object-cover mx-auto"
-        />
-        <label
-          htmlFor="fileupload"
-          className="cursor-pointer w-[150px] text-center mx-auto block border-[2px] border-[#00603A] rounded-full text-sm text-[#00603A] duration-300 py-3 px-5 mt-5 hover:bg-[#00603A] hover:text-white"
-        >
-          Choose Image
-        </label>
-        <input
-          type="file"
-          className="hidden"
-          id="fileupload"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-      </div>
-    </div>
-  );
-};
-
-type BillingType = {
-  firstname: string;
-  lastname: string;
-  company_name: string;
-  street: string;
-  country: string;
-  states: string;
-  zip_code: string;
-};
-
-type BillingProps = {
-  user: RootState["auth"]["user"];
-};
-
-const BillingAddress = ({ user }: BillingProps) => {
-  const [billInput, setBillInput] = useState<BillingType>({
-    firstname: "",
-    lastname: "",
-    company_name: "",
-    street: "",
-    country: "",
-    states: "",
-    zip_code: "",
-  });
-
-  useEffect(() => {
-    if (user?.addresses?.length) {
-      const address = user.addresses[0];
-
-      setBillInput({
-        firstname: address.firstname || "",
-        lastname: address.lastname || "",
-        company_name: address.company_name || "",
-        street: address.street || "",
-        country: address.country || "",
-        states: address.states || "",
-        zip_code: address.zip_code || "",
-      });
-    }
-  }, [user]);
-
-  const handleBillInput = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-
-    setBillInput((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      return await post("default", "user/address", billInput, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    },
-
-    onSuccess: () => {
-      alert("Billing Address Updated Successfully");
-    },
-
-    onError: (err: any) => {
-      console.log(err);
-      alert(err?.message || "Something went wrong");
-    },
-  });
-
-  return (
-    <div className="mt-5">
-      <div className="rounded-md border border-[#E6E6E6] py-5">
-        <h1 className="font-bold text-md px-4 pb-3 border-b border-[#E5E5E5] mb-5">
-          Billing Address
-        </h1>
-
-        <div className="flex items-center gap-3 w-full">
-          <div className="ps-3 mb-4 w-full">
-            <label htmlFor="firstname" className="block text-sm mb-2">
-              First Name
-            </label>
-
-            <InputField
-              inputType="text"
-              id="firstname"
-              name="firstname"
-              value={billInput.firstname}
-              onChange={handleBillInput}
-              className="py-2 w-full text-sm"
-            />
-          </div>
-
-          <div className="mb-4 w-full">
-            <label htmlFor="lastname" className="block text-sm mb-2">
-              Last Name
-            </label>
-
-            <InputField
-              inputType="text"
-              id="lastname"
-              name="lastname"
-              value={billInput.lastname}
-              onChange={handleBillInput}
-              className="py-2 w-full text-sm"
-            />
-          </div>
-
-          <div className="mb-4 w-full pr-3">
-            <label htmlFor="company_name" className="block text-sm mb-2">
-              Company Name
-            </label>
-
-            <InputField
-              inputType="text"
-              id="company_name"
-              name="company_name"
-              value={billInput.company_name}
-              onChange={handleBillInput}
-              className="py-2 w-full text-sm"
-            />
-          </div>
-        </div>
-
-        <div className="px-4 mb-5">
-          <label htmlFor="street" className="block text-sm mb-2">
-            Street Address
+            Choose Image
           </label>
-
-          <InputField
-            inputType="text"
-            id="street"
-            name="street"
-            value={billInput.street}
-            onChange={handleBillInput}
-            className="py-2 w-full text-sm"
+          <input
+            type="file"
+            className="hidden"
+            id="fileupload"
+            accept="image/*"
+            onChange={handleImageChange}
           />
         </div>
-
-        <div className="flex items-center gap-3 w-full">
-          <div className="ps-3 mb-4 w-full">
-            <label htmlFor="country" className="block text-sm mb-2">
-              Country / Region
-            </label>
-
-            <SelectInput
-              arrItem={[
-                { optVal: "US", optValName: "US" },
-                { optVal: "India", optValName: "India" },
-              ]}
-              name="country"
-              id="country"
-              value={billInput.country}
-              onChange={handleBillInput}
-            />
-          </div>
-
-          <div className="mb-4 w-full">
-            <label htmlFor="states" className="block text-sm mb-2">
-              States
-            </label>
-
-            <SelectInput
-              arrItem={[
-                { optVal: "Delhi", optValName: "Delhi" },
-                { optVal: "Mumbai", optValName: "Mumbai" },
-              ]}
-              name="states"
-              id="states"
-              value={billInput.states}
-              onChange={handleBillInput}
-            />
-          </div>
-
-          <div className="mb-4 w-full pr-3">
-            <label htmlFor="zip_code" className="block text-sm mb-2">
-              Zip Code
-            </label>
-
-            <InputField
-              inputType="text"
-              id="zip_code"
-              name="zip_code"
-              value={billInput.zip_code}
-              onChange={handleBillInput}
-              className="py-2 w-full text-sm"
-            />
-          </div>
-        </div>
-
-        <div className="px-4">
-          <button
-            className="py-2 px-5 bg-green text-white text-[14px] rounded-full cursor-pointer disabled:opacity-50"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
       </div>
-    </div>
+    </>
   );
 };
+
+
 
 const ChangePassword = ({ user }: UserProps) => {
   const [showOldPassword, setShowOldPassword] = useState(false);

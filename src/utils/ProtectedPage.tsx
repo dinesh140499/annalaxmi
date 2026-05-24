@@ -4,6 +4,7 @@ import type { RootState } from "../store/store";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
 import { setUser, logoutUser } from "../features/authSlice";
+import Loader from "../components/common/Loader";
 
 const ProtectedPage = () => {
   const dispatch = useDispatch();
@@ -22,7 +23,7 @@ const ProtectedPage = () => {
   }, [data, isError, dispatch]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }
 
   if (!user && !data?.user) {

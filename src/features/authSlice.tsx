@@ -22,6 +22,7 @@ type UserType = {
   avatar?: string;
   phoneNo?: string;
   addresses: BillingType[];
+  dialCode?: string;
 };
 
 type AuthState = {

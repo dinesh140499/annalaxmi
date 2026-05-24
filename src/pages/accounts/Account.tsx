@@ -2,10 +2,9 @@ import { useState, type FC, type JSX } from "react";
 import { Outlet } from "react-router-dom"; // Required for nested routes
 import Breadcrumbs from "../../components/reusable/Breadcrumps";
 import Tabs from "../../components/reusable/Tabs";
-import { MdDashboard, MdLogout } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import { TfiReload } from "react-icons/tfi";
-import { GoHeart } from "react-icons/go";
-import { IoSettingsOutline } from "react-icons/io5";
+import { IoSettingsOutline, IoHomeOutline  } from "react-icons/io5";
 import { FaToggleOff, FaToggleOn } from "react-icons/fa";
 
 // Define an interface for your tab items
@@ -17,6 +16,7 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { name: "Dashboard", icon: <MdDashboard />, link: "dashboard" },
+  { name: "Manage Addresses", icon: <IoHomeOutline />, link: "addresses" },
   { name: "Order History", icon: <TfiReload />, link: "order-history" },
   { name: "Settings", icon: <IoSettingsOutline />, link: "settings" },
   // { name: "Logout", icon: <MdLogout />, link: "logout" },

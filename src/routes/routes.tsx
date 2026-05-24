@@ -20,6 +20,7 @@ import Setting from "../components/accounts/setting/Setting";
 import ProtectedPage from "../utils/ProtectedPage";
 import PublicRoute from "../utils/PublicRoute";
 import AuthProvider from "../components/AuthProvider";
+import ManageAddress from "../components/accounts/manage-address/ManageAddress";
 
 export const router = createBrowserRouter([
   {
@@ -71,6 +72,10 @@ export const router = createBrowserRouter([
               {
                 path: "dashboard",
                 element: <Dashboard />,
+              },
+              {
+                path: "addresses",
+                element: <ManageAddress />,
               },
               {
                 path: "order-history",
