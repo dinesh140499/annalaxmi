@@ -1,10 +1,16 @@
 require("dotenv").config();
 require("./config/db")();
+
+const helmet = require("helmet");
 const path = require("path");
+const compression = require("compression");
+const errorMiddleware = require("./middleware/error.middleware");
 
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+
+const ErrorHandler = require("./utils/errorHandler");
 
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
@@ -12,31 +18,28 @@ const addressRoute = require("./routes/address.route");
 
 const app = express();
 
-console.log(process.cwd())
+console.log(process.cwd());
 
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "src/uploads"))
-);
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 // Middleware
-app.use(cookieParser());
+app.use(helmet());
+app.use(compression());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-let allowOrigin = ["http://localhost:5173"];
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+
+app.use(limiter);
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-
-      if (allowOrigin.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: [process.env.CLIENT_URL],
     credentials: true,
   }),
 );
@@ -50,4 +53,9 @@ app.get("/", (req, res) => {
   res.send("API running...");
 });
 
+app.all("*", (req, res, next) => {
+  return next(ErrorHandler("Route not found", 404));
+});
+
+app.use(errorMiddleware);
 module.exports = app;

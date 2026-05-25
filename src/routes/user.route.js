@@ -25,11 +25,5 @@ router.post(
   editProfile
 );
 
-router.post(
-  "/address",
-  protect,
-  // validate(userSchema),
-  billingAddress
-);
 
 module.exports = router;

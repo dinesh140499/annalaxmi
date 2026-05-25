@@ -1,5 +1,6 @@
-const Address = require("../models/addressSchema");
 const User = require("../models/userSchema");
+const asyncHandler = require("../utils/asyncHandler");
+const ErrorHandler = require("../utils/errorHandler");
 
 exports.profile = (req, res) => {
   res.json({
@@ -8,93 +9,37 @@ exports.profile = (req, res) => {
   });
 };
 
-exports.editProfile = async (req, res) => {
-  try {
-    const { firstname, lastname, email } = req.body;
+exports.editProfile = asyncHandler(async (req, res) => {
+  const { firstname, lastname, email } = req.body;
 
-    let avatar = "";
+  const updateData = {
+    firstname,
+    lastname,
+    email,
+  };
 
-    if (req.file) {
-      avatar = `/uploads/${req.file.filename}`;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          firstname,
-          lastname,
-          email,
-          ...(avatar && { avatar }),
-        },
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
-    ).select("-otp");
-
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      user: updatedUser,
-    });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (req.file) {
+    updateData.avatar = `/uploads/${req.file.filename}`;
   }
-};
 
-exports.billingAddress = async (req, res) => {
-  try {
-    const userId = req.user.id;
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: updateData,
+    },
+    {
+      returnDocument: "after", // modern mongoose
+      runValidators: true,
+    },
+  ).select("-otp");
 
-    const {
-      firstname,
-      lastname,
-      company_name,
-      street,
-      phone,
-      city,
-      country,
-      state,
-      zip_code,
-      landmark,
-      type
-    } = req.body;
-
-    const newAddress = {
-      user:userId,
-      firstname,
-      lastname,
-      company_name,
-      street,
-      phone,
-      city,
-      country,
-      state,
-      zip_code,
-      landmark,
-      type
-    };
-
-    const address = await Address.create(newAddress);
-
-    return res.status(201).json({
-      success: true,
-      message: "Address added successfully",
-      address: address,
-    });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (!updatedUser) {
+    return next(new ErrorHandler("User not found", 404));
   }
-};
+
+  return res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    user: updatedUser,
+  });
+});
