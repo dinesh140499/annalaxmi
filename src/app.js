@@ -2,6 +2,7 @@ require("dotenv").config();
 require("./config/db")();
 
 const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const path = require("path");
 const compression = require("compression");
 const errorMiddleware = require("./middleware/error.middleware");
@@ -53,8 +54,8 @@ app.get("/", (req, res) => {
   res.send("API running...");
 });
 
-app.all("*", (req, res, next) => {
-  return next(ErrorHandler("Route not found", 404));
+app.use((req, res, next) => {
+  return next(new ErrorHandler("Route not found", 404));
 });
 
 app.use(errorMiddleware);
