@@ -89,7 +89,7 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-});
+}); 
 
 userSchema.methods.compareOtp = async function (enteredOtp) {
 

@@ -34,7 +34,7 @@ exports.editProfile = asyncHandler(async (req, res) => {
   ).select("-otp");
 
   if (!updatedUser) {
-    return next(new new ErrorHandler("User not found", 404)());
+    return next(new new ErrorHandler("User not found", 404));
   }
 
   return res.status(200).json({

@@ -20,8 +20,8 @@ const router = express.Router();
 // Profile
 router.get("/profile", protect, profile);
 
-router.patch(
-  "/profile",
+router.post(
+  "/edit-profile",
   protect,
   upload.single("avatar"),
   validate(userSchema),
