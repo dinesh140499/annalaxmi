@@ -40,6 +40,7 @@ export const apiCall = async (
   } catch (error: any) {
     console.error(`[API Error] ${method} ${url}:`, error);
     throw new Error(error.response?.data?.message || "Something went wrong");
+    
   }
 };
 

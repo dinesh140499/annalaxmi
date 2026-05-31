@@ -12,19 +12,31 @@ import { type SubMenuProps } from "./SubMenu";
 import SearchFilter from "./reusable/SearchFilter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { get } from "../baseUrl";
+import Alert from "./common/Alert";
+import { useEffect, useState } from "react";
 
 const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
+  const [alertData, setAlertData] = useState({
+    message: "",
+    variant: "" as "success" | "error",
+    show: false,
+  });
+
   const queryClient = useQueryClient();
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const logoutMutation = useMutation({
     mutationFn: () => get("default", "auth/logout"),
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ["profile"],
       });
-
+      setAlertData({
+        message: data?.message || "Logout Successfull",
+        variant: "success",
+        show: true,
+      });
       navigate("/login");
     },
   });
@@ -142,6 +154,14 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
 
       {/* Cart Button Toggle */}
       <ShopCard />
+
+      {alertData.show && (
+        <Alert
+          message={alertData.message}
+          variant={alertData.variant}
+          onDismiss={() => setAlertData((p) => ({ ...p, show: false }))}
+        />
+      )}
     </>
   );
 };

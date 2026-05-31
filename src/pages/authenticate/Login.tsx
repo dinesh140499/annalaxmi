@@ -6,8 +6,9 @@ import Otp from "./Otp";
 import { useMutation } from "@tanstack/react-query";
 import { post } from "../../baseUrl";
 import ErrorMsg from "../../components/reusable/ErrorMsg";
+import Alert from "../../components/common/Alert";
 
-type PhoneInputState = {
+export type PhoneInputState = {
   phone: string;
   country: string;
   dialCode: string;
@@ -22,7 +23,11 @@ type AuthStep = "phone" | "otp";
 
 const Login = () => {
   const [step, setStep] = useState<AuthStep>("phone");
-
+  const [alertData, setAlertData] = useState({
+    message: "",
+    variant: "" as "success" | "error",
+    show: false,
+  });
   const [phoneInput, setPhoneInput] = useState<PhoneInputState>({
     phone: "",
     country: "in",
@@ -36,22 +41,35 @@ const Login = () => {
       country: string;
     }) => post("default", "auth/login", payload),
 
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setAlertData({
+        message: data?.message || "Otp Sent To Your Number "+phoneInput,
+        variant: "success",
+        show: true,
+      });
       setStep("otp");
     },
 
-    onError: (err) => {
-      console.error("Login Error", err);
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || "Something went wrong",
+        variant: "error",
+        show: true,
+      });
       setStep("phone");
     },
   });
 
   const handleSendCode = () => {
     if (!phoneInput.phone || phoneInput.phone.length < 10) {
-      alert("Enter valid phone number");
+      setAlertData({
+        message: "Enter valid phone number",
+        variant: "error",
+        show: true,
+      });
       return;
     }
-    
+
     mutation.mutate({
       phoneNo: phoneInput.phone.replace(phoneInput.dialCode, ""),
       dialCode: phoneInput.dialCode,
@@ -59,12 +77,14 @@ const Login = () => {
     });
   };
 
+  // console.log(phoneInput)
+
   return (
     <>
       <Breadcrumbs />
 
       {step === "otp" ? (
-        <Otp phoneNo={phoneInput.phone} />
+        <Otp phone={phoneInput.phone} dialCode={phoneInput.dialCode} />
       ) : (
         <div className="max-w-[90%] w-full lg:max-w-[95%] mx-auto min-h-[40vh] lg:min-h-[50vh] flex justify-center items-center">
           <div>
@@ -93,7 +113,8 @@ const Login = () => {
                   backgroundColor: "#F0F5FA",
                   border: "1px solid white",
                   outline: "none",
-                  marginLeft: "10px",
+                   outlineColor:"none",
+                  boxShadow:"none"
                 }}
                 buttonStyle={{
                   border: "none",
@@ -128,6 +149,14 @@ const Login = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {alertData.show && (
+        <Alert
+          message={alertData.message}
+          variant={alertData.variant}
+          onDismiss={() => setAlertData((p) => ({ ...p, show: false }))}
+        />
       )}
     </>
   );

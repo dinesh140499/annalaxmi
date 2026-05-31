@@ -1,5 +1,5 @@
 import InputField from "../../reusable/InputField";
-import profileDummy from "../../../assets/images/profile.jpg";
+import profileDummy from "/profile.png";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
@@ -130,7 +130,7 @@ const Profile = ({ user }: UserProps) => {
   return (
     <>
       {alertData.show && (
-        <Alert message={alertData.message} variant={"success"} />
+        <Alert message={alertData.message}  />
       )}
       <div className="lg:flex items-center mb-5">
         <div className="rounded-md border border-[#E6E6E6]  py-5 flex-1/2">
@@ -214,6 +214,17 @@ const Profile = ({ user }: UserProps) => {
             alt="profile"
             className="h-[200px] w-[200px] rounded-full object-cover mx-auto"
           />
+          {/* <img
+            src={
+              accInput.avatar
+                ? accInput.avatar.startsWith("blob:")
+                  ? accInput.avatar
+                  : `${import.meta.env.VITE_API_URL}${accInput.avatar}`
+                : profileDummy
+            }
+            alt="profile"
+            className="h-[200px] w-[200px] rounded-full object-cover mx-auto"
+          /> */}
           <label
             htmlFor="fileupload"
             className="cursor-pointer w-[150px] text-center mx-auto block border-[2px] border-[#00603A] rounded-full text-sm text-[#00603A] duration-300 py-3 px-5 mt-5 hover:bg-[#00603A] hover:text-white"

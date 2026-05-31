@@ -1,5 +1,5 @@
 import EditProfile from "./EditProfile";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
 import { Link } from "react-router-dom";
@@ -18,9 +18,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="mb-6">
-        {<ProfileCard user={user} />}
-      </div>
+      <div className="mb-6">{<ProfileCard user={user} />}</div>
 
       {/* Recent Order History */}
       <div className="rounded-md border border-[#E6E6E6] px-4 py-5">
@@ -34,7 +32,9 @@ const Dashboard = () => {
                   <th className="py-2 px-4 uppercase text-sm">Date</th>
                   <th className="py-2 px-4 uppercase text-sm">Status</th>
                   <th className="py-2 px-4 uppercase text-sm">Total</th>
-                  <th className="py-2 px-4 uppercase text-sm text-center">Action</th>
+                  <th className="py-2 px-4 uppercase text-sm text-center">
+                    Action
+                  </th>
                 </tr>
               </thead>
             </table>
@@ -76,16 +76,6 @@ type ProfileType = {
   user: RootState["auth"]["user"];
 };
 
-type BillingType = {
-  name: string;
-  address: string;
-  email: string;
-  phone: string;
-  type: string;
-  setEditModal: React.Dispatch<React.SetStateAction<boolean>>;
-  id: string;
-};
-
 type RecentOrderType = {
   orderId: number;
   date: string;
@@ -100,16 +90,20 @@ type RecentOrderType = {
 const ProfileCard = ({ user }: ProfileType) => {
   if (!user) return null;
 
-  const fullname = `${user.firstname || ""} ${user.lastname || ""}`.trim();
-  const orderCount = 0
+  const fullname = `${user.firstname || null} ${user.lastname || ""}`.trim();
+  const orderCount = 0;
   const addressCount = user?.addresses?.length ?? 0;
-  const totalSpent = 0
+  const totalSpent = 0;
 
   return (
     <div className="rounded-md border border-[#E6E6E6] px-5 py-4 flex items-center gap-4">
       {/* Avatar */}
       <img
-        src={`${import.meta.env.VITE_API_URL}${user.avatar}`}
+        src={
+          user?.avatar
+            ? `${import.meta.env.VITE_API_URL}${user.avatar}`
+            : "/profile.png"
+        }
         className="h-14 w-14 rounded-full object-cover flex-shrink-0"
         alt="profile"
         title="profile"
@@ -118,16 +112,17 @@ const ProfileCard = ({ user }: ProfileType) => {
       {/* Name + email + phone */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <h1 className="text-sm font-semibold capitalize truncate">{fullname}</h1>
+          <h1 className="text-sm font-semibold capitalize truncate">
+            {fullname}
+          </h1>
           <VscVerified className="text-base text-green-800 flex-shrink-0" />
         </div>
         <p className="text-[#808080] text-xs flex items-center gap-1 mb-0.5">
           <MdOutlineMail size={13} />
-          {user.email}
+          {user.email ? user.email : null}
         </p>
         <p className="text-[#808080] text-xs flex items-center gap-1">
-          <IoCallOutline size={13} />
-          +{user.dialCode}-{user.phoneNo?.slice(2)}
+          <IoCallOutline size={13} />+{user.dialCode}-{user.phoneNo?.slice(2)}
         </p>
       </div>
 
@@ -138,7 +133,9 @@ const ProfileCard = ({ user }: ProfileType) => {
           <p className="text-xs text-[#808080]">Orders</p>
         </div>
         <div>
-          <p className="text-base font-semibold text-[#1A1A1A]">{addressCount}</p>
+          <p className="text-base font-semibold text-[#1A1A1A]">
+            {addressCount}
+          </p>
           <p className="text-xs text-[#808080]">Addresses</p>
         </div>
         <div>
@@ -160,35 +157,6 @@ const ProfileCard = ({ user }: ProfileType) => {
     </div>
   );
 };
-
-// ─── BillingAddress ───────────────────────────────────────────────────────────
-
-const BillingAddress = ({
-  address,
-  email,
-  name,
-  phone,
-  type,
-  setEditModal,
-}: BillingType) => (
-  <div className="lg:flex-1 h-[250px] rounded-md border border-[#E6E6E6] flex items-center mt-5 lg:mt-0">
-    <div className="px-3 py-5">
-      <h3 className="text-sm text-[#999999] uppercase">Billing Address</h3>
-      <h3 className="text-md text-[#1A1A1A] uppercase mt-3 font-bold underline">{type}</h3>
-      <h1 className="font-semibold text-md mt-3 capitalize">{name}</h1>
-      <p className="text-[#666666] text-sm mt-1 capitalize">{address}</p>
-      <a href={`mailto:${email}`} className="text-[#1A1A1A] hover:underline text-sm mt-2 inline-block">
-        {email}
-      </a>
-      <a href={`tel:${phone}`} className="text-[#1A1A1A] hover:underline text-md block font-bold">
-        {phone}
-      </a>
-      <Link to="/account/settings" className="text-green text-sm mt-3 cursor-pointer">
-        Edit Billing Info
-      </Link>
-    </div>
-  </div>
-);
 
 // ─── RecentOrder ──────────────────────────────────────────────────────────────
 
@@ -220,7 +188,10 @@ const RecentOrder = ({
       ₹{total} ({Math.floor(Math.random() * totalProduct)} Products)
     </td>
     <td className="py-2 px-4 w-1/5 text-center">
-      <button onClick={viewDetail} className="text-sm text-green cursor-pointer hover:underline">
+      <button
+        onClick={viewDetail}
+        className="text-sm text-green cursor-pointer hover:underline"
+      >
         View Details
       </button>
     </td>
