@@ -43,3 +43,15 @@ exports.editProfile = asyncHandler(async (req, res) => {
     user: updatedUser,
   });
 });
+
+exports.changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  const user = await User.findById(req.user._id);
+
+  console.log(user)
+
+  res.status(200).json({
+    success:true,
+    user
+  })
+});

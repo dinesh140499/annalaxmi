@@ -1,12 +1,12 @@
 const express = require("express");
 
 const { protect } = require("../middleware/auth.middleware");
-const {validate} = require("../middleware/validate.middleware");
+const { validate } = require("../middleware/validate.middleware");
 
 const {
   profile,
   editProfile,
-  billingAddress
+  changePassword,
 } = require("../controllers/user.controller");
 
 const { upload } = require("../utils/upload");
@@ -22,8 +22,9 @@ router.post(
   protect,
   upload.single("avatar"),
   validate(userSchema),
-  editProfile
+  editProfile,
 );
 
+router.post("/change-password", protect, changePassword);
 
 module.exports = router;
