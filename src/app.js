@@ -1,6 +1,12 @@
 require("dotenv").config();
 require("./config/db")();
 
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const path = require("path");
+const compression = require("compression");
+const errorMiddleware = require("./middleware/error.middleware");
+
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -97,12 +103,8 @@ app.get("/", (req, res) => {
   });
 });
 
-/* =========================================
-   404 ROUTE
-========================================= */
-
 app.use((req, res, next) => {
-  next(new ErrorHandler(`Route not found: ${req.originalUrl}`, 404));
+  return next(new ErrorHandler("Route not found", 404));
 });
 
 /* =========================================

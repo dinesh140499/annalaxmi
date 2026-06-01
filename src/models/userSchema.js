@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const addressSchema = require("./addressSchema.js");
 
 const userSchema = new mongoose.Schema(
   {
@@ -8,59 +7,55 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
+
     firstname: {
       type: String,
-      trim: true,
       default: "",
+      trim: true,
     },
+
     lastname: {
       type: String,
-      trim: true,
       default: "",
+      trim: true,
     },
+
     email: {
       type: String,
-      trim: true,
       unique: true,
       sparse: true,
       lowercase: true,
+      trim: true,
     },
+
+    password: {
+      type: String,
+      minlength: 6,
+      select: false,
+    },
+
     dialCode: {
       type: String,
-      required: true,
+      trim: true,
     },
+
     country: {
       type: String,
-      required: true,
+      trim: true,
     },
 
     isVerified: {
       type: Boolean,
       default: false,
     },
+
     avatar: {
       type: String,
       default: "",
     },
-    wishlist: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
-    cart: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-        },
-        quantity: {
-          type: Number,
-          default: 1,
-        },
-      },
-    ],
+
     role: {
       type: String,
       enum: ["user", "admin"],
@@ -69,10 +64,12 @@ const userSchema = new mongoose.Schema(
 
     otp: {
       type: String,
+      select: false,
     },
+
     otpExpires: {
       type: Date,
-      // index: { expires: 0 },
+      select: false,
     },
   },
   {
@@ -81,13 +78,35 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function () {
-  if (!this.otp || !this.isModified("otp")) return;
 
-  this.otp = await bcrypt.hash(this.otp, 10);
-});
+  // hash otp
+  if (this.isModified("otp") && this.otp) {
+    this.otp = await bcrypt.hash(this.otp, 10);
+  }
 
-userSchema.methods.compareOtp = function (enteredOtp) {
-  return bcrypt.compare(enteredOtp, this.otp);
+  // hash password
+  if (this.isModified("password") && this.password) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+
+}); 
+
+userSchema.methods.compareOtp = async function (enteredOtp) {
+
+  if (!this.otp) {
+    return false;
+  }
+
+  return await bcrypt.compare(enteredOtp, this.otp);
+};
+
+userSchema.methods.comparePassword = async function (enteredPassword) {
+
+  if (!this.password) {
+    return false;
+  }
+
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model("user", userSchema);

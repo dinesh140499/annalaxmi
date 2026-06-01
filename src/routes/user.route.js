@@ -7,6 +7,7 @@ const {
   profile,
   editProfile,
   changePassword,
+  setPassword,
 } = require("../controllers/user.controller");
 
 const { upload } = require("../utils/upload");
@@ -15,6 +16,8 @@ const userSchema = require("../schemas/userSchema");
 
 const router = express.Router();
 
+
+// Profile
 router.get("/profile", protect, profile);
 
 router.post(
@@ -26,5 +29,10 @@ router.post(
 );
 
 router.post("/change-password", protect, changePassword);
+
+// Password
+router.post("/set-password", protect, setPassword);
+
+router.patch("/change-password", protect, changePassword);
 
 module.exports = router;

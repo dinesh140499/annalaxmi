@@ -34,7 +34,7 @@ exports.editProfile = asyncHandler(async (req, res) => {
   ).select("-otp");
 
   if (!updatedUser) {
-    return next(new ErrorHandler("User not found", 404));
+    return next(new new ErrorHandler("User not found", 404));
   }
 
   return res.status(200).json({
@@ -44,14 +44,65 @@ exports.editProfile = asyncHandler(async (req, res) => {
   });
 });
 
-exports.changePassword = asyncHandler(async (req, res) => {
+exports.setPassword = asyncHandler(async (req, res, next) => {
+
+  const { password, confirmPassword } = req.body;
+
+  if (!password || !confirmPassword) {
+    return next(new ErrorHandler("All fields required", 400));
+  }
+
+  if (password !== confirmPassword) {
+    return next(new ErrorHandler("Passwords do not match", 400));
+  }
+
+  const user = await User.findById(req.user ._id);
+
+  user.password = password;
+
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Password set successfully",
+  });
+
+});
+
+exports.changePassword = asyncHandler(async (req, res, next) => {
+
   const { currentPassword, newPassword, confirmPassword } = req.body;
+
   const user = await User.findById(req.user._id);
 
-  console.log(user)
+  // check user has password or not
+  if (!user.password) {
+    return next(
+      new ErrorHandler("Please create password first", 400)
+    );
+  }
 
-  res.status(200).json({
-    success:true,
-    user
-  })
+  const isMatched = await user.comparePassword(currentPassword);
+
+  if (!isMatched) {
+    return next(
+      new ErrorHandler("Current password incorrect", 400)
+    );
+  }
+
+  if (newPassword !== confirmPassword) {
+    return next(
+      new ErrorHandler("Passwords do not match", 400)
+    );
+  }
+
+  user.password = newPassword;
+
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Password changed successfully",
+  });
+
 });

@@ -69,7 +69,7 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
     });
   }
 
-  let user = await Register.findOne({ phoneNo });
+  let user = await Register.findOne({ phoneNo }).select("+otp");
 
   if (!user) {
     return res.status(404).json({
@@ -77,6 +77,8 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
       message: "User Not Found",
     });
   }
+
+  console.log("user otp: ", user);
 
   if (!user.otp) {
     return res.status(400).json({
@@ -128,11 +130,6 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
       id: user._id,
       phoneNo: user.phoneNo,
     },
-  });
-  console.error("Login error:", error);
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
   });
 });
 
