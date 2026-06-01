@@ -1,11 +1,9 @@
 import React, { useEffect, useState, type ChangeEvent } from "react";
-import { useSelector } from "react-redux";
 import InputField from "../../reusable/InputField";
 import SelectInput from "../../reusable/SelectInput";
 import Alert from "../../common/Alert";
-import type { RootState } from "../../../store/store";
-import { useMutation } from "@tanstack/react-query";
-import { post } from "../../../baseUrl";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { get, post, put, del } from "../../../baseUrl"; // ✅ FIX 1: import `put`
 import {
   IoHomeOutline,
   IoBriefcaseOutline,
@@ -18,21 +16,20 @@ import {
   IoRadioButtonOff,
 } from "react-icons/io5";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type AddressType = {
+export type AddressType = {
   _id?: string;
   firstname: string;
-  lastname?: string;
+  lastname: string;
+  phone: string;
   company_name: string;
   street: string;
   country: string;
   states: string;
   zip_code: string;
-  type: string;
+  landmark: string;
+  type: "home" | "office" | "other";
 };
 
-// ─── Print ────────────────────────────────────────────────────────────────────
 
 function printAddress(addr: AddressType) {
   const html = `<!DOCTYPE html><html><head><title>Address</title>
@@ -58,6 +55,8 @@ function printAddress(addr: AddressType) {
     <hr class="divider"/>
     <div class="logo">Anna Laxmi</div>
   </div></body></html>`;
+  // ✅ FIX 3: Was `${addr.country}, ${addr.country}` — corrected to `${addr.states}, ${addr.country}`
+
   const win = window.open("", "_blank", "width=480,height=360");
   if (!win) return;
   win.document.write(html);
@@ -75,8 +74,10 @@ const emptyForm = (): Omit<AddressType, "_id"> => ({
   street: "",
   country: "",
   states: "",
+  landmark: "",
   zip_code: "",
   type: "home",
+  phone: "",
 });
 
 // ─── Address Card ─────────────────────────────────────────────────────────────
@@ -367,49 +368,28 @@ const AddressForm = ({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const ManageAddress = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  // ✅ FIX 4: `useQueryClient()` now correctly called inside the component
+  const queryClient = useQueryClient();
 
-  const [addresses, setAddresses] = useState<AddressType[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [alertData, setAlertData] = useState({
-    message: "",
-    variant: "" as "success" | "error",
-    show: false,
+  const { data: rawAddresses, isLoading } = useQuery({
+    queryKey: ["address"],
+    queryFn: async () => get("default", "/user/address"),
   });
 
-  // ── Hydrate from redux user ──
-  useEffect(() => {
-    if (user?.addresses?.length) {
-      setAddresses(user.addresses);
-      setSelectedId(user.addresses[0]._id ?? null);
-    }
-  }, [user]);
+  // ✅ FIX: API may return { addresses: [] } or [] — normalise to always be an array
+  const reduxAddresses: AddressType[] = Array.isArray(rawAddresses)
+    ? rawAddresses
+    : Array.isArray(rawAddresses?.addresses)
+      ? rawAddresses.addresses
+      : [];
 
-  // ── Mutation ──
-  const mutation = useMutation({
-    mutationFn: async (data: Omit<AddressType, "_id">) =>
-      await post("default", "user/address", data, {
-        headers: { "Content-Type": "application/json" },
-      }),
-    onSuccess: (data: any, variables) => {
-      // optimistically add/update in local state
-      setAddresses((prev) => {
-        if (editId)
-          return prev.map((a) =>
-            a._id === editId ? { ...a, ...variables } : a,
-          );
-        const newAddr: AddressType = {
-          ...variables,
-          _id: Date.now().toString(),
-        };
-        return [...prev, newAddr];
-      });
-      setShowAddForm(false);
-      setEditId(null);
+  const deleteMutate = useMutation({
+    mutationFn: (id: string) => del("default", `/user/address/${id}`),
+    onSuccess: () => {
+      // ✅ FIX 5: Invalidate query so list refreshes after delete
+      queryClient.invalidateQueries({ queryKey: ["address"] });
       setAlertData({
-        message: data?.message || "Address saved successfully",
+        message: "Address deleted successfully",
         variant: "success",
         show: true,
       });
@@ -422,9 +402,72 @@ const ManageAddress = () => {
       }),
   });
 
+  // ✅ FIX 6: Separate add vs edit mutations so edits use PUT with the address ID
+  const addMutation = useMutation({
+    mutationFn: async (data: Omit<AddressType, "_id">) =>
+      await post("default", "/user/address", data, {
+        headers: { "Content-Type": "application/json" },
+      }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["address"] });
+      setShowAddForm(false);
+      setAlertData({
+        message: data?.message || "Address added successfully",
+        variant: "success",
+        show: true,
+      });
+    },
+    onError: (err: any) =>
+      setAlertData({
+        message: err?.response?.data?.message || "Something went wrong",
+        variant: "error",
+        show: true,
+      }),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Omit<AddressType, "_id">;
+    }) =>
+      await put("default", `/user/address/${id}`, data, {
+        headers: { "Content-Type": "application/json" },
+      }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["address"] });
+      setEditId(null);
+      setAlertData({
+        message: data?.message || "Address updated successfully",
+        variant: "success",
+        show: true,
+      });
+    },
+    onError: (err: any) =>
+      setAlertData({
+        message: err?.response?.data?.message || "Something went wrong",
+        variant: "error",
+        show: true,
+      }),
+  });
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [alertData, setAlertData] = useState({
+    message: "",
+    variant: "" as "success" | "error",
+    show: false,
+  });
+
+  useEffect(() => {
+    console.log(reduxAddresses);
+  }, [reduxAddresses]);
+
   function handleDelete(id: string) {
-    setAddresses((prev) => prev.filter((a) => a._id !== id));
-    if (selectedId === id) setSelectedId(addresses[0]?._id ?? null);
+    deleteMutate.mutate(id);
   }
 
   return (
@@ -444,7 +487,8 @@ const ManageAddress = () => {
             Manage Addresses
           </h2>
           <p className="text-[12px] text-[#888] mt-0.5">
-            {addresses.length} saved address{addresses.length !== 1 ? "es" : ""}
+            {reduxAddresses?.length || 0} saved address
+            {(reduxAddresses?.length || 0) !== 1 ? "es" : ""}
           </p>
         </div>
       </div>
@@ -466,14 +510,14 @@ const ManageAddress = () => {
         {/* Add form */}
         {showAddForm && (
           <AddressForm
-            onSave={(data) => mutation.mutate(data)}
+            onSave={(data) => addMutation.mutate(data)}
             onCancel={() => setShowAddForm(false)}
-            isPending={mutation.isPending}
+            isPending={addMutation.isPending}
           />
         )}
 
         {/* Cards from user.addresses */}
-        {addresses.map((addr) =>
+        {reduxAddresses?.map((addr: any) =>
           editId === addr._id ? (
             <AddressForm
               key={addr._id}
@@ -481,16 +525,21 @@ const ManageAddress = () => {
               initial={{
                 firstname: addr.firstname,
                 lastname: addr.lastname,
+                phone: addr.phone,
                 company_name: addr.company_name,
                 street: addr.street,
                 country: addr.country,
                 states: addr.states,
+                landmark: addr.landmark,
                 zip_code: addr.zip_code,
                 type: addr.type,
               }}
-              onSave={(data) => mutation.mutate(data)}
+              onSave={(data) =>
+                // ✅ FIX 6 (cont.): Edit uses PUT via editMutation
+                editMutation.mutate({ id: addr._id!, data })
+              }
               onCancel={() => setEditId(null)}
-              isPending={mutation.isPending}
+              isPending={editMutation.isPending}
             />
           ) : (
             <AddressCard
@@ -509,17 +558,19 @@ const ManageAddress = () => {
         )}
 
         {/* Empty state */}
-        {addresses.length === 0 && !showAddForm && (
-          <div className="text-center py-12">
-            <IoLocationOutline className="text-5xl mx-auto mb-3 text-[#ddd]" />
-            <p className="text-[14px] font-medium text-[#bbb]">
-              No saved addresses yet
-            </p>
-            <p className="text-[12px] mt-1 text-[#ccc]">
-              Add an address to get started
-            </p>
-          </div>
-        )}
+        {!isLoading &&
+          (!reduxAddresses || reduxAddresses.length === 0) &&
+          !showAddForm && (
+            <div className="text-center py-12">
+              <IoLocationOutline className="text-5xl mx-auto mb-3 text-[#ddd]" />
+              <p className="text-[14px] font-medium text-[#bbb]">
+                No saved addresses yet
+              </p>
+              <p className="text-[12px] mt-1 text-[#ccc]">
+                Add an address to get started
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

@@ -26,7 +26,6 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
     show: false,
   });
 
-  console.log(phone);
 
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
@@ -81,11 +80,13 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
 
   const handleSubmit = () => {
     const fullPhoneNo = dialCode + phone;
-    console.log(fullPhoneNo)
+
+    console.log(dialCode,phone)
+
     const fullOtp = otp.join("");
     if (fullOtp.length === 4) {
       mutation.mutate({
-        phoneNo: fullPhoneNo,
+        phoneNo: phone,
         otp: fullOtp,
       });
     }

@@ -43,7 +43,7 @@ const Login = () => {
 
     onSuccess: (data) => {
       setAlertData({
-        message: data?.message || "Otp Sent To Your Number "+phoneInput,
+        message: data?.message || "Otp Sent To Your Number " + phoneInput,
         variant: "success",
         show: true,
       });
@@ -61,7 +61,10 @@ const Login = () => {
   });
 
   const handleSendCode = () => {
-    if (!phoneInput.phone || phoneInput.phone.length < 10) {
+    if (
+      !phoneInput.phone ||
+      phoneInput.phone.length < 10 
+    ) {
       setAlertData({
         message: "Enter valid phone number",
         variant: "error",
@@ -91,7 +94,6 @@ const Login = () => {
             <h1 className="text-md text-center text-green font-bold">
               Mobile Number
             </h1>
-
             <div className="mt-3">
               <PhoneInput
                 country={phoneInput.country}
@@ -113,8 +115,8 @@ const Login = () => {
                   backgroundColor: "#F0F5FA",
                   border: "1px solid white",
                   outline: "none",
-                   outlineColor:"none",
-                  boxShadow:"none"
+                  outlineColor: "none",
+                  boxShadow: "none",
                 }}
                 buttonStyle={{
                   border: "none",
@@ -122,7 +124,6 @@ const Login = () => {
                 }}
                 containerStyle={{ width: "100%" }}
               />
-
               <div className="text-center my-3 mb-5">
                 {mutation.isPending && (
                   <p className="text-gray-400">Sending OTP...</p>

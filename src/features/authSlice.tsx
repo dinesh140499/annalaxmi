@@ -1,17 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type BillingType = {
-  firstname: string;
-  company_name: string;
-  street: string;
-  country: string;
-  states: string;
-  zip_code: string;
-  phoneNo: string;
-  email: string;
-  type: string;
-  _id?: string;
-};
 
 type UserType = {
   _id: string;
@@ -21,7 +9,6 @@ type UserType = {
   email?: string;
   avatar?: string;
   phoneNo?: string;
-  addresses: BillingType[];
   dialCode?: string;
 };
 
@@ -33,7 +20,7 @@ type AuthState = {
 
 const initialState: AuthState = {
   user: null,
-  loading: true,
+  loading: true,  
   error: null,
 };
 
