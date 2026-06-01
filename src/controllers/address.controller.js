@@ -46,6 +46,7 @@ exports.getAddresses = asyncHandler(async (req, res) => {
   const addresses = await Address.find({
     user: req.user._id,
   });
+
   return res.status(200).json({
     success: true,
     addresses,
@@ -56,7 +57,7 @@ exports.updateAddress = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return next(new new ErrorHandler("Invalid address id", 404));
+    return next(new new ErrorHandler("Invalid address id", 404)());
   }
 
   const address = await Address.findOneAndUpdate(
@@ -69,7 +70,7 @@ exports.updateAddress = asyncHandler(async (req, res, next) => {
   );
 
   if (!address) {
-    return next(new new ErrorHandler("Address not found", 404));
+    return next(new new ErrorHandler("Address not found", 404)());
   }
 
   return res.status(200).json({
@@ -83,7 +84,7 @@ exports.deleteAddress = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return next(new new ErrorHandler("Invalid address id", 400));
+    return next(new new ErrorHandler("Invalid address id", 400)());
   }
 
   const address = await Address.findOneAndDelete({
@@ -92,7 +93,7 @@ exports.deleteAddress = asyncHandler(async (req, res) => {
   });
 
   if (!address) {
-    return next(new new ErrorHandler("Address not found", 404));
+    return next(new new ErrorHandler("Address not found", 404)());
   }
 
   return res.status(200).json({
