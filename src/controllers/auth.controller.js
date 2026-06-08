@@ -8,113 +8,113 @@ const ErrorHandler = require("../utils/errorHandler");
 // const sendMail = require("../utils/sendMail");
 
 exports.login = asyncHandler(async (req, res) => {
-  const { phoneNo, dialCode, country } = req.body;
+  const { phoneNo, dialCode } = req.body;
 
   const fullPhone = `${dialCode}${phoneNo}`;
 
-  let user = await Register.findOne({ phoneNo: fullPhone });
+  let user = await Register.findOne({ phoneNo: fullPhone }).select("+password");
 
-  // ⛔ Cooldown check (prevents spam)
-  if (user && user.otpExpires > Date.now() - 60 * 1000) {
-    return res.status(429).json({
-      success: false,
-      message: "Please wait before requesting another OTP",
+  // Existing user
+  if (user) {
+    return res.status(200).json({
+      success: true,
+      exists: true,
+      hasPassword: !!user.password,
+      phoneNo: fullPhone,
+      // message: user.password ? "Choose Password or Otp Login" : "Otp Required",
+      message: "Account found",
     });
+  }
+
+  return res.status(200).json({
+    success: true,
+    exists: false,
+    hasPassword: false,
+    phoneNo: fullPhone,
+    message: "Continue verification",
+  });
+});
+
+exports.sendOtp = asyncHandler(async (req, res, next) => {
+  const { phoneNo, dialCode, country } = req.body;
+
+  if (!phoneNo || !dialCode || !country) {
+    return next(new ErrorHandler("Field Cannot Be Blank", 400));
+  }
+
+  const fullPhone = `${dialCode}${phoneNo}`;
+
+  const user = await Register.findOne({
+    phoneNo: fullPhone,
+  });
+
+  // cooldown
+  if (user && user.otpExpires && user.otpExpires > Date.now() - 60 * 1000) {
+    return next(
+      new ErrorHandler(
+        "Please wait before requesting another verification code",
+        429,
+      ),
+    );
   }
 
   const generatedOtp = otpGenerator();
 
   if (user) {
     user.otp = generatedOtp;
-    user.otpExpires = Date.now() + 5 * 60 * 1000;
+    user.otpExpires = process.env.OTP_EXPIRY;
+
     await user.save();
   } else {
-    user = await Register.create({
+    await Register.create({
       phoneNo: fullPhone,
       dialCode,
       country,
       otp: generatedOtp,
-      otpExpires: Date.now() + 5 * 60 * 1000,
+      otpExpires: process.env.OTP_EXPIRY,
     });
   }
-
-  // try {
-  //   await sendMail(
-  //     process.env.TEST_EMAIL,
-  //     "OTP Verification",
-  //     `Your OTP is ${generatedOtp}`,
-  //   );
-  // } catch (err) {
-  //   console.error("Mail error:", err);
-  // }
 
   return res.status(200).json({
     success: true,
-    message: "OTP sent successfully",
+    message: "Verification code sent successfully",
     generatedOtp,
-  });
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
   });
 });
 
-exports.verifyOtp = asyncHandler(async (req, res, next) => {
-  const { phoneNo, otp } = req.body;
+exports.loginWithPassword = asyncHandler(async (req, res, next) => {
+  const { phoneNo, password, email } = req.body;
 
-  if (!phoneNo || !otp) {
-    return res.status(400).json({
-      success: false,
-      message: "Phone number and OTP are required",
-    });
+  const query = {};
+
+  if (email) {
+    query.email = email.toLowerCase();
+  } else if (phoneNo) {
+    query.phoneNo = phoneNo;
+  } else {
+    return next(new ErrorHandler("Email or Phone Number is required", 400));
   }
 
-  let user = await Register.findOne({ phoneNo }).select("+otp");
+  const user = await Register.findOne(query).select("+password");
+  console.log(user);
 
   if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: "User Not Found",
-    });
+    return next(
+      new ErrorHandler("Invalid phone number, email, or password", 401),
+    );
   }
 
-  console.log("user otp: ", user);
+  const isMatch = await user.comparePassword(password);
 
-  if (!user.otp) {
-    return res.status(400).json({
-      success: false,
-      message: "OTP already used or not generated",
-    });
+  if (!isMatch) {
+    return next(
+      new ErrorHandler("Invalid phone number, email, or password", 401),
+    );
   }
 
-  if (user.otpExpires < Date.now()) {
-    return res.status(400).json({
-      success: false,
-      message: "OTP expired",
-    });
-  }
-
-  const isValid = await user.compareOtp(otp);
-
-  if (!isValid) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid OTP",
-    });
-  }
-
-  user.isVerified = true;
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  const token = jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES },
-  );
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES,
+  });
 
   res.cookie("token", token, {
     httpOnly: true,
@@ -125,11 +125,42 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    message: "Login successful",
+    message: "Logged in successfully",
     user: {
       id: user._id,
+      firstname: user.firstname,
+      email: user.email,
       phoneNo: user.phoneNo,
     },
+  });
+});
+
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+  const { phoneNo } = req.body;
+
+  const user = await Register.findOne({ phoneNo });
+
+  if (!user) {
+    return next(
+      new ErrorHandler(
+        "If an account exists, a verification code has been sent.",
+        200,
+      ),
+    );
+  }
+
+  const otp = otpGenerator();
+
+  user.otp = otp;
+  user.otpExpires = Date.now() + 5 * 60 * 1000;
+
+  await user.save();
+
+  // send SMS / Email
+
+  res.status(200).json({
+    success: true,
+    message: "Verification code sent successfully",
   });
 });
 
