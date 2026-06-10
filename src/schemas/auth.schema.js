@@ -14,4 +14,8 @@ const verifyOtpSchema = z.object({
   otp: z.string().length(4, "OTP must be 4 digits"),
 });
 
-module.exports = { loginSchema, verifyOtpSchema };
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+module.exports = { loginSchema, verifyOtpSchema , resetPasswordSchema};

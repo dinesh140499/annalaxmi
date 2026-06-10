@@ -10,12 +10,11 @@ const {
   setPassword,
 } = require("../controllers/user.controller");
 
-const { upload } = require("../utils/upload");
+const {upload} = require("../middleware/upload.middleware");
 
 const userSchema = require("../schemas/userSchema");
 
 const router = express.Router();
-
 
 // Profile
 router.get("/profile", protect, profile);

@@ -9,18 +9,19 @@ exports.profile = (req, res) => {
   });
 };
 
-exports.editProfile = asyncHandler(async (req, res) => {
+exports.editProfile = asyncHandler(async (req, res, next) => {
   const { firstname, lastname, email } = req.body;
 
   const updateData = {
     firstname,
     lastname,
     email,
+    avatar: { url: req.file?.path, public_id: req.file?.filename },
   };
 
-  if (req.file) {
-    updateData.avatar = `/uploads/${req.file.filename}`;
-  }
+  // if (req.file) {
+  //   updateData.avatar = `/uploads/${req.file.filename}`;
+  // }
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
@@ -34,7 +35,7 @@ exports.editProfile = asyncHandler(async (req, res) => {
   ).select("-otp");
 
   if (!updatedUser) {
-    return next(new new ErrorHandler("User not found", 404));
+    return next(new new ErrorHandler("User not found", 404)());
   }
 
   return res.status(200).json({
@@ -45,55 +46,52 @@ exports.editProfile = asyncHandler(async (req, res) => {
 });
 
 exports.setPassword = asyncHandler(async (req, res, next) => {
-
   const { password, confirmPassword } = req.body;
 
   if (!password || !confirmPassword) {
-    return next(new ErrorHandler("All fields required", 400));
+    return next(new ErrorHandler("All fields are required", 400));
   }
 
   if (password !== confirmPassword) {
     return next(new ErrorHandler("Passwords do not match", 400));
   }
 
-  const user = await User.findById(req.user ._id);
+  const user = await User.findById(req.user._id).select("+password");
+
+  if (user.password) {
+    return next(
+      new ErrorHandler("Password already exists. Use change password.", 400),
+    );
+  }
 
   user.password = password;
 
   await user.save();
 
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
-    message: "Password set successfully",
+    message: "Password created successfully",
   });
-
 });
 
 exports.changePassword = asyncHandler(async (req, res, next) => {
-
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select("+password");
 
   // check user has password or not
   if (!user.password) {
-    return next(
-      new ErrorHandler("Please create password first", 400)
-    );
+    return next(new ErrorHandler("Please create password first", 400));
   }
 
   const isMatched = await user.comparePassword(currentPassword);
 
   if (!isMatched) {
-    return next(
-      new ErrorHandler("Current password incorrect", 400)
-    );
+    return next(new ErrorHandler("Current password incorrect", 400));
   }
 
   if (newPassword !== confirmPassword) {
-    return next(
-      new ErrorHandler("Passwords do not match", 400)
-    );
+    return next(new ErrorHandler("Passwords do not match", 400));
   }
 
   user.password = newPassword;
@@ -104,5 +102,4 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Password changed successfully",
   });
-
 });

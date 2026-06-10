@@ -4,6 +4,7 @@ const sendMail = require("../utils/sendMail");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("../utils/asyncHandler");
 const ErrorHandler = require("../utils/errorHandler");
+const crypto = require("crypto");
 
 // const sendMail = require("../utils/sendMail");
 
@@ -96,7 +97,6 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
   }
 
   const user = await Register.findOne(query).select("+password");
-  console.log(user);
 
   if (!user) {
     return next(
@@ -136,31 +136,80 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
 });
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-  const { phoneNo } = req.body;
+  const { email } = req.body;
 
-  const user = await Register.findOne({ phoneNo });
+  const user = await Register.findOne({ email });
 
   if (!user) {
-    return next(
-      new ErrorHandler(
-        "If an account exists, a verification code has been sent.",
-        200,
-      ),
-    );
+    return res.status(200).json({
+      success: true,
+      message: "If an account exists, a reset link has been sent.",
+    });
   }
 
-  const otp = otpGenerator();
+  const resetToken = crypto.randomBytes(32).toString("hex");
 
-  user.otp = otp;
-  user.otpExpires = Date.now() + 5 * 60 * 1000;
+  user.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
 
-  await user.save();
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
-  // send SMS / Email
+  user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password/${resetToken}`;
+
+  await sendMail(
+    user.email,
+    "Password Reset Request",
+    `
+      <h2>Password Reset</h2>
+      <p>Click the button below to reset your password:</p>
+      <a href="${resetUrl}"
+         style="padding:10px 20px;background:#00603A;color:#fff;text-decoration:none;border-radius:5px;">
+         Reset Password
+      </a>
+
+      <p>This link will expire in 15 minutes.</p>
+    `,
+  );
 
   res.status(200).json({
     success: true,
     message: "Verification code sent successfully",
+  });
+});
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await Register.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: {
+      $gt: Date.now(),
+    },
+  }).select("+password");
+
+  if (!user) {
+    throw new ErrorHandler("Reset password link is invalid or expired", 400);
+  }
+
+  const { password } = req.body;
+
+  user.password = password;
+
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password updated successfully",
   });
 });
 

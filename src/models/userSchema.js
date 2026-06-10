@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
       sparse: true,
       lowercase: true,
       trim: true,
-      lowercase:true
+      lowercase: true,
     },
 
     password: {
@@ -53,8 +53,14 @@ const userSchema = new mongoose.Schema(
     },
 
     avatar: {
-      type: String,
-      default: "",
+      url: {
+        type: String,
+        default: "",
+      },
+      public_id: {
+        type: String,
+        default: "",
+      },
     },
 
     role: {
@@ -72,14 +78,28 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+      select: false,
+    },
+    // Login Tracking
+    lastLogin: {
+      type: Date,
+    },
   },
+
   {
     timestamps: true,
   },
 );
 
 userSchema.pre("save", async function () {
-
   // hash otp
   if (this.isModified("otp") && this.otp) {
     this.otp = await bcrypt.hash(this.otp, 10);
@@ -89,11 +109,9 @@ userSchema.pre("save", async function () {
   if (this.isModified("password") && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
-
-}); 
+});
 
 userSchema.methods.compareOtp = async function (enteredOtp) {
-
   if (!this.otp) {
     return false;
   }
@@ -102,7 +120,6 @@ userSchema.methods.compareOtp = async function (enteredOtp) {
 };
 
 userSchema.methods.comparePassword = async function (enteredPassword) {
-
   if (!this.password) {
     return false;
   }
