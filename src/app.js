@@ -1,8 +1,6 @@
 require("dotenv").config();
 require("./config/db")();
 
-
-
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -17,6 +15,7 @@ const ErrorHandler = require("./utils/errorHandler");
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
 const addressRoute = require("./routes/address.route");
+const productRoute = require("./routes/product.route");
 
 const app = express();
 
@@ -49,10 +48,7 @@ app.use(cookieParser());
    STATIC FOLDER
 ========================================= */
 
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "src/uploads"))
-);
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 /* =========================================
    RATE LIMITER
@@ -77,7 +73,7 @@ app.use(
   cors({
     origin: [process.env.CLIENT_URL],
     credentials: true,
-  })
+  }),
 );
 
 /* =========================================
@@ -87,6 +83,7 @@ app.use(
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/user", addressRoute);
+app.use("/api/v1/product", productRoute);
 
 /* =========================================
    HEALTH CHECK
