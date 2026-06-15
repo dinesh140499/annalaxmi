@@ -15,6 +15,7 @@ const ErrorHandler = require("./utils/errorHandler");
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
 const addressRoute = require("./routes/address.route");
+const categoriesRoute = require("./routes/category.route");
 const productRoute = require("./routes/product.route");
 
 const app = express();
@@ -83,6 +84,7 @@ app.use(
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/user", addressRoute);
+app.use("/api/v1/categories", categoriesRoute);
 app.use("/api/v1/product", productRoute);
 
 /* =========================================

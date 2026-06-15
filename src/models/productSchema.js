@@ -1,46 +1,58 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    slug: {
+      type: String,
+    },
+    sku: {
+      type: String,
+      unique: true,
+      index: true,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    brand: String,
+    description: String,
+    pricing: {
+      price: Number,
+      discountPrice: Number,
+    },
+    inventory: {
+      stock: Number,
+      stockStatus: {
+        type: String,
+        enum: ["Available", "Out Of Stock"],
+      },
+    },
+    images: [
+      {
+        url: String,
+        public_id: String,
+      },
+    ],
+    specifications: {
+      weight: String,
+      color: String,
+      type: String,
+    },
+    tags: [String],
+    rating: {
+      average: Number,
+      totalReviews: Number,
+    },
+    isFeatured: Boolean,
+    isActive: Boolean,
   },
-  slug: {
-    type: String,
-    unique: true,
-    required: true,
+  {
+    timestamps: true,
   },
-  description: {
-    type: String,
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-  discountPrice: {
-    type: Number,
-    default: 0,
-  },
-  stock: {
-    type: String,
-    default: 0,
-  },
-  rating: {
-    type: String,
-    default: "",
-  },
-  images: [String],
-  provided_by: {
-    type: String,
-    default: "",
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
-  },
-});
+);
 
-module.exports = new mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Product", productSchema);
