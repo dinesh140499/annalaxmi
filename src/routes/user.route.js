@@ -12,7 +12,7 @@ const {
 
 const {upload} = require("../middleware/upload.middleware");
 
-const userSchema = require("../schemas/userSchema");
+const userSchema = require("../schemas/user.schema");
 
 const router = express.Router();
 
