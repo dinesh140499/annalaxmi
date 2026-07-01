@@ -88,3 +88,17 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.getSingleProduct = asyncHandler(async (req, res, next) => {
+  const product = await Products.findById({
+    _id: req.params.id,
+  });
+
+  if (!product) {
+    return next(new ErrorHandler("Product Not Found", 404));
+  }
+
+  return res.status(200).json({
+    success: true,
+    product,
+  });
+});

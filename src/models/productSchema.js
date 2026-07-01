@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema(
       type: String,
     },
     sku: {
+      // Stock Keeping In Unit
       type: String,
       unique: true,
       index: true,
