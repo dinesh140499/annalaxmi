@@ -13,18 +13,18 @@ const productSchema = z.object({
 
   description: z.string().min(10, "Description is required").trim(),
 
-  price: z
+  price: z.coerce
     .number({
       required_error: "Price is required",
     })
     .positive("Price must be greater than 0"),
 
-  discountPrice: z
+  discountPrice: z.coerce
     .number()
     .nonnegative("Discount price cannot be negative")
     .optional(),
 
-  stock: z
+  stock: z.coerce
     .number({
       required_error: "Stock is required",
     })
@@ -39,9 +39,28 @@ const productSchema = z.object({
 
   color: z.string().optional(),
 
-  type: z.string().min(1, "Type is required"),
+  spec_type: z.string().min(1, "Specification Type is required"),
 
-  tags: z.array(z.string()).optional(),
+  tags: z.preprocess((value) => {
+    console.log("Preprocessing tags:", value);
+
+    if (!value) return undefined;
+
+    // If already an array, return it
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    // If comma-separated string
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+    }
+
+    return undefined;
+  }, z.array(z.string()).optional()),
 
   isFeatured: z.coerce.boolean().optional(),
 });

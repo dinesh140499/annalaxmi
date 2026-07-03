@@ -42,7 +42,7 @@ const productSchema = new mongoose.Schema(
     specifications: {
       weight: String,
       color: String,
-      type: String,
+      spec_type: String,
     },
     tags: [String],
     rating: {
@@ -57,7 +57,7 @@ const productSchema = new mongoose.Schema(
   },
 );
 
-productSchema.pre("save", function (next) {
+productSchema.pre("save", function () {
   if (this.isModified("name")) {
     this.slug = slugify(this.name, {
       lower: true,
@@ -65,8 +65,6 @@ productSchema.pre("save", function (next) {
       trim: true,
     });
   }
-
-  next();
 });
 
 module.exports = mongoose.model("Product", productSchema);

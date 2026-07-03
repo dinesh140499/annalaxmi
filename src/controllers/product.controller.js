@@ -1,6 +1,8 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Products = require("../models/productSchema");
 const Category = require("../models/categorySchema");
+const ErrorHandler = require("../utils/errorHandler");
+
 
 exports.getProducts = asyncHandler(async (req, res, next) => {
   const products = await Products.find().sort({ createdAt: -1 });
@@ -23,7 +25,7 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     stockStatus,
     weight,
     color,
-    type,
+    spec_type,
     tags,
     isFeatured,
   } = req.body;
@@ -66,7 +68,7 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     specifications: {
       weight,
       color,
-      type,
+      spec_type,
     },
 
     tags: tags
