@@ -1,0 +1,32 @@
+info:
+  name: Add
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{Local_URL}}user/address"
+  body:
+    type: form-urlencoded
+    data:
+      - name: firstname
+        value: priya
+      - name: company_name
+        value: fipkart
+      - name: street
+        value: peeraghari
+      - name: country
+        value: india
+      - name: states
+        value: delhi
+      - name: zip_code
+        value: "110083"
+      - name: lastname
+        value: kumar
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

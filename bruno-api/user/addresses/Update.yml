@@ -1,0 +1,38 @@
+info:
+  name: Update
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: "{{Local_URL}}user/address/6a1328f802ddc2fb77b39efa"
+  body:
+    type: form-urlencoded
+    data:
+      - name: firstname
+        value: Ankit
+      - name: lastname
+        value: Kohli
+      - name: company_name
+        value: Wow Momo
+      - name: street
+        value: Peeraghari
+      - name: city
+        value: Delhi
+      - name: country
+        value: India
+      - name: state
+        value: Delhi
+      - name: zip_code
+        value: "110083"
+      - name: phone
+        value: "7836008553"
+      - name: landmark
+        value: Mosque
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

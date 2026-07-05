@@ -1,0 +1,24 @@
+info:
+  name: Login
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{Local_URL}}auth/login"
+  body:
+    type: form-urlencoded
+    data:
+      - name: phoneNo
+        value: "9910102929"
+      - name: dialCode
+        value: "91"
+      - name: country
+        value: in
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

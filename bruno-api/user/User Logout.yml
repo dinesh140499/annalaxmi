@@ -1,0 +1,26 @@
+info:
+  name: User Logout
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{Local_URL}}auth/logout"
+  body:
+    type: form-urlencoded
+    data:
+      - name: phoneNo
+        value: "7836008553"
+      - name: dialCode
+        value: "91"
+      - name: country
+        value: in
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

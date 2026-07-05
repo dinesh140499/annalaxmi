@@ -1,0 +1,20 @@
+info:
+  name: Get Single Product
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{Local_URL}}product"
+  body:
+    type: text
+    data: ""
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

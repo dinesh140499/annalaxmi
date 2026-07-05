@@ -1,0 +1,20 @@
+info:
+  name: Get All Category
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{Local_URL}}categories"
+  body:
+    type: text
+    data: ""
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

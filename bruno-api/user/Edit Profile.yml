@@ -1,0 +1,31 @@
+info:
+  name: Edit Profile
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{Local_URL}}user/edit-profile"
+  body:
+    type: multipart-form
+    data:
+      - name: firstname
+        type: text
+        value: varun
+      - name: lastname
+        type: text
+        value: kumar
+      - name: email
+        type: text
+        value: varun@gmail.com
+      - name: avatar
+        type: file
+        value:
+          - /D:/image.jpg
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
