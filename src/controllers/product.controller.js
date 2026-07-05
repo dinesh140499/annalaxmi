@@ -94,17 +94,20 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   });
 });
 
-exports.getProducts = asyncHandler(async (req, res, next) => {
+exports.getProducts = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
 
   const skip = (page - 1) * limit;
 
-  const totalProducts = await Product.countDocuments();
+  const totalProducts = await Products.countDocuments();
 
-  const products = await Products.find().sort({ createdAt: -1 }).skip(page).limit(limit);
+  const products = await Products.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     products,
     pagination: {
