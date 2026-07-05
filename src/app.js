@@ -20,6 +20,8 @@ const productRoute = require("./routes/product.route");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 /* =========================================
    SECURITY MIDDLEWARE
 ========================================= */
