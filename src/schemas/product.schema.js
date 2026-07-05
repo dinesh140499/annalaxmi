@@ -1,6 +1,6 @@
 const { z } = require("zod");
 
-const productSchema = z.object({
+const createProductSchema = z.object({
   name: z
     .string()
     .min(2, "Product name is required")
@@ -42,7 +42,6 @@ const productSchema = z.object({
   spec_type: z.string().min(1, "Specification Type is required"),
 
   tags: z.preprocess((value) => {
-    console.log("Preprocessing tags:", value);
 
     if (!value) return undefined;
 
@@ -65,4 +64,37 @@ const productSchema = z.object({
   isFeatured: z.coerce.boolean().optional(),
 });
 
-module.exports = { productSchema };
+// PATCH schema
+const updateProductSchema = createProductSchema
+  .partial()
+  .superRefine((data, ctx) => {
+
+    if (Object.keys(data).length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "At least one field is required",
+      });
+    }
+
+    if (
+      data.price &&
+      data.discountPrice &&
+      data.discountPrice >= data.price
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discountPrice"],
+        message: "Discount price must be less than price",
+      });
+    }
+
+  });
+  // .refine((data) => Object.keys(data).length > 0, {
+  //   message: "At least one field is required for update",
+  // })
+  
+
+module.exports = {
+  createProductSchema,
+  updateProductSchema,
+};

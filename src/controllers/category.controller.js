@@ -8,6 +8,7 @@ exports.getCategories = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     categories,
+    categoryCount: categories.length,
   });
 });
 
@@ -80,7 +81,6 @@ exports.updateCategory = asyncHandler(async (req, res, next) => {
     category,
   });
 });
-
 
 exports.deleteCategory = asyncHandler(async (req, res, next) => {
   const category = await Categories.findById(req.params.id);

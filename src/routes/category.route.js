@@ -11,13 +11,15 @@ const { protect } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-router.get("/", getCategories);
-router.get("/:id", getCategory);
+router
+  .route("/")
+  .get(getCategories)
+  .post(protect, upload.single("image"), createCategory);
 
-router.post("/", protect, upload.single("image"), createCategory);
-
-router.put("/:id", protect, upload.single("image"), updateCategory);
-
-router.delete("/:id", protect, deleteCategory);
+router
+  .route("/:id")
+  .get(getCategory)
+  .put(protect, upload.single("image"), updateCategory)
+  .delete(protect, deleteCategory);
 
 module.exports = router;

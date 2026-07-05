@@ -9,18 +9,22 @@ const productSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
+      unique: true,
     },
     sku: {
       // Stock Keeping In Unit
       type: String,
       unique: true,
-      index: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
+      index: true,
     },
-    brand: String,
+    brand: {
+      type: String,
+      index: true, // if users filter by brand
+    },
     description: String,
     pricing: {
       price: Number,
@@ -49,13 +53,18 @@ const productSchema = new mongoose.Schema(
       average: Number,
       totalReviews: Number,
     },
-    isFeatured: Boolean,
+    isFeatured: {
+      type: Boolean,
+      index: true,
+    },
     isActive: Boolean,
   },
   {
     timestamps: true,
   },
 );
+
+productSchema.index({ createdAt: -1 });
 
 productSchema.pre("save", function () {
   if (this.isModified("name")) {

@@ -70,9 +70,29 @@ app.use("/api", limiter);
    CORS
 ========================================= */
 
+// app.use(
+//   cors({
+//     origin: [process.env.CLIENT_URL],
+//     credentials: true,
+//   }),
+// );
+
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "null" // needed when the HTML file is opened directly via file:// in the browser
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL],
+    origin: function (origin, callback) {
+      // allow requests with no origin (curl, Postman, mobile apps, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
