@@ -176,6 +176,10 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
     removeImages,
   } = req.body;
 
+  if (!category) {
+    return next(new ErrorHandler("Category Field is Required", 404));
+  }
+
   // Check category
   if (category) {
     const categoryExists = await Category.findById(category);
@@ -236,15 +240,26 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
   }
   if (isFeatured !== undefined) product.isFeatured = isFeatured;
 
-  if (req.files && req.files.length > 0) {
-    for (const image of product.images) {
-      await cloudinary.uploader.destroy(image.public_id);
+  // Remove selected images
+  if (removeImages?.length) {
+    for (const public_id of removeImages) {
+      await cloudinary.uploader.destroy(public_id);
     }
 
-    product.images = req.files.map((file) => ({
+    product.images = product.images.filter(
+      (img) => !removeImages.includes(img.public_id),
+    );
+
+  }
+
+  // Upload new images
+  if (req.files?.length) {
+    const newImages = req.files.map((file) => ({
       url: file.path,
       public_id: file.filename,
     }));
+
+    product.images.push(...newImages);
   }
 
   await product.save();

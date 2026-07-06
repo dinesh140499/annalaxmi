@@ -42,7 +42,6 @@ const createProductSchema = z.object({
   spec_type: z.string().min(1, "Specification Type is required"),
 
   tags: z.preprocess((value) => {
-
     if (!value) return undefined;
 
     // If already an array, return it
@@ -61,6 +60,17 @@ const createProductSchema = z.object({
     return undefined;
   }, z.array(z.string()).optional()),
 
+  removeImages: z.preprocess((value) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === "string") {
+      return value.split(",").map((img) => img.trim()).filter(Boolean);
+    }
+
+    return undefined;
+  }, z.array(z.string()).optional()),
+
   isFeatured: z.coerce.boolean().optional(),
 });
 
@@ -68,6 +78,12 @@ const createProductSchema = z.object({
 const updateProductSchema = createProductSchema
   .partial()
   .superRefine((data, ctx) => {
+    if (!data.category) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Category Field is Required",
+      });
+    }
 
     if (Object.keys(data).length === 0) {
       ctx.addIssue({
@@ -76,23 +92,17 @@ const updateProductSchema = createProductSchema
       });
     }
 
-    if (
-      data.price &&
-      data.discountPrice &&
-      data.discountPrice >= data.price
-    ) {
+    if (data.price && data.discountPrice && data.discountPrice >= data.price) {
       ctx.addIssue({
         code: "custom",
         path: ["discountPrice"],
         message: "Discount price must be less than price",
       });
     }
-
   });
-  // .refine((data) => Object.keys(data).length > 0, {
-  //   message: "At least one field is required for update",
-  // })
-  
+// .refine((data) => Object.keys(data).length > 0, {
+//   message: "At least one field is required for update",
+// })
 
 module.exports = {
   createProductSchema,
