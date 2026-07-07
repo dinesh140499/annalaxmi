@@ -116,6 +116,8 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
     expiresIn: process.env.JWT_EXPIRES,
   });
 
+  console.log(token)
+
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

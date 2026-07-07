@@ -1,29 +1,99 @@
 const { z } = require("zod");
 
-const createProductSchema = z.object({
+// =========================
+// Helpers
+// =========================
+
+const tagsSchema = z.preprocess((value) => {
+  if (!value) return undefined;
+
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }
+
+  return undefined;
+}, z.array(z.string()).optional());
+
+const removeImagesSchema = z.preprocess((value) => {
+  if (!value) return undefined;
+
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((img) => img.trim())
+      .filter(Boolean);
+  }
+
+  return undefined;
+}, z.array(z.string()).optional());
+
+const keywordsSchema = z.preprocess((value) => {
+  if (!value) return [];
+
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((keyword) => keyword.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}, z.array(z.string()).optional());
+
+// =========================
+// Base Product Schema
+// =========================
+
+const productSchema = z.object({
+  // Basic
   name: z
     .string()
+    .trim()
     .min(2, "Product name is required")
-    .max(100, "Product name cannot exceed 100 characters")
-    .trim(),
+    .max(100, "Product name cannot exceed 100 characters"),
 
   category: z.string().min(1, "Category is required"),
 
-  brand: z.string().optional(),
+  brand: z
+    .string()
+    .trim()
+    .max(50, "Brand cannot exceed 50 characters")
+    .optional(),
 
-  description: z.string().min(10, "Description is required").trim(),
+  description: z
+    .string()
+    .trim()
+    .min(10, "Description is required")
+    .max(5000, "Description is too long"),
 
-  price: z.coerce
+  // Pricing
+  mrp: z.coerce
     .number({
-      required_error: "Price is required",
+      required_error: "MRP is required",
     })
-    .positive("Price must be greater than 0"),
+    .positive("MRP must be greater than 0"),
+
+  sellingPrice: z.coerce
+    .number({
+      required_error: "Selling price is required",
+    })
+    .positive("Selling price must be greater than 0"),
 
   discountPrice: z.coerce
     .number()
     .nonnegative("Discount price cannot be negative")
     .optional(),
 
+  // Inventory
   stock: z.coerce
     .number({
       required_error: "Stock is required",
@@ -31,60 +101,117 @@ const createProductSchema = z.object({
     .int()
     .min(0, "Stock cannot be negative"),
 
-  stockStatus: z.enum(["Available", "Out Of Stock"], {
-    message: "Invalid stock status",
-  }),
+  sold: z.coerce.number().int().min(0).default(0),
 
+  lowStockAlert: z.coerce.number().int().min(0).default(5),
+
+  stockStatus: z.enum(["Available", "Out Of Stock"]),
+
+  // Specifications
   weight: z.string().min(1, "Weight is required"),
 
   color: z.string().optional(),
 
-  spec_type: z.string().min(1, "Specification Type is required"),
+  spec_type: z.string().min(1, "Specification type is required"),
 
-  tags: z.preprocess((value) => {
-    if (!value) return undefined;
+  countryOfOrigin: z.string().optional(),
 
-    // If already an array, return it
-    if (Array.isArray(value)) {
-      return value;
-    }
+  // Arrays
+  tags: tagsSchema,
 
-    // If comma-separated string
-    if (typeof value === "string") {
-      return value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean);
-    }
+  removeImages: removeImagesSchema,
 
-    return undefined;
-  }, z.array(z.string()).optional()),
+  // Flags
+  isFeatured: z.coerce.boolean().default(false),
 
-  removeImages: z.preprocess((value) => {
-    if (!value) return undefined;
-    if (Array.isArray(value)) return value;
+  isTrending: z.coerce.boolean().default(false),
 
-    if (typeof value === "string") {
-      return value.split(",").map((img) => img.trim()).filter(Boolean);
-    }
+  isNewArrival: z.coerce.boolean().default(false),
 
-    return undefined;
-  }, z.array(z.string()).optional()),
+  isBestSeller: z.coerce.boolean().default(false),
 
-  isFeatured: z.coerce.boolean().optional(),
+  isActive: z.coerce.boolean().default(true),
+
+  // SEO
+  metaTitle: z.string().trim().max(70).optional(),
+
+  metaDescription: z.string().trim().max(160).optional(),
+
+  keywords: keywordsSchema,
 });
 
-// PATCH schema
-const updateProductSchema = createProductSchema
-  .partial()
-  .superRefine((data, ctx) => {
-    if (!data.category) {
+// =========================
+// Shared Validation
+// =========================
+
+const validateProduct = (data, ctx) => {
+  if (
+    data.mrp !== undefined &&
+    data.sellingPrice !== undefined &&
+    data.sellingPrice > data.mrp
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["sellingPrice"],
+      message: "Selling price cannot be greater than MRP",
+    });
+  }
+
+  if (
+    data.discountPrice !== undefined &&
+    data.sellingPrice !== undefined &&
+    data.discountPrice >= data.sellingPrice
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["discountPrice"],
+      message: "Discount price must be less than selling price",
+    });
+  }
+
+  if (
+    data.stock !== undefined &&
+    data.stockStatus !== undefined
+  ) {
+    if (
+      data.stockStatus === "Out Of Stock" &&
+      data.stock > 0
+    ) {
       ctx.addIssue({
         code: "custom",
-        message: "Category Field is Required",
+        path: ["stockStatus"],
+        message:
+          'Stock status cannot be "Out Of Stock" when stock is greater than 0',
       });
     }
 
+    if (
+      data.stockStatus === "Available" &&
+      data.stock === 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["stockStatus"],
+        message:
+          'Stock status should be "Out Of Stock" when stock is 0',
+      });
+    }
+  }
+};
+
+// =========================
+// Create Schema
+// =========================
+
+const createProductSchema = productSchema.superRefine(validateProduct);
+
+// =========================
+// Update Schema
+// =========================
+
+const updateProductSchema = productSchema
+  .partial()
+  .superRefine((data, ctx) => {
     if (Object.keys(data).length === 0) {
       ctx.addIssue({
         code: "custom",
@@ -92,17 +219,8 @@ const updateProductSchema = createProductSchema
       });
     }
 
-    if (data.price && data.discountPrice && data.discountPrice >= data.price) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["discountPrice"],
-        message: "Discount price must be less than price",
-      });
-    }
+    validateProduct(data, ctx);
   });
-// .refine((data) => Object.keys(data).length > 0, {
-//   message: "At least one field is required for update",
-// })
 
 module.exports = {
   createProductSchema,

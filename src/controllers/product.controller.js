@@ -11,35 +11,53 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     category,
     brand,
     description,
+
+    // Pricing
     price,
     discountPrice,
+
+    // Inventory
     stock,
     stockStatus,
+
+    // Specifications
     weight,
     color,
     spec_type,
+
+    // SEO
+    metaTitle,
+    metaDescription,
+    keywords,
+
+    // Product
     tags,
     isFeatured,
+    isActive,
   } = req.body;
 
+  // Check category
   const categoryExists = await Category.findById(category);
 
   if (!categoryExists) {
     return next(new ErrorHandler("Category not found", 404));
   }
 
+  // Generate slug
   const slug = slugify(name, {
     lower: true,
     strict: true,
     trim: true,
   });
 
+  // Duplicate product check
   const existingProduct = await Products.findOne({ slug });
 
   if (existingProduct) {
     return next(new ErrorHandler("Product already exists", 409));
   }
 
+  // Upload images
   const images = [];
 
   if (req.files?.length) {
@@ -53,6 +71,7 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
 
   const product = await Products.create({
     name,
+    slug,
     sku: `ANN-${Date.now()}`,
 
     category,
@@ -75,16 +94,23 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
       spec_type,
     },
 
-    tags: tags
-      ? Array.isArray(tags)
-        ? tags
-        : tags.split(",").map((tag) => tag.trim())
-      : [],
+    seo: {
+      metaTitle,
+      metaDescription,
+      keywords,
+    },
+
+    tags,
 
     images,
 
-    isFeatured,
-    isActive: true,
+    rating: {
+      average: 0,
+      totalReviews: 0,
+    },
+
+    isFeatured: isFeatured ?? false,
+    isActive: isActive ?? true,
   });
 
   return res.status(201).json({
@@ -164,38 +190,49 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
     category,
     brand,
     description,
+
+    // Pricing
     price,
     discountPrice,
+
+    // Inventory
     stock,
     stockStatus,
+
+    // Specifications
     weight,
     color,
     spec_type,
+
+    // SEO
+    metaTitle,
+    metaDescription,
+    keywords,
+
+    // Others
     tags,
     isFeatured,
+    isActive,
     removeImages,
-  } = req.body;
+  } = req.body; 
 
-  if (!category) {
-    return next(new ErrorHandler("Category Field is Required", 404));
-  }
-
-  // Check category
+  // Category
   if (category) {
     const categoryExists = await Category.findById(category);
 
     if (!categoryExists) {
       return next(new ErrorHandler("Category not found", 404));
     }
+
     product.category = category;
   }
 
-  // Product duplicate check
+  // Name & Slug
   if (name && name !== product.name) {
     const slug = slugify(name, {
-      trim: true,
-      strict: true,
       lower: true,
+      strict: true,
+      trim: true,
     });
 
     const existing = await Products.findOne({
@@ -211,48 +248,76 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
     product.slug = slug;
   }
 
-  // Simple fields
+  // Basic Fields
   if (brand !== undefined) product.brand = brand;
   if (description !== undefined) product.description = description;
 
   // Pricing
   if (price !== undefined) product.pricing.price = Number(price);
 
-  if (discountPrice !== undefined)
+  if (discountPrice !== undefined) {
     product.pricing.discountPrice = Number(discountPrice);
+  }
 
   // Inventory
   if (stock !== undefined) product.inventory.stock = Number(stock);
 
-  if (stockStatus !== undefined) product.inventory.stockStatus = stockStatus;
+  if (stockStatus !== undefined) {
+    product.inventory.stockStatus = stockStatus;
+  }
 
   // Specifications
-  if (weight !== undefined) product.specifications.weight = weight;
-
-  if (color !== undefined) product.specifications.color = color;
-
-  if (spec_type !== undefined) product.specifications.spec_type = spec_type;
-
-  if (tags !== undefined) {
-    product.tags = Array.isArray(tags)
-      ? tags
-      : tags.split(",").map((tag) => tag.trim());
+  if (weight !== undefined) {
+    product.specifications.weight = weight;
   }
-  if (isFeatured !== undefined) product.isFeatured = isFeatured;
 
-  // Remove selected images
+  if (color !== undefined) {
+    product.specifications.color = color;
+  }
+
+  if (spec_type !== undefined) {
+    product.specifications.spec_type = spec_type;
+  }
+
+  // SEO
+  if (metaTitle !== undefined) {
+    product.seo.metaTitle = metaTitle;
+  }
+
+  if (metaDescription !== undefined) {
+    product.seo.metaDescription = metaDescription;
+  }
+
+  if (keywords !== undefined) {
+    product.seo.keywords = keywords;
+  }
+
+  // Tags
+  if (tags !== undefined) {
+    product.tags = tags;
+  }
+
+  // Status
+  if (isFeatured !== undefined) {
+    product.isFeatured = isFeatured;
+  }
+
+  if (isActive !== undefined) {
+    product.isActive = isActive;
+  }
+
+  // Remove Images
   if (removeImages?.length) {
     for (const public_id of removeImages) {
       await cloudinary.uploader.destroy(public_id);
     }
 
     product.images = product.images.filter(
-      (img) => !removeImages.includes(img.public_id),
+      (img) => !removeImages.includes(img.public_id)
     );
-
   }
 
-  // Upload new images
+  // Upload New Images
   if (req.files?.length) {
     const newImages = req.files.map((file) => ({
       url: file.path,
