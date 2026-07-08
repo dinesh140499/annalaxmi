@@ -13,13 +13,11 @@ const productSchema = new mongoose.Schema(
     slug: {
       type: String,
       unique: true,
-      index: true,
     },
 
     sku: {
       type: String,
       unique: true,
-      index: true,
     },
 
     category: {
@@ -117,6 +115,13 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
+    // SEO
+    seo: {
+      metaTitle: String,
+      metaDescription: String,
+      keywords: [String],
+    },
+
     isTrending: {
       type: Boolean,
       default: false,
@@ -140,7 +145,7 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 productSchema.index({ createdAt: -1 });

@@ -140,6 +140,8 @@ const productSchema = z.object({
   keywords: keywordsSchema,
 });
 
+
+
 // =========================
 // Shared Validation
 // =========================
@@ -169,14 +171,8 @@ const validateProduct = (data, ctx) => {
     });
   }
 
-  if (
-    data.stock !== undefined &&
-    data.stockStatus !== undefined
-  ) {
-    if (
-      data.stockStatus === "Out Of Stock" &&
-      data.stock > 0
-    ) {
+  if (data.stock !== undefined && data.stockStatus !== undefined) {
+    if (data.stockStatus === "Out Of Stock" && data.stock > 0) {
       ctx.addIssue({
         code: "custom",
         path: ["stockStatus"],
@@ -185,15 +181,11 @@ const validateProduct = (data, ctx) => {
       });
     }
 
-    if (
-      data.stockStatus === "Available" &&
-      data.stock === 0
-    ) {
+    if (data.stockStatus === "Available" && data.stock === 0) {
       ctx.addIssue({
         code: "custom",
         path: ["stockStatus"],
-        message:
-          'Stock status should be "Out Of Stock" when stock is 0',
+        message: 'Stock status should be "Out Of Stock" when stock is 0',
       });
     }
   }
@@ -203,24 +195,24 @@ const validateProduct = (data, ctx) => {
 // Create Schema
 // =========================
 
+console.log(productSchema.superRefine())
+
 const createProductSchema = productSchema.superRefine(validateProduct);
 
 // =========================
 // Update Schema
 // =========================
 
-const updateProductSchema = productSchema
-  .partial()
-  .superRefine((data, ctx) => {
-    if (Object.keys(data).length === 0) {
-      ctx.addIssue({
-        code: "custom",
-        message: "At least one field is required",
-      });
-    }
+const updateProductSchema = productSchema.partial().superRefine((data, ctx) => {
+  if (Object.keys(data).length === 0) {
+    ctx.addIssue({
+      code: "custom",
+      message: "At least one field is required",
+    });
+  }
 
-    validateProduct(data, ctx);
-  });
+  validateProduct(data, ctx);
+});
 
 module.exports = {
   createProductSchema,
