@@ -6,6 +6,7 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteProductPermanently
 } = require("../controllers/product.controller");
 
 const { upload } = require("../middleware/upload.middleware");
@@ -33,5 +34,10 @@ router
   .get(getSingleProduct)
   .patch(upload.array("images", 5), validate(updateProductSchema), updateProduct)
   .delete(deleteProduct);
+
+  // Single product routes
+router
+  .route("/:id/permanent")
+  .delete(deleteProductPermanently)
 
 module.exports = router;

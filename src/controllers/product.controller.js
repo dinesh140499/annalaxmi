@@ -200,6 +200,34 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.deleteProductPermanently = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const product = await Products.findById(id);
+
+  if (!product) {
+    return next(new ErrorHandler("Product not found", 404));
+  }
+
+  // Delete all product images from Cloudinary
+  if (product.images?.length) {
+    await Promise.all(
+      product.images.map((image) => {
+        if (image.public_id) {
+          return cloudinary.uploader.destroy(image.public_id);
+        }
+      }),
+    );
+  }
+
+  await product.deleteOne();
+
+  return res.status(200).json({
+    success: true,
+    message: "Product permanently deleted successfully",
+  });
+});
+
 exports.updateProduct = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
