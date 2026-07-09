@@ -11,6 +11,8 @@ const {
 
 const { upload } = require("../middleware/upload.middleware");
 const { validate } = require("../middleware/validate.middleware");
+const { protect } = require("../middleware/auth.middleware");
+
 const {
   createProductSchema,
   updateProductSchema,
@@ -23,6 +25,7 @@ router
   .route("/")
   .get(getProducts)
   .post(
+    protect,
     upload.array("images", 5),
     validate(createProductSchema),
     createProduct,
@@ -32,12 +35,12 @@ router
 router
   .route("/:id")
   .get(getSingleProduct)
-  .patch(upload.array("images", 5), validate(updateProductSchema), updateProduct)
-  .delete(deleteProduct);
+  .patch(protect, upload.array("images", 5), validate(updateProductSchema), updateProduct)
+  .delete(protect, deleteProduct);
 
-  // Single product routes
+// Single product routes
 router
   .route("/:id/permanent")
-  .delete(deleteProductPermanently)
+  .delete(protect, deleteProductPermanently)
 
 module.exports = router;
