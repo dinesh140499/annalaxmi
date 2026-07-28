@@ -15,8 +15,8 @@ const ErrorHandler = require("./utils/errorHandler");
 const authRoute = require("./routes/auth.route");
 const userRoute = require("./routes/user.route");
 const addressRoute = require("./routes/address.route");
-const categoriesRoute = require("./routes/category.route");
-const productRoute = require("./routes/product.route");
+const publicCategoryRoute = require("./routes/category.route");
+const publicProductRoute = require("./routes/product.route");
 
 const app = express();
 
@@ -104,10 +104,18 @@ app.use(
 ========================================= */
 
 app.use("/api/v1/auth", authRoute);
+
+// Customer APIs
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/user", addressRoute);
-app.use("/api/v1/categories", categoriesRoute);
-app.use("/api/v1/product", productRoute);
+
+// Public APIs
+app.use("/api/v1/products", publicProductRoute);
+app.use("/api/v1/categories", publicCategoryRoute);
+
+
+
+
 
 /* =========================================
    HEALTH CHECK

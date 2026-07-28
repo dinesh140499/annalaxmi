@@ -1,7 +1,7 @@
-const Address = require("../models/addressSchema");
+const Address = require("../../models/addressSchema");
 const mongoose = require("mongoose");
-const asyncHandler = require("../utils/asyncHandler");
-const ErrorHandler = require("../utils/errorHandler");
+const asyncHandler = require("../../utils/asyncHandler");
+const ErrorHandler = require("../../utils/errorHandler");
 
 exports.addAddresses = asyncHandler(async (req, res) => {
   const userId = req.user.id;

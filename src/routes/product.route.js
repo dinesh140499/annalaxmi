@@ -3,11 +3,12 @@ const express = require("express");
 const {
   getProducts,
   getSingleProduct,
-  createProduct,
   updateProduct,
   deleteProduct,
   deleteProductPermanently
-} = require("../controllers/product.controller");
+} = require("../controllers/users/product.controller");
+
+const { createProduct} = require("../controllers/product/createProduct.controller");
 
 const { upload } = require("../middleware/upload.middleware");
 const { validate } = require("../middleware/validate.middleware");
@@ -28,7 +29,7 @@ router
     protect,
     upload.array("images", 5),
     validate(createProductSchema),
-    createProduct,
+    createProduct
   );
 
 // Single product routes

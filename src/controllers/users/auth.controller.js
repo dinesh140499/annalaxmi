@@ -1,9 +1,9 @@
-const Register = require("../models/userSchema");
-const otpGenerator = require("../utils/otpGenerator");
-const sendMail = require("../utils/sendMail");
+const Register = require("../../models/userSchema");
+const otpGenerator = require("../../utils/otpGenerator");
+const sendMail = require("../../utils/sendMail");
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("../utils/asyncHandler");
-const ErrorHandler = require("../utils/errorHandler");
+const asyncHandler = require("../../utils/asyncHandler");
+const ErrorHandler = require("../../utils/errorHandler");
 const crypto = require("crypto");
 
 // const sendMail = require("../utils/sendMail");

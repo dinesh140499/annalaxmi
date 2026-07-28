@@ -1,6 +1,6 @@
-const asyncHandler = require("../utils/asyncHandler");
-const ErrorHandler = require("../utils/errorHandler");
-const Categories = require("../models/categorySchema");
+const asyncHandler = require("../../utils/asyncHandler");
+const ErrorHandler = require("../../utils/errorHandler");
+const Categories = require("../../models/categorySchema");
 
 exports.getCategories = asyncHandler(async (req, res) => {
   const categories = await Categories.find().sort({ createdAt: -1 });

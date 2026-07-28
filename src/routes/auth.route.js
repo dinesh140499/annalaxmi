@@ -6,7 +6,7 @@ const {
   forgotPassword,
   resetPassword,
   logout,
-} = require("../controllers/auth.controller");
+} = require("../controllers/users/auth.controller");
 const { validate } = require("../middleware/validate.middleware");
 const { loginSchema, resetPasswordSchema } = require("../schemas/auth.schema");
 

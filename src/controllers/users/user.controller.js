@@ -1,6 +1,6 @@
-const User = require("../models/userSchema");
-const asyncHandler = require("../utils/asyncHandler");
-const ErrorHandler = require("../utils/errorHandler");
+const User = require("../../models/userSchema");
+const asyncHandler = require("../../utils/asyncHandler");
+const ErrorHandler = require("../../utils/errorHandler");
 
 exports.profile = (req, res) => {
   res.json({

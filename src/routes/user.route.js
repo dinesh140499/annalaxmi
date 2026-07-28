@@ -8,7 +8,7 @@ const {
   editProfile,
   changePassword,
   setPassword,
-} = require("../controllers/user.controller");
+} = require("../controllers/users/user.controller");
 
 const {upload} = require("../middleware/upload.middleware");
 
