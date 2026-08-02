@@ -1,0 +1,21 @@
+info:
+  name: Update Category
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{Local_URL}}admin/categories"
+  body:
+    type: json
+    data: ""
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+

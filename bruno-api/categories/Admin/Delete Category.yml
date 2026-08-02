@@ -5,7 +5,7 @@ info:
 
 http:
   method: DELETE
-  url: "{{Local_URL}}categories"
+  url: "{{Local_URL}}admin/categories"
   body:
     type: json
     data: ""
@@ -18,3 +18,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+

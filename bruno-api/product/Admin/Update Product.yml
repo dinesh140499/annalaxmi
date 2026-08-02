@@ -1,11 +1,11 @@
 info:
-  name: Create Product
+  name: Update Product
   type: http
-  seq: 4
+  seq: 5
 
 http:
-  method: POST
-  url: "{{Local_URL}}product"
+  method: PATCH
+  url: "{{Local_URL}}product/6a495051003b4d1a6ac78d18"
   body:
     type: multipart-form
     data:
@@ -61,3 +61,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+

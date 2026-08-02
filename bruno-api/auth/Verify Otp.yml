@@ -1,20 +1,18 @@
 info:
-  name: Login
+  name: Verify Otp
   type: http
-  seq: 3
+  seq: 2
 
 http:
   method: POST
-  url: "{{Local_URL}}auth/login"
+  url: "{{Local_URL}}auth/verify-otp"
   body:
     type: form-urlencoded
     data:
       - name: phoneNo
-        value: "9910102929"
-      - name: dialCode
-        value: "91"
-      - name: country
-        value: in
+        value: "7836008553"
+      - name: otp
+        value: "1234"
   auth: inherit
 
 settings:

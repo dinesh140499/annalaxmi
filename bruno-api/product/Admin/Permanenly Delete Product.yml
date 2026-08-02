@@ -1,13 +1,13 @@
 info:
-  name: Update Category
+  name: Permanenly Delete Product
   type: http
-  seq: 5
+  seq: 6
 
 http:
-  method: PATCH
-  url: "{{Local_URL}}categories"
+  method: DELETE
+  url: "{{Local_URL}}admin/products/6a6da05896d5420f098b94a7/permanent"
   body:
-    type: json
+    type: text
     data: ""
   auth:
     type: bearer
@@ -18,3 +18,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+

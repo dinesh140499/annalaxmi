@@ -1,5 +1,5 @@
 info:
-  name: Delete Product
+  name: In Active Product
   type: http
   seq: 3
 
@@ -18,3 +18,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+

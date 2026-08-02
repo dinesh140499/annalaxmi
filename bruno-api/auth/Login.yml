@@ -1,16 +1,16 @@
 info:
-  name: Send Otp
+  name: Login
   type: http
-  seq: 1
+  seq: 3
 
 http:
   method: POST
-  url: "{{Local_URL}}auth/send-otp"
+  url: "{{Local_URL}}auth/login"
   body:
     type: form-urlencoded
     data:
       - name: phoneNo
-        value: "9910102929"
+        value: "8595266538"
       - name: dialCode
         value: "91"
       - name: country
