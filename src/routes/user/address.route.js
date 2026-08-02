@@ -1,11 +1,11 @@
 const express = require("express");
-const { protect } = require("../middleware/auth.middleware");
+const { protect } = require("../../middleware/auth.middleware");
 const {
   addAddresses,
   getAddresses,
   updateAddress,
   deleteAddress,
-} = require("../controllers/users/address.controller");
+} = require("../../controllers/users/address.controller");
 
 const router = express.Router();
 
