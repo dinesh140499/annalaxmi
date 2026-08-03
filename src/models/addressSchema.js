@@ -26,13 +26,25 @@ const addressSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    city: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     country: {
       type: String,
       required: true,
+      trim: true,
     },
     zip_code: {
       type: String,
       required: true,
+      trim: true,
     },
     landmark: String,
     type: {

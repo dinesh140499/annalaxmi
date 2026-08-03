@@ -1,10 +1,11 @@
 const categoryRepository = require("../../repositories/category.repository");
 const ErrorHandler = require("../../utils/errorHandler");
+const slugify = require("slugify");
 
 exports.createCategory = async (body, file) => {
     const { name, slug } = body;
 
-    if (!name || !slug) {
+    if (!name) {
         throw new ErrorHandler("All fields are required", 400);
     }
 
@@ -12,9 +13,7 @@ exports.createCategory = async (body, file) => {
         throw new ErrorHandler("Category image is required", 400);
     }
 
-    const existingCategory = await categoryRepository.findOne({
-        $or: [{ name }, { slug }],
-    });
+    const existingCategory = await categoryRepository.findOne({ name });
 
     if (existingCategory) {
         throw new ErrorHandler("Category already exists", 400);
@@ -22,7 +21,7 @@ exports.createCategory = async (body, file) => {
 
     return await categoryRepository.create({
         name,
-        slug,
+        slug: slugify(slug, { lower: true, trim: true }),
         image: {
             url: file.path,
             public_id: file.filename,

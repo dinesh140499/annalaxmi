@@ -22,7 +22,7 @@ exports.editProfile = async (userId, body, file) => {
             returnDocument: "after",
             runValidators: true,
         }
-    ).select("-otp");
+    );
 
     if (!updatedUser) {
         throw new ErrorHandler("User not found", 404);
@@ -68,6 +68,8 @@ exports.setPassword = async (userId, body) => {
     }
 
     const user = await userRepository.findById(userId, { selectFields: "+password" });
+
+    console.log(user)
 
     if (user.password) {
         throw new ErrorHandler("Password already exists. Use change password.", 400);
