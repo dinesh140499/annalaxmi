@@ -21,7 +21,7 @@ exports.createCategory = async (body, file) => {
 
     return await categoryRepository.create({
         name,
-        slug: slugify(slug, { lower: true, trim: true }),
+        slug: slugify(slug || name, { lower: true, strict: true, trim: true }),
         image: {
             url: file.path,
             public_id: file.filename,

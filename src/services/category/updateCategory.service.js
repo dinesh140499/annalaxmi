@@ -1,5 +1,6 @@
 const categoryRepository = require("../../repositories/category.repository");
 const ErrorHandler = require("../../utils/errorHandler");
+const slugify = require("slugify");
 
 exports.updateCategory = async (id, body, file) => {
     const { name, slug } = body;
@@ -11,7 +12,9 @@ exports.updateCategory = async (id, body, file) => {
 
     const updateData = {};
     if (name) updateData.name = name;
-    if (slug) updateData.slug = slug;
+    if (slug || name) {
+        updateData.slug = slugify(slug || name, { lower: true, strict: true, trim: true });
+    }
     if (file) {
         updateData.image = {
             url: file.path,
