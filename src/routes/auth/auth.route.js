@@ -9,12 +9,16 @@ const {
   verifyOtp,
 } = require("../../controllers/auth/auth.controller");
 const { validate } = require("../../middleware/validate.middleware");
-const { loginSchema, resetPasswordSchema, verifyOtpSchema } = require("../../schemas/auth.schema");
+const {
+  loginSchema,
+  resetPasswordSchema,
+  verifyOtpSchema,
+} = require("../../schemas/auth.schema");
 
 const router = express.Router();
 
 router.post("/login", validate(loginSchema), login);
-router.post("/send-otp", sendOtp);
+router.post("/send-otp",  sendOtp);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);
 router.post("/login-with-password", loginWithPassword);
 router.post("/forgot-password", forgotPassword);

@@ -29,17 +29,23 @@ const checkUserExists = async (fullPhone) => {
 
 const processOtp = async (phoneNo, dialCode, country) => {
   const fullPhone = `${dialCode}${phoneNo}`;
-  const user = await authRepository.findUser({ phoneNo: fullPhone });
+  const user = await authRepository.findUser({ phoneNo: fullPhone }, "+otp +otpExpires");
 
-  if (user && user.otpExpires && user.otpExpires > Date.now() - 60 * 1000) {
-    throw new ErrorHandler("Please wait before requesting another verification code", 429);
+  const otpExpiryDuration = Number(process.env.OTP_EXPIRY) || 300000;
+
+  if (user && user.otpExpires) {
+    const lastOtpSentAt = new Date(user.otpExpires).getTime() - otpExpiryDuration;
+    if (Date.now() - lastOtpSentAt < 60 * 1000) {
+      throw new ErrorHandler("Please wait before requesting another verification code", 429);
+    }
   }
 
   const generatedOtp = otpGenerator();
+  const otpExpires = new Date(Date.now() + otpExpiryDuration);
 
   if (user) {
     user.otp = generatedOtp;
-    user.otpExpires = process.env.OTP_EXPIRY;
+    user.otpExpires = otpExpires;
     await authRepository.saveUser(user);
   } else {
     await authRepository.createUser({
@@ -47,7 +53,7 @@ const processOtp = async (phoneNo, dialCode, country) => {
       dialCode,
       country,
       otp: generatedOtp,
-      otpExpires: process.env.OTP_EXPIRY,
+      otpExpires,
     });
   }
 
