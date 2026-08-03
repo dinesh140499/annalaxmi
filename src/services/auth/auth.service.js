@@ -173,6 +173,7 @@ const verifyOtp = async (phoneNo, otp) => {
   // Clear OTP fields
   user.otp = undefined;
   user.otpExpires = undefined;
+  user.isVerified = true;
   await authRepository.saveUser(user);
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
