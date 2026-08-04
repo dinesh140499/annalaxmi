@@ -195,8 +195,6 @@ const validateProduct = (data, ctx) => {
 // Create Schema
 // =========================
 
-console.log(productSchema.superRefine())
-
 const createProductSchema = productSchema.superRefine(validateProduct);
 
 // =========================

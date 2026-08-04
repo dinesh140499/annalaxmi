@@ -9,7 +9,11 @@ const { editProfile } = require("../../controllers/user/editProfile.controller")
 const { setPassword } = require("../../controllers/user/setPassword.controller");
 const { changePassword } = require("../../controllers/user/changePassword.controller");
 
-const userSchema = require("../../schemas/user.schema");
+const {
+  userSchema,
+  setPasswordSchema,
+  changePasswordSchema,
+} = require("../../schemas/user.schema");
 
 const router = express.Router();
 
@@ -25,9 +29,9 @@ router.post(
 );
 
 // Password
-router.post("/set-password", protect, setPassword);
+router.post("/set-password", protect, validate(setPasswordSchema), setPassword);
 
-router.post("/change-password", protect, changePassword);
-router.patch("/change-password", protect, changePassword);
+router.post("/change-password", protect, validate(changePasswordSchema), changePassword);
+router.patch("/change-password", protect, validate(changePasswordSchema), changePassword);
 
 module.exports = router;
