@@ -1,33 +1,37 @@
 const Address = require("../../models/addressSchema");
 
-exports.create = async (addressData) => {
-  return await Address.create(addressData);
-};
+class AddressRepository {
+  async create(addressData) {
+    return await Address.create(addressData);
+  }
 
-exports.findByUserId = async (userId) => {
-  return await Address.find({ user: userId }).sort({ isDefault: -1, createdAt: -1 });
-};
+  async findByUserId(userId) {
+    return await Address.find({ user: userId }).sort({ isDefault: -1, createdAt: -1 });
+  }
 
-exports.findByIdAndUserId = async (id, userId) => {
-  return await Address.findOne({ _id: id, user: userId });
-};
+  async findByIdAndUserId(id, userId) {
+    return await Address.findOne({ _id: id, user: userId });
+  }
 
-exports.updateByIdAndUserId = async (id, userId, updateData) => {
-  return await Address.findOneAndUpdate(
-    { _id: id, user: userId },
-    { $set: updateData },
-    { new: true, runValidators: true }
-  );
-};
+  async updateByIdAndUserId(id, userId, updateData) {
+    return await Address.findOneAndUpdate(
+      { _id: id, user: userId },
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+  }
 
-exports.deleteByIdAndUserId = async (id, userId) => {
-  return await Address.findOneAndDelete({ _id: id, user: userId });
-};
+  async deleteByIdAndUserId(id, userId) {
+    return await Address.findOneAndDelete({ _id: id, user: userId });
+  }
 
-exports.clearDefaultAddresses = async (userId) => {
-  return await Address.updateMany({ user: userId }, { isDefault: false });
-};
+  async clearDefaultAddresses(userId) {
+    return await Address.updateMany({ user: userId }, { isDefault: false });
+  }
 
-exports.countByUserId = async (userId) => {
-  return await Address.countDocuments({ user: userId });
-};
+  async countByUserId(userId) {
+    return await Address.countDocuments({ user: userId });
+  }
+}
+
+module.exports = new AddressRepository();

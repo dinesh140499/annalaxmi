@@ -13,15 +13,15 @@ const { authorize } = require("../../middleware/role.middleware");
 
 router
     .route('/')
-    .post(protect, authorize("admin"), upload.array("images", 5), validate(createProductSchema), createProduct)
+    .post(protect, authorize("admin","superadmin"), upload.array("images", 5), validate(createProductSchema), createProduct)
 
 router
     .route('/:id')
-    .put(protect, authorize("admin"), upload.array("images", 5), validate(updateProductSchema), updateProduct)
-    .delete(protect, authorize("admin"), deleteProduct)
+    .put(protect, authorize("admin","superadmin"), upload.array("images", 5), validate(updateProductSchema), updateProduct)
+    .delete(protect, authorize("admin","superadmin"), deleteProduct)
 
 router
     .route('/:id/permanent')
-    .delete(protect, authorize("admin"), deleteProductPermanently)
+    .delete(protect, authorize("superadmin"), deleteProductPermanently)
 
 module.exports = router

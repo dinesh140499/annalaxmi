@@ -21,6 +21,8 @@ const publicProductRoute = require("./routes/public/product.route");
 const adminProductRoute = require("./routes/admin/product.route");
 const adminCategoryRoute = require("./routes/admin/category.route");
 
+const superAdminRoute = require("./routes/superadmin/superadmin.route");
+
 const app = express();
 
 app.set("trust proxy", 1);
@@ -119,6 +121,9 @@ app.use("/api/v1/products", publicProductRoute);
 // Admin APIs
 app.use("/api/v1/admin/products", adminProductRoute);
 app.use("/api/v1/admin/categories", adminCategoryRoute);
+
+// Super Admin APIs
+app.use("/api/v1/superadmin", superAdminRoute);
 
 
 /* =========================================

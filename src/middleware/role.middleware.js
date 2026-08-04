@@ -1,9 +1,12 @@
 exports.authorize = (...roles) => {
     return (req, res, next) => {
+        if (req.user.role === "superadmin") {
+            return next();
+        }
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: `Admin Acccess Only`
+                message: `Access Denied: ${req.user.role} cannot perform this action.`
             })
         }
         next();

@@ -23,6 +23,10 @@ exports.protect = async (req, res, next) => {
       });
     }
 
+      // Mark user as logged in
+    user.lastLogin = Date.now();
+    await user.save({ validateBeforeSave: false });
+
     req.user = user;
 
     next();

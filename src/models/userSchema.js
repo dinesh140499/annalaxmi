@@ -65,7 +65,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin", "superadmin"],
       default: "user",
     },
 
@@ -92,6 +92,11 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
+    createdBy:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"user",
+      select:false,
+    }
   },
 
   {
