@@ -114,9 +114,6 @@ app.use("/api/v1/products", publicProductRoute);
 app.use("/api/v1/categories", publicCategoryRoute);
 
 
-
-
-
 /* =========================================
    HEALTH CHECK
 ========================================= */
