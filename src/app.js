@@ -1,4 +1,4 @@
-require("dotenv").config({path:".env"});
+require("dotenv").config({ path: ".env" });
 require("./config/db")();
 
 const express = require("express");
@@ -12,11 +12,14 @@ const rateLimit = require("express-rate-limit");
 const errorMiddleware = require("./middleware/error.middleware");
 const ErrorHandler = require("./utils/errorHandler");
 
-const authRoute = require("./routes/auth.route");
-const userRoute = require("./routes/user.route");
-const addressRoute = require("./routes/address.route");
-const publicCategoryRoute = require("./routes/category.route");
-const publicProductRoute = require("./routes/product.route");
+const authRoute = require("./routes/auth/auth.route");
+const userRoute = require("./routes/user/user.route");
+const addressRoute = require("./routes/user/address.route");
+const publicCategoryRoute = require("./routes/public/category.route");
+const publicProductRoute = require("./routes/public/product.route");
+
+const adminProductRoute = require("./routes/admin/product.route");
+const adminCategoryRoute = require("./routes/admin/category.route");
 
 const app = express();
 
@@ -110,8 +113,12 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/user", addressRoute);
 
 // Public APIs
-app.use("/api/v1/products", publicProductRoute);
 app.use("/api/v1/categories", publicCategoryRoute);
+app.use("/api/v1/products", publicProductRoute);
+
+// Admin APIs
+app.use("/api/v1/admin/products", adminProductRoute);
+app.use("/api/v1/admin/categories", adminCategoryRoute);
 
 
 /* =========================================
