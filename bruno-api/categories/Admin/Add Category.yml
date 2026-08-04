@@ -1,0 +1,31 @@
+info:
+  name: Add Category
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{Local_URL}}admin/categories"
+  body:
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: Rice
+      - name: slug
+        type: text
+        value: rice
+      - name: image
+        type: file
+        value:
+          - /C:/Users/Dinesh/Downloads/shopping.webp
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+

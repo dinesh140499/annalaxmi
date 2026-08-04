@@ -17,9 +17,9 @@ config:
 request:
   variables:
     - name: Local_URL
-      value: ""
+      value: http://localhost:3000/api/v1/
     - name: Production_URL
-      value: ""
+      value: https://annalaxmi-backend.onrender.com/api/v1/
 bundled: false
 extensions:
   bruno:

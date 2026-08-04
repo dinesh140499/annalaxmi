@@ -1,0 +1,21 @@
+info:
+  name: Permanenly Delete Product
+  type: http
+  seq: 6
+
+http:
+  method: DELETE
+  url: "{{Local_URL}}admin/products/6a6da05896d5420f098b94a7/permanent"
+  body:
+    type: text
+    data: ""
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+

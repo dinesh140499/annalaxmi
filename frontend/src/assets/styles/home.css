@@ -1,0 +1,86 @@
+.home-pagination {
+  position: absolute;
+  bottom: 10%;
+  left: 0;
+  right: 0;
+  z-index: 10; /* Increased */
+  text-align: center;
+  pointer-events: auto; /* Ensures bullets are clickable */
+}
+
+.home-pagination .swiper-pagination-bullet {
+  border: 1px solid white;
+  background-color: white;
+  opacity: 1;
+  transition: all 0.3s linear;
+}
+
+
+.home-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  border: 1px solid white;
+  background-color: white;
+  width: 20px;
+  border-radius: 10px;
+}
+
+.beat {
+  font-family: 'Poppins';
+  font-weight: 700;
+}
+
+.stroke-white {
+  color: transparent;
+  -webkit-text-stroke: 1px white;
+  font-family: 'Poppins';
+  font-weight: 700;
+}
+
+
+.feature-pagination {
+  position: absolute;
+  bottom: -40px !important;
+  z-index: 1;
+  text-align: center;
+}
+
+.feature-pagination .swiper-pagination-bullet {
+  border: 1px solid white;
+  background-color: #D9D9D9;
+  opacity: 1;
+  transition: all 0.3s linear;
+}
+
+
+.feature-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  border: 1px solid white;
+  background-color: #00603A;
+  width: 20px;
+  border-radius: 10px;
+}
+
+.new-products-pagination {
+  position: absolute;
+  top: -30px !important;
+  left: 0;
+  width: auto !important;
+  z-index: 0;
+  text-align: center;
+}
+
+.new-products-pagination .swiper-pagination-bullet {
+  border: 1px solid white;
+  background-color: #D9D9D9;
+  opacity: 1;
+  transition: all 0.3s linear;
+  border-radius: 0;
+  width: 10px;
+  
+}
+
+
+.new-products-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  border: 1px solid white;
+  background-color: #00603A;
+  width: 50px;
+  border-radius: 0;
+}

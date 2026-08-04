@@ -1,0 +1,99 @@
+info:
+  name: Create Product
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{Local_URL}}admin/products"
+  body:
+    type: multipart-form
+    data:
+      - name: name
+        type: text
+        value: India Gate Beans Basmati Rice
+      - name: category
+        type: text
+        value: 6a4f3ac451083286280b04f2
+      - name: brand
+        type: text
+        value: India Gate
+      - name: description
+        type: text
+        value: Premium long grain basmati rice suitable for daily meals and biryani.
+      - name: mrp
+        type: text
+        value: "1250"
+      - name: sellingPrice
+        type: text
+        value: "1099"
+      - name: discountPrice
+        type: text
+        value: "999"
+      - name: stock
+        type: text
+        value: "120"
+      - name: sold
+        type: text
+        value: "38"
+      - name: lowStockAlert
+        type: text
+        value: "10"
+      - name: stockStatus
+        type: text
+        value: Available
+      - name: weight
+        type: text
+        value: 15 Kg
+      - name: color
+        type: text
+        value: White
+      - name: images
+        type: file
+        value:
+          - D:\Website Wallpapers\Food\breakfast-1.jpg
+        contentType: image/jpeg
+      - name: spec_type
+        type: text
+        value: Basmati Rice
+      - name: countryOfOrigin
+        type: text
+        value: Indian
+      - name: tags
+        type: text
+        value: rice, basmati, premium
+      - name: metaTitle
+        type: text
+        value: India Gate Classic Basmati Rice
+      - name: metaDescription
+        type: text
+        value: Premium long grain basmati rice suitable for daily meals and biryani.
+      - name: keywords
+        type: text
+        value: rice, basmati, premium
+      - name: isFeatured
+        type: text
+        value: ""
+        disabled: true
+      - name: isNewArrival
+        type: text
+        value: "true"
+        disabled: true
+      - name: isTrending
+        type: text
+        value: "true"
+        disabled: true
+      - name: isBestSeller
+        type: text
+        value: "true"
+        disabled: true
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
