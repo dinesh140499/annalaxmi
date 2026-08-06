@@ -1,0 +1,23 @@
+const express = require('express')
+const router = express.Router()
+
+const { createCategory } = require("../../controllers/category/createCategory.controller");
+const { updateCategory } = require("../../controllers/category/updateCategory.controller");
+const { deleteCategory } = require("../../controllers/category/category.delete.controller");
+
+const { protect } = require("../../middleware/auth.middleware");
+const { upload } = require("../../middleware/upload.middleware");
+const { authorize } = require("../../middleware/role.middleware");
+const { validate } = require("../../middleware/validate.middleware");
+const { createCategorySchema, updateCategorySchema } = require("../../schemas/category.schema");
+
+router
+    .route('/')
+    .post(protect, authorize("admin"), upload.single("image"), validate(createCategorySchema), createCategory)
+
+router
+    .route('/:id')
+    .put(protect, authorize("admin"), upload.single("image"), validate(updateCategorySchema), updateCategory)
+    .delete(protect, authorize("admin"), deleteCategory)
+
+module.exports = router
