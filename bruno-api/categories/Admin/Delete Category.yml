@@ -5,7 +5,7 @@ info:
 
 http:
   method: DELETE
-  url: "{{Local_URL}}admin/categories"
+  url: "{{Local_URL}}admin/categories/6a303796aae7f06057e2a49c"
   body:
     type: json
     data: ""

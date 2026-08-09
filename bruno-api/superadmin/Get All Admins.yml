@@ -1,14 +1,11 @@
 info:
-  name: User Profile
+  name: Get All Admins
   type: http
-  seq: 5
+  seq: 2
 
 http:
   method: GET
-  url: "{{Local_URL}}user/profile"
-  body:
-    type: text
-    data: ""
+  url: "{{Local_URL}}superadmin"
   auth:
     type: bearer
     token: ""

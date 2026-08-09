@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{Local_URL}}product"
+  url: "{{Local_URL}}products/6a495051003b4d1a6ac78d18"
   body:
     type: text
     data: ""

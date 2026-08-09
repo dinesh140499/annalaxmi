@@ -5,7 +5,7 @@ info:
 
 http:
   method: DELETE
-  url: "{{Local_URL}}product/6a494f59003b4d1a6ac78d17"
+  url: "{{Local_URL}}admin/products/6a494f59003b4d1a6ac78d17"
   body:
     type: text
     data: ""

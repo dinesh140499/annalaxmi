@@ -4,8 +4,8 @@ info:
   seq: 5
 
 http:
-  method: PATCH
-  url: "{{Local_URL}}product/6a495051003b4d1a6ac78d18"
+  method: PUT
+  url: "{{Local_URL}}admin/products/6a495051003b4d1a6ac78d18"
   body:
     type: multipart-form
     data:

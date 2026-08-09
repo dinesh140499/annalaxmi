@@ -1,0 +1,28 @@
+info:
+  name: Create Admin
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{Local_URL}}superadmin/create-admin"
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Admin",
+        "lastName": "User",
+        "email": "admin@example.com",
+        "phoneNo": "9876543210",
+        "role": "admin",
+        "password": "Password@123"
+      }
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
