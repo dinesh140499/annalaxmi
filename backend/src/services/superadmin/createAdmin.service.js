@@ -20,5 +20,4 @@ exports.createAdminService = async ({ firstName, lastName, email, phoneNo, role,
         password,
     });
     return admin;
-
 }

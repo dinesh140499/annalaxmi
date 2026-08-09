@@ -17,21 +17,21 @@ const {
 
 const router = express.Router();
 
+router.use(protect)
+
 // Profile
-router.get("/profile", protect, getProfile);
+router.get("/profile", getProfile);
 
 router.post(
   "/edit-profile",
-  protect,
   upload.single("avatar"),
   validate(userSchema),
   editProfile,
 );
 
 // Password
-router.post("/set-password", protect, validate(setPasswordSchema), setPassword);
+router.post("/set-password", validate(setPasswordSchema), setPassword);
 
-router.post("/change-password", protect, validate(changePasswordSchema), changePassword);
-router.patch("/change-password", protect, validate(changePasswordSchema), changePassword);
+router.post("/change-password", validate(changePasswordSchema), changePassword);
 
 module.exports = router;

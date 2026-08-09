@@ -1,8 +1,13 @@
-require("dotenv").config({ path: ".env" });
+const path = require("path");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
+
 require("./config/db")();
 
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");

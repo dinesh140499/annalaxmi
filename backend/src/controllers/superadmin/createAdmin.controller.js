@@ -1,8 +1,8 @@
 const asyncHandler = require("../../utils/asyncHandler");
-const { createAdminService } = require("../../services/superadmin/createAdmin.service"); 
+const { createAdminService } = require("../../services/superadmin/createAdmin.service");
 
 exports.createAdmin = asyncHandler(async (req, res, next) => {
-  const { firstName, lastName, email, phoneNo, role, gender, password } = req.body;
+  const { firstName, lastName, email, phoneNo, role, password } = req.body;
 
   const admin = await createAdminService({
     firstName,
