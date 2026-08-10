@@ -45,8 +45,10 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
     user: {
       id: user._id,
       firstname: user.firstname,
-      email: user.email,
-      phoneNo: user.phoneNo,
+      lastname: user.lastname,
+      email: user.email ?? "",
+      role: user.role,
+      ...(user.avatar?.url ? { avatar: user.avatar.url } : {}),
     },
   });
 });
@@ -88,8 +90,10 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
     user: {
       id: user._id,
       firstname: user.firstname,
-      email: user.email,
-      phoneNo: user.phoneNo,
+      lastname: user.lastname,
+      email: user.email ?? "",
+      role: user.role,
+      ...(user.avatar?.url ? { avatar: user.avatar.url } : {}),
     },
   });
 });

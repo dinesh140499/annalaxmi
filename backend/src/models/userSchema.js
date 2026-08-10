@@ -28,7 +28,6 @@ const userSchema = new mongoose.Schema(
       sparse: true,
       lowercase: true,
       trim: true,
-      lowercase: true,
     },
 
     password: {
@@ -50,6 +49,10 @@ const userSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
 
     avatar: {

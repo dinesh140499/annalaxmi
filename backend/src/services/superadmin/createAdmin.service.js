@@ -12,11 +12,11 @@ exports.createAdminService = async ({ firstName, lastName, email, phoneNo, role,
         throw new ErrorHandler("User already exists", 400);
     }
     const admin = await userRepositories.create({
-        firstName,
-        lastName,
+        firstname: firstName,
+        lastname: lastName,
         email,
         phoneNo,
-        role,
+        role: role || "admin",
         password,
     });
     return admin;

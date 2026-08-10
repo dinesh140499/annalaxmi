@@ -16,5 +16,6 @@ exports.createAdmin = asyncHandler(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Admin created successfully",
+    admin,
   });
 });

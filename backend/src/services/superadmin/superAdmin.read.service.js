@@ -1,6 +1,6 @@
-const { adminReadRepository } = require("../../repositories/superadmin/superAdmin.repository");
+const superAdminRepository = require("../../repositories/superadmin/superAdmin.repository");
 
 exports.getAllAdmins = async () => {
-    const admins = await adminReadRepository.getAllAdmins()
-    return admins
-}
+    const admins = await superAdminRepository.getAllAdmins();
+    return admins;
+};

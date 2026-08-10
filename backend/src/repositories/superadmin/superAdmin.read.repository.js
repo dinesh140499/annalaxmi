@@ -1,10 +1,9 @@
 const Users = require("../../models/userSchema");
 
-class ProdcutReadRepository {
+class SuperAdminReadRepository {
     async getAllAdmins() {
-        const admins = await Users.find({ role: 'admin' })
-        return admins
+        return await Users.find({ role: 'admin' })
     }
 }
 
-module.exports = new ProdcutReadRepository();
+module.exports = new SuperAdminReadRepository();

@@ -1,5 +1,5 @@
+const superAdminReadRepository = require("./superAdmin.read.repository");
+
 module.exports = {
-    getAllAdmins: async () => {
-        return await User.find({ role: 'admin' })
-    },
-}
+    getAllAdmins: () => superAdminReadRepository.getAllAdmins(),
+};
