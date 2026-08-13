@@ -183,6 +183,62 @@ const verifyOtp = async (phoneNo, otp) => {
   return { user, token };
 };
 
+const changePassword = async (userId, body) => {
+  const { currentPassword, newPassword, confirmPassword } = body;
+
+  const user = await authRepository.findUser({ _id: userId }, "+password");
+
+  if (!user) {
+    throw new ErrorHandler("User not found", 404);
+  }
+
+  if (!user.password) {
+    throw new ErrorHandler("Please create password first", 400);
+  }
+
+  const isMatched = await user.comparePassword(currentPassword);
+
+  if (!isMatched) {
+    throw new ErrorHandler("Current password incorrect", 400);
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new ErrorHandler("Passwords do not match", 400);
+  }
+
+  user.password = newPassword;
+  await authRepository.saveUser(user);
+
+  return true;
+};
+
+const setPassword = async (userId, body) => {
+  const { password, confirmPassword } = body;
+
+  if (!password || !confirmPassword) {
+    throw new ErrorHandler("All fields are required", 400);
+  }
+
+  if (password !== confirmPassword) {
+    throw new ErrorHandler("Passwords do not match", 400);
+  }
+
+  const user = await authRepository.findUser({ _id: userId }, "+password");
+
+  if (!user) {
+    throw new ErrorHandler("User not found", 404);
+  }
+
+  if (user.password) {
+    throw new ErrorHandler("Password already exists. Use change password.", 400);
+  }
+
+  user.password = password;
+  await authRepository.saveUser(user);
+
+  return true;
+};
+
 module.exports = {
   checkUserExists,
   processOtp,
@@ -190,4 +246,7 @@ module.exports = {
   generatePasswordResetToken,
   resetPasswordWithToken,
   verifyOtp,
+  changePassword,
+  setPassword,
 };
+

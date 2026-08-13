@@ -6,6 +6,8 @@ info:
 http:
   method: GET
   url: "{{Local_URL}}superadmin"
+  body:
+    type: form-urlencoded
   auth:
     type: bearer
     token: ""

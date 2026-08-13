@@ -6,15 +6,6 @@ info:
 http:
   method: GET
   url: "{{Local_URL}}auth/logout"
-  body:
-    type: form-urlencoded
-    data:
-      - name: phoneNo
-        value: "7836008553"
-      - name: dialCode
-        value: "91"
-      - name: country
-        value: in
   auth:
     type: bearer
     token: ""

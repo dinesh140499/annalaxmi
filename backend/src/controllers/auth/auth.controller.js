@@ -117,3 +117,22 @@ exports.logout = (req, res) => {
     message: "Logged out successfully",
   });
 };
+
+exports.setPassword = asyncHandler(async (req, res) => {
+  await authService.setPassword(req.user._id, req.body);
+
+  res.status(200).json({
+    success: true,
+    message: "Password created successfully",
+  });
+});
+
+exports.changePassword = asyncHandler(async (req, res) => {
+  await authService.changePassword(req.user._id, req.body);
+
+  return res.status(200).json({
+    success: true,
+    message: "Password changed successfully",
+  });
+});
+

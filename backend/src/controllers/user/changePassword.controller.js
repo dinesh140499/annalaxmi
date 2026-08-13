@@ -1,11 +1,4 @@
-const asyncHandler = require("../../utils/asyncHandler");
-const { changePassword } = require("../../services/user/user.service");
+const { changePassword } = require("../auth/auth.controller");
 
-exports.changePassword = asyncHandler(async (req, res) => {
-    await changePassword(req.user._id, req.body);
+exports.changePassword = changePassword;
 
-    return res.status(200).json({
-        success: true,
-        message: "Password changed successfully",
-    });
-});

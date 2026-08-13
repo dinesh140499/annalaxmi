@@ -12,34 +12,12 @@ const userSchema = z.object({
     .email("Invalid email address"),
 });
 
-const setPasswordSchema = z
-  .object({
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z
-      .string({ required_error: "Confirm password is required" })
-      .min(1, "Confirm password cannot be blank"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(6, "New password must be at least 6 characters"),
-    confirmPassword: z
-      .string({ required_error: "Confirm password is required" })
-      .min(1, "Confirm password cannot be blank"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+const { setPasswordSchema, changePasswordSchema } = require("./auth.schema");
 
 module.exports = {
   userSchema,
   setPasswordSchema,
   changePasswordSchema,
 };
+
 

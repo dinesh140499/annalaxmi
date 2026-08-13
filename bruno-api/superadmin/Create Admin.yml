@@ -7,16 +7,20 @@ http:
   method: POST
   url: "{{Local_URL}}superadmin/create-admin"
   body:
-    type: json
-    data: |-
-      {
-        "firstName": "Admin",
-        "lastName": "User",
-        "email": "admin@example.com",
-        "phoneNo": "9876543210",
-        "role": "admin",
-        "password": "Password@123"
-      }
+    type: form-urlencoded
+    data:
+      - name: firstName
+        value: pankaj
+      - name: lastName
+        value: raikwar
+      - name: email
+        value: pankaj@mail..com
+      - name: phoneNo
+        value: "918595266538"
+      - name: role
+        value: admin
+      - name: password
+        value: pankaj@123
   auth:
     type: bearer
     token: ""

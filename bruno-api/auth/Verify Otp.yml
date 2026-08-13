@@ -10,9 +10,9 @@ http:
     type: form-urlencoded
     data:
       - name: phoneNo
-        value: "7836008553"
+        value: "919990645231"
       - name: otp
-        value: "1234"
+        value: "9732"
   auth: inherit
 
 settings:

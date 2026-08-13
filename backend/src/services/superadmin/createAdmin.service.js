@@ -18,6 +18,9 @@ exports.createAdminService = async ({ firstName, lastName, email, phoneNo, role,
         phoneNo,
         role: role || "admin",
         password,
+        isVerified: true,
+        isActive: true,
     });
+
     return admin;
 }

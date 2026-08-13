@@ -11,17 +11,18 @@ http:
     data:
       - name: firstname
         type: text
-        value: varun
+        value: priya
       - name: lastname
         type: text
-        value: kumar
+        value: verma
       - name: email
         type: text
-        value: varun@gmail.com
+        value: priya@gmail.com
       - name: avatar
         type: file
         value:
-          - /D:/image.jpg
+          - D:\Website Wallpapers\Clients\client-1.jpg
+        contentType: image/jpeg
   auth: inherit
 
 settings:

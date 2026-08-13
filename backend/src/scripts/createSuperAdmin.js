@@ -29,17 +29,11 @@ const createSuperAdmin = async () => {
     const superAdmin = await User.create({
       firstname: "System",
       lastname: "Administrator",
-
       email: process.env.SUPERADMIN_EMAIL,
-
       phoneNo: process.env.SUPERADMIN_PHONE,
-
       password: process.env.SUPERADMIN_PASSWORD,
-
       role: "superadmin",
-
       isVerified: true,
-
       isActive: true,
     });
 
