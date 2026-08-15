@@ -1,0 +1,72 @@
+:root {
+    --theme-green: #00603A;
+    --theme-light-green: #9DCFBB;
+    --theme-yellow: #FFD75E;
+    --theme-blue: #102861;
+}
+
+
+
+.bg-green {
+    background-color: var(--theme-green);
+}
+
+.bg-yellow {
+    background-color: var(--theme-yellow);
+}
+
+.bg-light-green {
+    background-color: var(--theme-light-green);
+}
+
+.bg-light-blue {
+    background-color: var(--theme-blue);
+}
+
+.text-green {
+    color: var(--theme-green);
+}
+
+.text-yellow {
+    color: var(--theme-yellow);
+}
+
+.text-light-green {
+    color: var(--theme-light-green);
+}
+
+.text-light-blue {
+    color: var(--theme-blue);
+}
+
+.custom-scrollbar {
+  scrollbar-width: auto;             
+  scrollbar-color: #F2F2F2;  
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #F2F2F2;
+  border-radius: 10px;
+  width: 2px;
+
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f3f3f3;
+  width: 2px;
+
+}
+
+/* Green brand pill */
+.your-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: #00603A #F1EFE8;
+}
+.your-scroll-area::-webkit-scrollbar { width: 6px; }
+.your-scroll-area::-webkit-scrollbar-track { background: #F1EFE8; border-radius: 99px; }
+.your-scroll-area::-webkit-scrollbar-thumb { background: #00603A; border-radius: 99px; }
+.your-scroll-area::-webkit-scrollbar-thumb:hover { background: #004a2c; }
