@@ -16,7 +16,7 @@ const OrderDetails = () => {
                         <li className="decoration-2">3 Products</li>
                     </ul>
                 </div>
-                <Link to={'/'} className="text-sm text-green cursor-pointer font-semibold">Back To List</Link>
+                <Link to={'/account/order-history'} className="text-sm text-emerald-800 hover:text-emerald-900 cursor-pointer font-semibold">Back To List</Link>
             </div>
 
             {/* Address Section */}

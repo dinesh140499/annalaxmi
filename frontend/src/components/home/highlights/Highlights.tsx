@@ -1,43 +1,64 @@
-import { FaStar } from "react-icons/fa";
-import { BsFillPatchCheckFill } from "react-icons/bs";
-import { FaShippingFast } from "react-icons/fa";
-import { IoCheckmarkDoneSharp } from "react-icons/io5";
+import { FaTruck, FaLeaf, FaShieldAlt, FaSeedling } from 'react-icons/fa';
+
+const highlights = [
+    {
+        icon: <FaSeedling className="text-2xl text-emerald-700" />,
+        title: "100% Farm-Direct Sourcing",
+        desc: "Handpicked from certified regenerative farmers across Indian heritage soils.",
+        badge: "Zero Middlemen",
+    },
+    {
+        icon: <FaLeaf className="text-2xl text-emerald-700" />,
+        title: "Unpolished & Chemical Free",
+        desc: "Zero mineral oils, chemical polishers, or synthetic preservatives.",
+        badge: "Pure Bioavailable",
+    },
+    {
+        icon: <FaTruck className="text-2xl text-emerald-700" />,
+        title: "Express Fresh Delivery",
+        desc: "Free express same-day doorstep shipping on orders above ₹499.",
+        badge: "2-Hour Express",
+    },
+    {
+        icon: <FaShieldAlt className="text-2xl text-emerald-700" />,
+        title: "Lab Tested Purity",
+        desc: "Certified organic testing with verified chemical-free nutrient density.",
+        badge: "100% Guaranteed",
+    },
+];
 
 const Highlights = () => {
     return (
-        <section className='pt-10'>
-            <div className="max-w-[90%] lg:max-w-[95%] mx-auto w-full">
-                <div className="lg:flex items-center gap-5">
-                    <div className="hidden lg:inline-block lg:max-w-[40%] w-full mx-auto h-[2px] bg-[#00603A] border-[#00603A]"></div>
-                    <h1 className=" text-green font-bold text-lg pb-2 lg:text-start">When health is organic</h1>
-                    <div className="max-w-[55%] lg:max-w-[40%] w-full lg:mx-auto h-[2px] bg-[#00603A] border-[#00603A]"></div>
-                </div>
-                <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-10">
-                    <div className="text-center">
-                        <FaStar className="block mx-auto text-green text-5xl text-center " />
-                        <h1 className="mt-1 text-lg">Top Rank Farms</h1>
-                        <p className="text-sm px-3"> farm-fresh produce to bring quality and health to your family's table, every day.</p>
-                    </div>
-                    <div className="text-center">
-                        <BsFillPatchCheckFill className="block mx-auto text-green text-5xl text-center " />
-                        <h1 className="mt-1 text-lg">Organic Certified</h1>
-                        <p className="text-sm px-3"> Guaranteed pure, naturally grown products for a healthier, chemical-free lifestyle.</p>
-                    </div>
-                    <div className="text-center">
-                        <FaShippingFast className="block mx-auto text-green text-5xl text-center " />
-                        <h1 className="mt-1 text-lg">Fast Delivery</h1>
-                        <p className="text-sm px-3"> Fresh groceries at your doorstep in no time, ensuring convenience without the wait!</p>
-                    </div>
-                    <div className="text-center">
-                        <IoCheckmarkDoneSharp className="block mx-auto text-green text-5xl text-center " />
-                        <h1 className="mt-1 text-lg">Trusted Products</h1>
-                        <p className="text-sm px-3"> Handpicked, high-quality items you can rely on for your family's well-being </p>
-                    </div>
-
+        <section className="py-8 sm:py-12">
+            <div className="max-w-[95%] mx-auto w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    {highlights.map((item, index) => (
+                        <div
+                            key={index}
+                            className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs hover:shadow-lg hover:border-emerald-300 transition-all duration-300 card-hover-effect flex flex-col justify-between"
+                        >
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                                        {item.icon}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200/50">
+                                        {item.badge}
+                                    </span>
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 mb-1">
+                                    {item.title}
+                                </h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                    {item.desc}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
-    )
-}
+    );
+};
 
-export default Highlights
+export default Highlights;

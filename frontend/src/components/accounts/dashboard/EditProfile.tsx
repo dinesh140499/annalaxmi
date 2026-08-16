@@ -1,217 +1,224 @@
 import { IoMdCloseCircleOutline } from "react-icons/io";
 import InputField from "../../reusable/InputField";
-import { useState, useEffect } from "react";
-// import { useMutation } from "@tanstack/react-query";
-// import { put } from "../../../baseUrl";
-// import ErrorMsg from "../../reusable/ErrorMsg";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
+import { useState, type ChangeEvent } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { post } from "../../../baseUrl";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../../store/store";
+import { setUser } from "../../../features/authSlice";
+import Alert from "../../common/Alert";
 
 type EditType = {
   setEditModal: (value: boolean) => void;
 };
 
-type UpdateProfileResponse = {
-  message: string;
-  profileImg?: string;
-};
-
-type PhoneInputState = {
-  phone: string;
-  country: string;
-  dialCode: string;
-};
-
-type InputFieldType = {
-  fullname: string;
-  phone: string;
-  email: string;
-  dob: string;
-  address: string[]; // ✅ actual data for API
-  formattedAddress: string;
-};
-
 const EditProfile = ({ setEditModal }: EditType) => {
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [addressInput, setAddressInput] = useState<string>(""); // ✅ for user input
+  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
-  const [phoneInput, setPhoneInput] = useState<PhoneInputState>({
-    phone: "",
-    country: "in",
-    dialCode: "91",
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formInput, setFormInput] = useState({
+    firstname: user?.firstname || "",
+    lastname: user?.lastname || "",
+    email: user?.email || "",
   });
 
-  const [inputField, setInputField] = useState<InputFieldType>({
-    fullname: "",
-    phone: "",
-    email: "",
-    dob: "",
-    address: [],
-    formattedAddress: "",
+  const [alertData, setAlertData] = useState({
+    message: "",
+    variant: "" as "success" | "error",
+    show: false,
   });
 
+  const editProfileMutation = useMutation({
+    mutationFn: async (formData: FormData) =>
+      post("default", "user/edit-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }),
 
+    onSuccess: (data: any) => {
+      if (data?.user) {
+        dispatch(setUser(data.user));
+      }
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setAlertData({
+        message: data?.message || "Profile updated successfully!",
+        variant: "success",
+        show: true,
+      });
+      setTimeout(() => {
+        setEditModal(false);
+      }, 700);
+    },
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = e.target.files?.[0];
-    if (uploadedFile) {
-      setFile(uploadedFile);
-      setFileName(uploadedFile.name);
-    }
-  };
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || "Failed to update profile.",
+        variant: "error",
+        show: true,
+      });
+    },
+  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    if (name === "address") {
-      setAddressInput(value); // string input for UI
-    } else {
-      setInputField((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormInput((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePhoneChange = (value: string, data: any) => {
-    setPhoneInput({
-      phone: value,
-      country: data.countryCode || "in",
-      dialCode: data.dialCode || "91",
-    });
-    setInputField((prev) => ({ ...prev, phone: value }));
-  };
-
-  const handleSubmit = () => {
-    const formData = new FormData();
-
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
-      formData.append("profilePic", file);
+      setSelectedFile(file);
     }
-
-    formData.append("fullname", inputField.fullname);
-    formData.append("email", inputField.email);
-    formData.append("dob", inputField.dob);
-    formData.append("phone", inputField.phone);
-
-    inputField.address.forEach((addr) => {
-      formData.append("address", addr);
-    });
-
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formInput.firstname.trim()) {
+      setAlertData({
+        message: "First name is required.",
+        variant: "error",
+        show: true,
+      });
+      return;
+    }
 
-  const formFields = [
-    { label: "Full Name", id: "fullname", type: "text" },
-    { label: "Email", id: "email", type: "email" },
-    { label: "Date of Birth", id: "dob", type: "date" },
-    { label: "Address", id: "address", type: "text" },
-  ];
+    const formData = new FormData();
+    formData.append("firstname", formInput.firstname.trim());
+    formData.append("lastname", formInput.lastname.trim());
+    formData.append("email", formInput.email.trim());
+
+    if (selectedFile) {
+      formData.append("avatar", selectedFile);
+    }
+
+    editProfileMutation.mutate(formData);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="relative w-[90%] max-w-[450px] lg:max-h-[500px] h-full bg-white rounded-lg p-3 pt-0 overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-white flex items-center justify-between border-b border-gray-300 pt-3 pb-3">
-          <h1 className="text-lg font-semibold">Edit Profile</h1>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+      <div className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        
+        {alertData.show && (
+          <Alert
+            message={alertData.message}
+            variant={alertData.variant}
+            onDismiss={() => setAlertData((p) => ({ ...p, show: false }))}
+          />
+        )}
+
+        {/* Modal Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+          <h2 className="text-base font-bold text-slate-900 font-heading">
+            Edit Personal Profile
+          </h2>
           <button
-            className="text-xl text-black hover:text-red-600 duration-300"
+            className="text-2xl text-slate-400 hover:text-slate-700 cursor-pointer transition"
             onClick={() => setEditModal(false)}
           >
             <IoMdCloseCircleOutline />
           </button>
         </div>
 
-        {/* File Upload */}
-        <div className="mt-5">
-          <label className="text-sm block mb-1">Image</label>
-          <label
-            htmlFor="image"
-            className="bg-green text-white px-3 py-1 rounded-md text-sm cursor-pointer w-fit block mt-2"
-          >
-            Choose File
-          </label>
-          <InputField
-            inputType="file"
-            id="image"
-            name="image"
-            className="hidden"
-            onChange={handleFileUpload}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4">
           
-            {/* <p className="mt-3 text-sm italic text-gray-400">Loading..</p> */}
-           (
-            <>
-              {fileName && <p className="text-xs mt-2 text-gray-700">Selected: {fileName}</p>}
-              {file && (
-                <img
-                  src={URL.createObjectURL(file)}
-                  className="h-10 w-20 object-contain mt-2"
-                  alt="Preview"
-                />
+          {/* Avatar Upload */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+              Profile Avatar
+            </label>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="avatar-upload"
+                className="bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition"
+              >
+                Choose Photo
+              </label>
+              <input
+                type="file"
+                id="avatar-upload"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              {selectedFile && (
+                <span className="text-xs text-slate-600 truncate max-w-[180px]">
+                  {selectedFile.name}
+                </span>
               )}
-            </>
-          )
-        </div>
+            </div>
+          </div>
 
-        {/* Form Fields */}
-        {formFields.map(({ label, id, type }) => (
-          <div className="mt-5" key={id}>
-            <label htmlFor={id} className="text-sm block mb-1">
-              {label}
+          {/* First Name */}
+          <div>
+            <label htmlFor="firstname" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              First Name *
             </label>
             <InputField
-              inputType={type}
-              id={id}
-              name={id}
-              className="w-full py-2"
+              inputType="text"
+              id="firstname"
+              name="firstname"
+              value={formInput.firstname}
               onChange={handleInputChange}
-              value={id === "address" ? addressInput : (inputField as any)[id] || ""}
+              className="py-2.5 w-full text-sm border border-slate-200 rounded-xl px-3.5 focus:border-emerald-700 outline-none"
+              placeholder="e.g. Priya"
             />
           </div>
-        ))}
 
-        {/* Phone Input */}
-        <div className="mt-5">
-          <label className="text-sm block mb-1">Phone</label>
-          <PhoneInput
-            country={phoneInput.country}
-            enableSearch
-            value={phoneInput.phone}
-            onChange={handlePhoneChange}
-            placeholder="91-99999-99999"
-            inputStyle={{
-              width: "100%",
-              padding: "8px 48px",
-              fontSize: "16px",
-              borderRadius: "0.375rem",
-              backgroundColor: "#F0F5FA",
-              border: "1px solid white",
-              outline: "none",
-              marginLeft: "10px",
-            }}
-            buttonStyle={{ border: "none", backgroundColor: "#F0F5FA" }}
-            containerStyle={{ width: "100%" }}
-          />
-        </div>
+          {/* Last Name */}
+          <div>
+            <label htmlFor="lastname" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Last Name
+            </label>
+            <InputField
+              inputType="text"
+              id="lastname"
+              name="lastname"
+              value={formInput.lastname}
+              onChange={handleInputChange}
+              className="py-2.5 w-full text-sm border border-slate-200 rounded-xl px-3.5 focus:border-emerald-700 outline-none"
+              placeholder="e.g. Verma"
+            />
+          </div>
 
-        {/* Submit */}
-        <div className="mt-5">
-          <button
-            className="bg-black text-white text-sm rounded-md py-2 px-5 block ml-auto"
-            // disabled={isPending}
-            onClick={handleSubmit}
-          >
-            {/* {isPending ? "Uploading..." : "Update"} */}
-          </button>
-        </div>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Email Address
+            </label>
+            <InputField
+              inputType="email"
+              id="email"
+              name="email"
+              value={formInput.email}
+              onChange={handleInputChange}
+              className="py-2.5 w-full text-sm border border-slate-200 rounded-xl px-3.5 focus:border-emerald-700 outline-none"
+              placeholder="priya.verma@example.com"
+            />
+          </div>
 
-        {/* Error */}
-       
-          {/* <div className="mt-2">
-            <ErrorMsg message={error instanceof Error ? error.message : "Something went wrong"} />
-          </div> */}
-        
+          {/* Actions */}
+          <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={editProfileMutation.isPending}
+              className="flex-1 py-3 px-4 bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
+            >
+              {editProfileMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditModal(false)}
+              className="py-3 px-4 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-50 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+
+        </form>
+
       </div>
     </div>
   );

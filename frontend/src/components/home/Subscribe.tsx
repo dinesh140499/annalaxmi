@@ -1,7 +1,8 @@
-import { FaFacebookF, FaPinterestP } from "react-icons/fa";
-import { FaXTwitter, FaInstagram } from "react-icons/fa6";
+import { FaFacebookF, FaPinterestP, FaInstagram, FaLeaf } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export interface SocialLink {
     name: string;
@@ -17,48 +18,83 @@ const socialLinks: SocialLink[] = [
 ];
 
 const Subscribe = () => {
+    const [email, setEmail] = useState('');
+    const [subscribed, setSubscribed] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (email) {
+            setSubscribed(true);
+            setEmail('');
+        }
+    };
+
     return (
-        <div className="mt-10 mb-10 bg-[#E6E6E6] py-10">
-            <div className="max-w-[90%] lg:max-w-[95%] mx-auto w-full">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="flex-1">
-                        <h1 className="capitalize text-[20px] font-bold text-green">
-                            Subscribe to our Newsletter
-                        </h1>
-                        <p className="text-[#999999] text-sm mt-1">
-                            Pellentesque eu nibh eget mauris congue mattis mattis nec tellus.
-                            Phasellus imperdiet elit eu magna.
-                        </p>
-                    </div>
-                    <div className="lg:flex flex-1 lg:justify-end items-center gap-3">
-                        <div className=" flex flex-wrap items-center ">
-                            <input
-                                type="email"
-                                placeholder="Your email address"
-                                className="rounded-l-full border border-gray-100 outline-[#E6E6E6] py-2 px-4 bg-white text-md flex-1 min-w-[200px]"
-                            />
-                            <button className="bg-green text-white py-2 px-4 text-md rounded-r-full cursor-pointer">
-                                Subscribe
-                            </button>
+        <section className="py-8 sm:py-12">
+            <div className="max-w-[95%] mx-auto w-full">
+                <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 rounded-3xl p-6 sm:p-10 lg:p-12 text-white shadow-lg relative overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center relative z-10">
+                        
+                        {/* Left: Copy */}
+                        <div className="lg:col-span-6 text-center lg:text-left">
+                            <div className="inline-flex items-center gap-1.5 text-amber-300 text-xs font-semibold mb-2">
+                                <FaLeaf className="text-xs" />
+                                <span>Weekly Organic Digest</span>
+                            </div>
+                            <h2 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
+                                Stay Connected to Farm Fresh Harvests
+                            </h2>
+                            <p className="text-xs sm:text-sm text-emerald-100/80 mt-2 max-w-lg leading-relaxed">
+                                Subscribe for harvest updates, healthy grain recipes, and exclusive seasonal member discounts.
+                            </p>
                         </div>
-                        <div className=" flex gap-3 justify-start md:justify-end mt-5 lg:mt-0">
-                            {socialLinks.map(({ name, icon: Icon, link }) => (
-                                <Link
-                                    key={name}
-                                    to={link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#4D4D4D] p-[5px] transition text-lg rounded-full duration-75 hover:bg-[#00603a] hover:text-white"
-                                    aria-label={name}
-                                >
-                                    <Icon />
-                                </Link>
-                            ))}
+
+                        {/* Right: Input Form & Socials */}
+                        <div className="lg:col-span-6 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-end">
+                            {subscribed ? (
+                                <div className="bg-emerald-700/80 border border-emerald-500/50 text-amber-300 px-6 py-3 rounded-2xl text-xs font-semibold">
+                                    🎉 Thank you for subscribing to GrainPulse updates!
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="flex items-center w-full max-w-md bg-white rounded-2xl p-1.5 shadow-sm">
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Enter your email address..."
+                                        required
+                                        className="w-full bg-transparent px-4 text-xs sm:text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                                    />
+                                    <button 
+                                        type="submit" 
+                                        className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer shadow-sm"
+                                    >
+                                        Subscribe
+                                    </button>
+                                </form>
+                            )}
+
+                            {/* Social Icons */}
+                            <div className="flex gap-2">
+                                {socialLinks.map(({ name, icon: Icon, link }) => (
+                                    <Link
+                                        key={name}
+                                        to={link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="h-9 w-9 rounded-xl bg-emerald-800/80 hover:bg-amber-400 text-emerald-100 hover:text-emerald-950 transition flex items-center justify-center text-sm shadow-xs"
+                                        aria-label={name}
+                                    >
+                                        <Icon />
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
 

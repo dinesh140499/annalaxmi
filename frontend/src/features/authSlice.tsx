@@ -10,6 +10,7 @@ type UserType = {
   avatar?: string;
   phoneNo?: string;
   dialCode?: string;
+  addresses?: any[];
 };
 
 type AuthState = {

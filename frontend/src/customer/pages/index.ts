@@ -1,0 +1,19 @@
+// Customer Module Exports
+export { default as Home } from '../../pages/home/Home';
+export { default as Shop } from '../../pages/shop/Shop';
+export { default as ProductDetails } from '../../pages/shop/ProductDetails';
+export { default as ShopLayout } from '../../pages/shop/Layout';
+export { default as Search } from '../../pages/search/Search';
+export { default as Deals } from '../../pages/deals/Deals';
+export { default as Cart } from '../../pages/cart/Checkout';
+export { default as Billing } from '../../pages/billing/ShoppingBilling';
+export { default as OrderConfirmation } from '../../pages/order-confirmation/OrderConfirmation';
+export { default as TrackOrder } from '../../pages/track-order/TrackOrder';
+export { default as Wishlist } from '../../pages/wishlist/Wishlist';
+export { default as Account } from '../../pages/accounts/Account';
+export { default as About } from '../../pages/about/About';
+export { default as Contact } from '../../pages/contact/Contact';
+export { default as Faq } from '../../pages/faq/Faq';
+export { default as CustomerLogin } from '../../pages/authenticate/Login';
+export { default as CustomerRegister } from '../../pages/authenticate/Register';
+export { default as CustomerForgotPassword } from '../../pages/authenticate/ForgotPassword';

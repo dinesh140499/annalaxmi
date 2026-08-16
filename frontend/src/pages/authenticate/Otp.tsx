@@ -1,24 +1,22 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { post } from "../../baseUrl";
-// import ErrorMsg from "../../components/reusable/ErrorMsg";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../features/authSlice";
 import Alert from "../../components/common/Alert";
-import type { PhoneInputState } from "./Login";
+import { FaLock, FaArrowLeft } from "react-icons/fa";
 
-type PhoneType = {
-  phoneNo?: string;
-  otp?: string;
+type OtpProps = {
+  phone: string;
+  dialCode: string;
+  onBack?: () => void;
 };
 
-type OtpProps = Pick<PhoneInputState, "phone" | "dialCode">;
-
-const Otp = ({ phone, dialCode }: OtpProps) => {
+const Otp = ({ phone, dialCode, onBack }: OtpProps) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const dispatch = useDispatch();
-  const [resendTimer, setResendTimer] = useState(50);
+  const [resendTimer, setResendTimer] = useState(45);
   const navigate = useNavigate();
   const [alertData, setAlertData] = useState({
     message: "",
@@ -26,24 +24,37 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
     show: false,
   });
 
-
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
+  // Format phoneNo matching backend validator /^[0-9]{10,15}$/ (digits only, no '+')
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  const cleanDial = (dialCode || '91').replace(/[^0-9]/g, '');
+  const formattedFullPhone = cleanPhone.startsWith(cleanDial) ? cleanPhone : `${cleanDial}${cleanPhone}`;
+
   const mutation = useMutation({
-    mutationFn: (payload: PhoneType) =>
-      post("default", "auth/verify-otp", payload),
+    mutationFn: (payload: { phoneNo: string; otp: string }) =>
+      post("default", "auth/verify-otp", {
+        phoneNo: payload.phoneNo.replace(/[^0-9]/g, ''),
+        otp: payload.otp,
+      }),
+
     onSuccess: (data) => {
-      dispatch(setUser(data.user));
+      if (data?.user) {
+        dispatch(setUser(data.user));
+      }
       setAlertData({
-        message: data?.message || "Login Successfull",
+        message: data?.message || "Login Successful! Welcome to GrainPulse.",
         variant: "success",
         show: true,
       });
-      navigate("/account/dashboard");
+      setTimeout(() => {
+        navigate("/account/dashboard");
+      }, 700);
     },
+
     onError: (err: any) => {
       setAlertData({
-        message: err?.response?.data?.message || "Something went wrong",
+        message: err?.response?.data?.message || err?.message || "Invalid OTP code. Please check and try again.",
         variant: "error",
         show: true,
       });
@@ -78,15 +89,12 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
     }
   };
 
-  const handleSubmit = () => {
-    const fullPhoneNo = dialCode + phone;
-
-    console.log(dialCode,phone)
-
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const fullOtp = otp.join("");
     if (fullOtp.length === 4) {
       mutation.mutate({
-        phoneNo: phone,
+        phoneNo: formattedFullPhone,
         otp: fullOtp,
       });
     }
@@ -94,21 +102,62 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
 
   const handleResend = () => {
     if (resendTimer === 0) {
-      console.log("Resending OTP...");
       setOtp(["", "", "", ""]);
       inputRefs.current[0]?.focus();
-      setResendTimer(50);
+      setResendTimer(45);
+      
+      // Resend OTP using backend auth/send-otp
+      post("default", "auth/send-otp", {
+        phoneNo: phone.replace(/[^0-9]/g, ''),
+        dialCode: (dialCode || '91').replace(/[^0-9]/g, ''),
+        country: "in",
+      }).then(() => {
+        setAlertData({
+          message: "A fresh OTP code has been sent to +" + dialCode + " " + phone,
+          variant: "success",
+          show: true,
+        });
+      }).catch((err: any) => {
+        setAlertData({
+          message: err?.response?.data?.message || "Please wait before requesting another OTP.",
+          variant: "error",
+          show: true,
+        });
+      });
     }
   };
 
   return (
     <>
-      <div className="max-w-[90%] w-full lg:max-w-[95%] mx-auto min-h-[40vh] lg:min-h-[50vh] flex justify-center items-center">
-        <div>
-          <h1 className="text-md text-center text-green font-bold">
-            Enter OTP
+      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-10 border border-slate-100 shadow-xl text-slate-800">
+        
+        {/* Back navigation */}
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-800 mb-4 transition cursor-pointer"
+          >
+            <FaArrowLeft className="text-[10px]" />
+            <span>Change Mobile Number</span>
+          </button>
+        )}
+
+        <div className="text-center mb-6">
+          <div className="h-12 w-12 rounded-2xl bg-emerald-800 text-amber-400 flex items-center justify-center mx-auto mb-3 shadow-md shadow-emerald-900/20">
+            <FaLock className="text-lg" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-heading">
+            Enter Verification Code
           </h1>
-          <div className="mt-3 flex gap-3 justify-center">
+          <p className="text-xs text-slate-500 mt-1">
+            We sent a 4-digit OTP to <strong className="text-slate-800">+{dialCode} {phone}</strong>
+          </p>
+        </div>
+
+        {/* 4-Box OTP input */}
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-3 justify-center my-6">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -118,9 +167,10 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
                 name={`otp${index + 1}`}
                 id={`otp${index + 1}`}
                 value={digit}
+                autoFocus={index === 0}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
-                className="py-3 w-12 text-center text-lg border border-gray-300 rounded"
+                className="h-14 w-14 text-center text-xl font-extrabold border-2 border-slate-200 focus:border-emerald-700 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 transition"
                 ref={(el) => {
                   if (el) inputRefs.current[index] = el;
                 }}
@@ -129,46 +179,33 @@ const Otp = ({ phone, dialCode }: OtpProps) => {
             ))}
           </div>
 
-          <div className="text-center my-3 mb-5">
-            {mutation.isPending && (
-              <p className="text-gray-400 capitalize">Loading...</p>
-            )}
-
-            {/* {mutation.isError && (
-              <h1 className="text-red-500 text-sm ">
-                {mutation.error instanceof Error ? (
-                  <ErrorMsg message={mutation.error.message} />
-                ) : (
-                  <p>Something went wrong</p>
-                )}
-              </h1>
-            )} */}
-          </div>
-
           <button
-            onClick={handleSubmit}
+            type="submit"
             disabled={otp.some((d) => d === "") || mutation.isPending}
-            className="w-full py-[10px] px-2 rounded-md bg-green text-white cursor-pointer disabled:opacity-50"
+            className="w-full py-3.5 px-4 rounded-2xl bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-900/20 transition cursor-pointer disabled:opacity-50"
           >
-            Submit
+            {mutation.isPending ? "Verifying Code..." : "Verify & Sign In"}
           </button>
+        </form>
 
-          <h1 className="text-[13px] mt-2 text-center">
-            {resendTimer > 0 ? (
-              <span>
-                <b>Resend</b> in {resendTimer} sec
-              </span>
-            ) : (
-              <span
-                className="text-green cursor-pointer"
-                onClick={handleResend}
-              >
-                <b>Resend OTP</b>
-              </span>
-            )}
-          </h1>
+        {/* Resend Countdown */}
+        <div className="text-xs text-center text-slate-500 mt-5">
+          {resendTimer > 0 ? (
+            <span>
+              Resend OTP in <strong className="text-emerald-900 font-bold">{resendTimer}s</strong>
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="text-emerald-800 hover:text-emerald-950 font-bold underline cursor-pointer"
+              onClick={handleResend}
+            >
+              Resend OTP Now
+            </button>
+          )}
         </div>
       </div>
+
       {alertData.show && (
         <Alert
           message={alertData.message}

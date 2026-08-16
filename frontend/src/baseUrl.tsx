@@ -13,9 +13,6 @@ const createAxiosInstance = (
 ): AxiosInstance => {
   return axios.create({
     baseURL: BASE_URLS[base],
-    // headers: {
-    //     "Content-Type": "application/json",
-    // },
     withCredentials: true,
   });
 };
@@ -39,8 +36,11 @@ export const apiCall = async (
     return response.data;
   } catch (error: any) {
     console.error(`[API Error] ${method} ${url}:`, error);
-    throw new Error(error.response?.data?.message || "Something went wrong");
-    
+    const msg = error.response?.data?.message || error.message || "Something went wrong";
+    const customError = new Error(msg);
+    (customError as any).response = error.response;
+    (customError as any).status = error.response?.status;
+    throw customError;
   }
 };
 
@@ -63,6 +63,13 @@ export const put = (
   data?: any,
   config?: AxiosRequestConfig,
 ) => apiCall(base, "PUT", url, data, config);
+
+export const patch = (
+  base: keyof typeof BASE_URLS,
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig,
+) => apiCall(base, "PATCH", url, data, config);
 
 export const del = (
   base: keyof typeof BASE_URLS,

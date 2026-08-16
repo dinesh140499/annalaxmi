@@ -1,9 +1,9 @@
-import React, { useEffect, useState, type ChangeEvent } from "react";
+import React, { useState, type ChangeEvent } from "react";
 import InputField from "../../reusable/InputField";
 import SelectInput from "../../reusable/SelectInput";
 import Alert from "../../common/Alert";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, post, put, del } from "../../../baseUrl"; // ✅ FIX 1: import `put`
+import { get, post, patch, del } from "../../../baseUrl";
 import {
   IoHomeOutline,
   IoBriefcaseOutline,
@@ -19,20 +19,21 @@ import {
 export type AddressType = {
   _id?: string;
   firstname: string;
-  lastname: string;
-  phone: string;
-  company_name: string;
+  lastname?: string;
+  phone?: string;
+  company_name?: string;
   street: string;
+  city: string;
+  state: string;
   country: string;
-  states: string;
   zip_code: string;
-  landmark: string;
+  landmark?: string;
   type: "home" | "office" | "other";
+  isDefault?: boolean;
 };
 
-
 function printAddress(addr: AddressType) {
-  const html = `<!DOCTYPE html><html><head><title>Address</title>
+  const html = `<!DOCTYPE html><html><head><title>Address - GrainPulse</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Segoe UI',sans-serif;padding:40px;background:#fff;color:#212121;}
@@ -50,12 +51,11 @@ function printAddress(addr: AddressType) {
     <div class="addr">
       ${addr.company_name ? addr.company_name + "<br>" : ""}
       ${addr.street}<br>
-      ${addr.states}, ${addr.country} – ${addr.zip_code}
+      ${addr.city ? addr.city + ", " : ""}${addr.state}, ${addr.country} – ${addr.zip_code}
     </div>
     <hr class="divider"/>
-    <div class="logo">Anna Laxmi</div>
+    <div class="logo">GrainPulse Organic</div>
   </div></body></html>`;
-  // ✅ FIX 3: Was `${addr.country}, ${addr.country}` — corrected to `${addr.states}, ${addr.country}`
 
   const win = window.open("", "_blank", "width=480,height=360");
   if (!win) return;
@@ -65,22 +65,19 @@ function printAddress(addr: AddressType) {
   win.print();
 }
 
-// ─── Empty form ───────────────────────────────────────────────────────────────
-
 const emptyForm = (): Omit<AddressType, "_id"> => ({
   firstname: "",
   lastname: "",
   company_name: "",
   street: "",
-  country: "",
-  states: "",
+  city: "Delhi",
+  state: "Delhi",
+  country: "India",
   landmark: "",
   zip_code: "",
   type: "home",
   phone: "",
 });
-
-// ─── Address Card ─────────────────────────────────────────────────────────────
 
 interface CardProps {
   address: AddressType;
@@ -107,74 +104,77 @@ const AddressCard = ({
   <div
     onClick={onSelect}
     className={[
-      "relative border rounded-xl p-4 cursor-pointer transition-all duration-200",
+      "relative border rounded-2xl p-5 cursor-pointer transition-all duration-200",
       selected
-        ? "border-[#00603A] bg-[#f0f7f2] shadow-sm"
-        : "border-[#e0e0e0] bg-white hover:border-[#00603A] hover:shadow-sm",
+        ? "border-emerald-800 bg-emerald-50/50 shadow-xs"
+        : "border-slate-200 bg-white hover:border-emerald-700 hover:shadow-xs",
     ].join(" ")}
   >
     {/* Type + radio */}
     <div className="flex items-center gap-2 mb-3">
-      <span className="text-[#00603A] text-lg">
+      <span className="text-emerald-800 text-lg">
         {selected ? (
           <IoCheckmarkCircle />
         ) : (
-          <IoRadioButtonOff className="text-[#999]" />
+          <IoRadioButtonOff className="text-slate-400" />
         )}
       </span>
-      <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-[#555]">
+      <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md">
         {TYPE_ICON[address.type] ?? <IoLocationOutline />}
         {address.type}
       </span>
     </div>
 
     {/* Details */}
-    <p className="text-[14px] font-semibold text-[#212121]">
+    <p className="text-sm font-bold text-slate-900">
       {address.firstname} {address.lastname}
     </p>
     {address.company_name && (
-      <p className="text-[12px] text-[#888] mt-0.5">{address.company_name}</p>
+      <p className="text-xs text-slate-500 mt-0.5">{address.company_name}</p>
     )}
-    <p className="text-[13px] text-[#555] mt-1 leading-relaxed">
+    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
       {address.street}
       <br />
-      {address.states}, {address.country} – {address.zip_code}
+      {address.city ? `${address.city}, ` : ""}{address.state}, {address.country} – {address.zip_code}
     </p>
+    {address.phone && (
+      <p className="text-xs text-slate-500 mt-1 font-mono">
+        📞 {address.phone}
+      </p>
+    )}
 
     {/* Actions */}
-    <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[#efefef]">
+    <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100">
       <button
         onClick={(e) => {
           e.stopPropagation();
           onEdit();
         }}
-        className="flex items-center gap-1 text-[12px] font-semibold text-[#00603A] hover:text-[#004d2e] transition-colors"
+        className="flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors cursor-pointer"
       >
-        <IoCreateOutline className="text-base" /> EDIT
+        <IoCreateOutline className="text-sm" /> EDIT
       </button>
       <button
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
-        className="flex items-center gap-1 text-[12px] font-semibold text-[#c0392b] hover:text-[#922b21] transition-colors"
+        className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 transition-colors cursor-pointer"
       >
-        <IoTrashOutline className="text-base" /> REMOVE
+        <IoTrashOutline className="text-sm" /> REMOVE
       </button>
       <button
         onClick={(e) => {
           e.stopPropagation();
           onPrint();
         }}
-        className="flex items-center gap-1 text-[12px] font-semibold text-[#555] hover:text-[#212121] transition-colors"
+        className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
       >
-        <IoPrintOutline className="text-base" /> PRINT
+        <IoPrintOutline className="text-sm" /> PRINT
       </button>
     </div>
   </div>
 );
-
-// ─── Add / Edit Form ──────────────────────────────────────────────────────────
 
 interface FormProps {
   initial?: Omit<AddressType, "_id">;
@@ -201,19 +201,19 @@ const AddressForm = ({
   };
 
   const lbl = (text: string) => (
-    <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#888] mb-1">
+    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
       {text}
     </label>
   );
 
   const inputCls =
-    "py-2 w-full text-sm border border-[#d9d9d9] rounded focus:border-[#00603A] outline-none px-3 transition-colors capitalize";
+    "py-2.5 w-full text-xs sm:text-sm border border-slate-200 rounded-xl focus:border-emerald-700 outline-none px-3.5 transition-colors";
 
   return (
-    <div className="border border-[#00603A] rounded-xl overflow-hidden">
-      <div className="bg-[#00603A] px-5 py-3">
-        <h3 className="text-white font-semibold text-[14px] uppercase tracking-wide">
-          {isEditing ? "Edit Address" : "Add New Address"}
+    <div className="border border-emerald-700/60 rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-emerald-800 px-5 py-3.5">
+        <h3 className="text-white font-bold text-xs sm:text-sm uppercase tracking-wide">
+          {isEditing ? "Edit Delivery Address" : "Add New Delivery Address"}
         </h3>
       </div>
 
@@ -229,10 +229,10 @@ const AddressForm = ({
               <label
                 key={val}
                 className={[
-                  "flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all text-[13px] font-semibold",
+                  "flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all text-xs font-bold",
                   form.type === val
-                    ? "border-[#00603A] bg-[#f0f7f2] text-[#00603A]"
-                    : "border-[#d9d9d9] text-[#888] hover:border-[#00603A]",
+                    ? "border-emerald-800 bg-emerald-50 text-emerald-900 shadow-2xs"
+                    : "border-slate-200 text-slate-500 hover:border-emerald-300",
                 ].join(" ")}
               >
                 <input
@@ -243,16 +243,16 @@ const AddressForm = ({
                   onChange={handle}
                   className="hidden"
                 />
-                <Icon className="text-base" /> {label}
+                <Icon className="text-sm" /> {label}
               </label>
             ))}
           </div>
         </div>
 
-        {/* Name row */}
+        {/* Name & Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            {lbl("First Name")}
+            {lbl("First Name *")}
             <InputField
               inputType="text"
               id="firstname"
@@ -260,6 +260,7 @@ const AddressForm = ({
               value={form.firstname}
               onChange={handle}
               className={inputCls}
+              placeholder="e.g. Priya"
             />
           </div>
           <div>
@@ -271,42 +272,88 @@ const AddressForm = ({
               value={form.lastname ?? ""}
               onChange={handle}
               className={inputCls}
+              placeholder="e.g. Verma"
             />
           </div>
           <div>
-            {lbl("Company Name")}
+            {lbl("Contact Phone")}
             <InputField
               inputType="text"
-              id="company_name"
-              name="company_name"
-              value={form.company_name}
+              id="phone"
+              name="phone"
+              value={form.phone ?? ""}
+              onChange={handle}
+              className={inputCls}
+              placeholder="9990645231"
+            />
+          </div>
+        </div>
+
+        {/* Street & Landmark */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            {lbl("Street Address *")}
+            <InputField
+              inputType="text"
+              id="street"
+              name="street"
+              value={form.street}
+              onChange={handle}
+              className={inputCls}
+              placeholder="Flat / House No., Colony / Street"
+            />
+          </div>
+          <div>
+            {lbl("Landmark (Optional)")}
+            <InputField
+              inputType="text"
+              id="landmark"
+              name="landmark"
+              value={form.landmark ?? ""}
+              onChange={handle}
+              className={inputCls}
+              placeholder="Near Metro / Temple"
+            />
+          </div>
+        </div>
+
+        {/* City / State / Country / Zip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            {lbl("City *")}
+            <InputField
+              inputType="text"
+              id="city"
+              name="city"
+              value={form.city}
+              onChange={handle}
+              className={inputCls}
+              placeholder="Delhi"
+            />
+          </div>
+          <div>
+            {lbl("State *")}
+            <SelectInput
+              arrItem={[
+                { optVal: "Delhi", optValName: "Delhi" },
+                { optVal: "Maharashtra", optValName: "Maharashtra" },
+                { optVal: "Haryana", optValName: "Haryana" },
+                { optVal: "Uttar Pradesh", optValName: "Uttar Pradesh" },
+                { optVal: "Karnataka", optValName: "Karnataka" },
+                { optVal: "Gujarat", optValName: "Gujarat" },
+              ]}
+              name="state"
+              id="state"
+              value={form.state}
               onChange={handle}
               className={inputCls}
             />
           </div>
-        </div>
-
-        {/* Street */}
-        <div>
-          {lbl("Street Address")}
-          <InputField
-            inputType="text"
-            id="street"
-            name="street"
-            value={form.street}
-            onChange={handle}
-            className={inputCls}
-          />
-        </div>
-
-        {/* Country / State / Zip */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            {lbl("Country / Region")}
+            {lbl("Country *")}
             <SelectInput
               arrItem={[
                 { optVal: "India", optValName: "India" },
-                { optVal: "US", optValName: "US" },
               ]}
               name="country"
               id="country"
@@ -316,23 +363,7 @@ const AddressForm = ({
             />
           </div>
           <div>
-            {lbl("State")}
-            <SelectInput
-              arrItem={[
-                { optVal: "Delhi", optValName: "Delhi" },
-                { optVal: "Mumbai", optValName: "Mumbai" },
-                { optVal: "Haryana", optValName: "Haryana" },
-                { optVal: "Gujarat", optValName: "Gujarat" },
-              ]}
-              name="states"
-              id="states"
-              value={form.states}
-              onChange={handle}
-              className={inputCls}
-            />
-          </div>
-          <div>
-            {lbl("Zip Code")}
+            {lbl("Zip Code *")}
             <InputField
               inputType="text"
               id="zip_code"
@@ -340,22 +371,23 @@ const AddressForm = ({
               value={form.zip_code}
               onChange={handle}
               className={inputCls}
+              placeholder="110001"
             />
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-1">
+        <div className="flex gap-3 pt-2">
           <button
             onClick={() => onSave(form)}
-            disabled={isPending}
-            className="px-6 py-2 bg-[#00603A] text-white text-[13px] font-bold uppercase tracking-wide rounded-lg hover:bg-[#004d2e] transition-colors shadow-sm disabled:opacity-50"
+            disabled={isPending || !form.firstname || !form.street || !form.city || !form.zip_code}
+            className="px-6 py-2.5 bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-900 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
           >
             {isPending ? "Saving..." : "Save Address"}
           </button>
           <button
             onClick={onCancel}
-            className="px-6 py-2 border border-[#d9d9d9] text-[#555] text-[13px] font-semibold uppercase tracking-wide rounded-lg hover:border-[#999] transition-colors"
+            className="px-6 py-2.5 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -365,61 +397,56 @@ const AddressForm = ({
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 const ManageAddress = () => {
-  // ✅ FIX 4: `useQueryClient()` now correctly called inside the component
   const queryClient = useQueryClient();
 
   const { data: rawAddresses, isLoading } = useQuery({
     queryKey: ["address"],
-    queryFn: async () => get("default", "/user/address"),
+    queryFn: async () => get("default", "user/address"),
+    retry: 1,
   });
 
-  // ✅ FIX: API may return { addresses: [] } or [] — normalise to always be an array
-  const reduxAddresses: AddressType[] = Array.isArray(rawAddresses)
+  const addresses: AddressType[] = Array.isArray(rawAddresses)
     ? rawAddresses
     : Array.isArray(rawAddresses?.addresses)
       ? rawAddresses.addresses
       : [];
 
   const deleteMutate = useMutation({
-    mutationFn: (id: string) => del("default", `/user/address/${id}`),
+    mutationFn: (id: string) => del("default", `user/address/${id}`),
     onSuccess: () => {
-      // ✅ FIX 5: Invalidate query so list refreshes after delete
       queryClient.invalidateQueries({ queryKey: ["address"] });
       setAlertData({
-        message: "Address deleted successfully",
+        message: "Address removed successfully",
         variant: "success",
         show: true,
       });
     },
     onError: (err: any) =>
       setAlertData({
-        message: err?.response?.data?.message || "Something went wrong",
+        message: err?.response?.data?.message || "Unable to delete address",
         variant: "error",
         show: true,
       }),
   });
 
-  // ✅ FIX 6: Separate add vs edit mutations so edits use PUT with the address ID
   const addMutation = useMutation({
     mutationFn: async (data: Omit<AddressType, "_id">) =>
-      await post("default", "/user/address", data, {
+      await post("default", "user/address", data, {
         headers: { "Content-Type": "application/json" },
       }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["address"] });
       setShowAddForm(false);
       setAlertData({
-        message: data?.message || "Address added successfully",
+        message: data?.message || "Address saved successfully",
         variant: "success",
         show: true,
       });
     },
     onError: (err: any) =>
       setAlertData({
-        message: err?.response?.data?.message || "Something went wrong",
+        message: err?.response?.data?.message || "Error saving address",
         variant: "error",
         show: true,
       }),
@@ -433,7 +460,7 @@ const ManageAddress = () => {
       id: string;
       data: Omit<AddressType, "_id">;
     }) =>
-      await put("default", `/user/address/${id}`, data, {
+      await patch("default", `user/address/${id}`, data, {
         headers: { "Content-Type": "application/json" },
       }),
     onSuccess: (data: any) => {
@@ -447,7 +474,7 @@ const ManageAddress = () => {
     },
     onError: (err: any) =>
       setAlertData({
-        message: err?.response?.data?.message || "Something went wrong",
+        message: err?.response?.data?.message || "Error updating address",
         variant: "error",
         show: true,
       }),
@@ -462,16 +489,12 @@ const ManageAddress = () => {
     show: false,
   });
 
-  useEffect(() => {
-    console.log(reduxAddresses);
-  }, [reduxAddresses]);
-
   function handleDelete(id: string) {
     deleteMutate.mutate(id);
   }
 
   return (
-    <div className="mt-5 font-sans">
+    <div className="mt-2">
       {alertData.show && (
         <Alert
           message={alertData.message}
@@ -481,29 +504,28 @@ const ManageAddress = () => {
       )}
 
       {/* Page header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
         <div>
-          <h2 className="text-[18px] font-bold text-[#212121]">
-            Manage Addresses
+          <h2 className="text-lg font-bold text-slate-900 font-heading">
+            Saved Delivery Addresses
           </h2>
-          <p className="text-[12px] text-[#888] mt-0.5">
-            {reduxAddresses?.length || 0} saved address
-            {(reduxAddresses?.length || 0) !== 1 ? "es" : ""}
+          <p className="text-xs text-slate-500 mt-0.5">
+            {addresses.length} saved delivery destination{addresses.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Add button */}
         {!showAddForm && !editId && (
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full flex items-center gap-3 border-2 border-dashed border-[#00603A] rounded-xl px-4 py-3.5 text-[#00603A] font-semibold text-[13px] hover:bg-[#f0f7f2] transition-colors group"
+            className="w-full flex items-center gap-3 border-2 border-dashed border-emerald-700/60 rounded-2xl px-5 py-4 text-emerald-800 font-bold text-xs hover:bg-emerald-50/60 transition-colors group cursor-pointer"
           >
-            <span className="w-7 h-7 rounded-full border-2 border-[#00603A] flex items-center justify-center group-hover:bg-[#00603A] group-hover:text-white transition-all">
-              <IoAddOutline className="text-base" />
+            <span className="w-8 h-8 rounded-full border-2 border-emerald-700 flex items-center justify-center group-hover:bg-emerald-800 group-hover:text-white transition-all shadow-2xs">
+              <IoAddOutline className="text-lg" />
             </span>
-            ADD A NEW ADDRESS
+            <span>+ ADD NEW DELIVERY ADDRESS</span>
           </button>
         )}
 
@@ -516,8 +538,8 @@ const ManageAddress = () => {
           />
         )}
 
-        {/* Cards from user.addresses */}
-        {reduxAddresses?.map((addr: any) =>
+        {/* Cards list */}
+        {addresses.map((addr: AddressType) =>
           editId === addr._id ? (
             <AddressForm
               key={addr._id}
@@ -528,14 +550,14 @@ const ManageAddress = () => {
                 phone: addr.phone,
                 company_name: addr.company_name,
                 street: addr.street,
+                city: addr.city,
+                state: addr.state,
                 country: addr.country,
-                states: addr.states,
                 landmark: addr.landmark,
                 zip_code: addr.zip_code,
                 type: addr.type,
               }}
               onSave={(data) =>
-                // ✅ FIX 6 (cont.): Edit uses PUT via editMutation
                 editMutation.mutate({ id: addr._id!, data })
               }
               onCancel={() => setEditId(null)}
@@ -558,19 +580,17 @@ const ManageAddress = () => {
         )}
 
         {/* Empty state */}
-        {!isLoading &&
-          (!reduxAddresses || reduxAddresses.length === 0) &&
-          !showAddForm && (
-            <div className="text-center py-12">
-              <IoLocationOutline className="text-5xl mx-auto mb-3 text-[#ddd]" />
-              <p className="text-[14px] font-medium text-[#bbb]">
-                No saved addresses yet
-              </p>
-              <p className="text-[12px] mt-1 text-[#ccc]">
-                Add an address to get started
-              </p>
-            </div>
-          )}
+        {!isLoading && addresses.length === 0 && !showAddForm && (
+          <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-slate-100">
+            <IoLocationOutline className="text-5xl mx-auto mb-2 text-slate-300" />
+            <p className="text-sm font-bold text-slate-700">
+              No saved addresses yet
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Add your delivery address for 1-click organic checkout.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

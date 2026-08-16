@@ -1,43 +1,57 @@
-import playstore from '../../../assets/images/playstore-support.png'
-import apple from '../../../assets/images/apple-support.png'
-import { Link } from 'react-router-dom'
-import products from '../../../assets/images/home/Products.png'
-import details from '../../../assets/images/home/Details.png'
+import AppStore from '../../../assets/images/apple-support.png';
+import Playstore from '../../../assets/images/playstore-support.png';
+import { FaCheckCircle, FaLeaf } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const AvailableDevice = () => {
-  return (
-    <section className='mt-20 bg-[#9DCFBB] lg:h-[400px] pt-5 pb-10  relative'>
-      <div className="max-w-[85%] mx-auto">
-        {/* <div className="lg:flex items-center justify-between w-full relative lg:h-full "> */}
-        <div className="w-full relative lg:h-full py-20">
-          {/* Left */}
-          <div className='mt-5 lg:mt-0'>
-            <div className='text-center lg:text-start'>
-              <h1 className="font-bold text-2xl ">Shop Faster With AnnaLaxmi App</h1>
-              <span className='text-[#7C7C7C] mt-3 text-sm inline-block'>Available on both IOS & Android</span>
-            </div>
-            <div>
-              <div className="flex items-center mt-5 lg:mt-10">
-                <Link to={'/'} className='h-[43px]'>
-                  <img src={apple} className='h-full w-full object-contain' alt="apple" />
-                </Link>
-                <Link to={'/'} className='h-[50px]'>
-                  <img src={playstore} className='h-full w-full object-contain' alt="playstore" />
-                </Link>
-              </div>
-            </div>
-          </div>
-          {/* Right */}
-          <div className=" h-full w-full">
-            <div className='flex items-center  top-5 lg:absolute z-10 lg:top-0 lg:right-0'>
-              <img src={products} className='h-[280px] lg:h-full lg:w-[220px] object-contain absolute right-[50px] lg:right-48' alt="products" />
-              <img src={details} className='h-[280px] lg:h-full lg:w-[220px] object-contain ' alt="products" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
+    return (
+        <section className="py-8 sm:py-12">
+            <div className="max-w-[95%] mx-auto w-full">
+                <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 rounded-3xl p-6 sm:p-12 text-white relative overflow-hidden shadow-lg">
+                    <div className="max-w-2xl relative z-10">
+                        <div className="inline-flex items-center gap-1.5 text-amber-300 text-xs font-semibold mb-2">
+                            <FaLeaf className="text-xs" />
+                            <span>GrainPulse Mobile App</span>
+                        </div>
+                        <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">
+                            Shop Pure Organic Staples Anywhere, Anytime
+                        </h2>
+                        <p className="text-xs sm:text-sm text-emerald-100/90 mt-3 leading-relaxed">
+                            Order fresh unpolished dals, cold-pressed oils, and heirloom millets with live batch traceability and 2-hour express delivery.
+                        </p>
 
-export default AvailableDevice
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-6 text-xs text-emerald-200">
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-amber-400 shrink-0" />
+                                <span>Real-time harvest batch tracking</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-amber-400 shrink-0" />
+                                <span>App-exclusive subscriber discounts</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-amber-400 shrink-0" />
+                                <span>Instant 1-click doorstep reordering</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-amber-400 shrink-0" />
+                                <span>Zero-contact express delivery</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 mt-8">
+                            <Link to="/" className="hover:opacity-90 transition">
+                                <img src={AppStore} alt="App Store" className="h-10 sm:h-11 w-auto rounded-xl" />
+                            </Link>
+                            <Link to="/" className="hover:opacity-90 transition">
+                                <img src={Playstore} alt="Google Play" className="h-10 sm:h-11 w-auto rounded-xl" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default AvailableDevice;

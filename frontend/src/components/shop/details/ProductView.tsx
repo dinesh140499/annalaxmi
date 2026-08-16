@@ -1,18 +1,22 @@
 import { useState, type JSX } from 'react';
-import img1 from '../../../assets/images/products/freeimg.png'
-import img2 from '../../../assets/images/products/grains.png'
-import { FaInstagram, FaLinkedinIn, FaStar, FaTwitter } from 'react-icons/fa';
-import logo from '../../../assets/project-logo.png'
-import { FaFacebookF } from "react-icons/fa";
-import { Link } from 'react-router-dom';
-import Divider from '../../reusable/Divider';
-import { HiOutlineShoppingBag } from "react-icons/hi2";
-import { FaRegHeart } from "react-icons/fa";
+import img1 from '../../../assets/images/products/pulse.png';
+import img2 from '../../../assets/images/products/grains.png';
+import img3 from '../../../assets/images/products/freeimg.png';
+import { FaInstagram, FaStar, FaFacebookF, FaWhatsapp, FaShieldAlt, FaTruck } from 'react-icons/fa';
+import { FaXTwitter, FaRegHeart, FaHeart } from "react-icons/fa6";
+import { Link, useParams } from 'react-router-dom';
+import { HiOutlineShoppingBag, HiOutlineSparkles } from "react-icons/hi2";
 import { useDispatch } from "react-redux";
 import { setButton } from "../../../features/commonSlice";
+import { useQuery } from '@tanstack/react-query';
+import { get } from '../../../baseUrl';
 
-let arrImg: string[] = [img1, img2, img1, img2]
+import { addToCart } from '../../../features/cartSlice';
+import { toggleWishlist } from '../../../features/wishlistSlice';
+import type { RootState } from '../../../store/store';
+import { useSelector } from 'react-redux';
 
+const defaultGallery: string[] = [img1, img2, img3, img1];
 
 type SocialType = {
     name: string;
@@ -20,155 +24,272 @@ type SocialType = {
     icon: JSX.Element;
 };
 
-type TagsType = {
-    name: string,
-    link: string
-}
-
-const tags: TagsType[] = [{
-    name: 'Vegetables',
-    link: 'vegetables'
-},
-{
-    name: 'Healthy',
-    link: 'healthy'
-},
-{
-    name: 'Chinese',
-    link: 'chinese'
-},
-{
-    name: 'Cabbage',
-    link: 'cabbage'
-},
-{
-    name: 'Green',
-    link: 'green'
-},
-{
-    name: 'Cabbage',
-    link: 'cabbage'
-}]
-
-// This enforces exactly 4 items in the array
-let socialLinks: [SocialType, SocialType, SocialType, SocialType] = [
-    {
-        name: "facebook",
-        link: "https://facebook.com",
-        icon: <FaFacebookF />
-    },
-    {
-        name: "instagram",
-        link: "https://instagram.com",
-        icon: <FaInstagram />
-    },
-    {
-        name: "twitter",
-        link: "https://twitter.com",
-        icon: <FaTwitter />
-    },
-    {
-        name: "linkedin",
-        link: "https://linkedin.com",
-        icon: <FaLinkedinIn />
-    }
+const socialLinks: SocialType[] = [
+    { name: "WhatsApp", link: "https://whatsapp.com", icon: <FaWhatsapp /> },
+    { name: "Instagram", link: "https://instagram.com", icon: <FaInstagram /> },
+    { name: "Facebook", link: "https://facebook.com", icon: <FaFacebookF /> },
+    { name: "Twitter", link: "https://twitter.com", icon: <FaXTwitter /> },
 ];
 
-const ProductView = () => {
-    const [mainImage, setMainImage] = useState<string>(img1);
-    const [stockItem, setStockItem] = useState<number>(1)
-    const dispatch = useDispatch()
+const weights = ["500 g", "1 Kg", "2 Kg", "5 Kg"];
 
-    const handleImage = (img1: string) => {
-        setMainImage(img1)
-    }
+const ProductView = () => {
+    const { productId } = useParams<{ productId: string }>();
+    const dispatch = useDispatch();
+    const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+
+    const [mainImage, setMainImage] = useState<string>(img1);
+    const [quantity, setQuantity] = useState<number>(1);
+    const [selectedWeight, setSelectedWeight] = useState<string>("1 Kg");
+
+    // Fetch product details from backend
+    const { data: apiData } = useQuery({
+        queryKey: ['product', productId],
+        queryFn: () => get('default', `products/${productId}`),
+        enabled: Boolean(productId && productId.length > 5),
+        retry: 1,
+    });
+
+    const product = apiData?.product;
+    const name = product?.name || "Organic Toor / Arhar Dal (Unpolished)";
+    const price = product?.pricing?.sellingPrice || 165;
+    const originalPrice = product?.pricing?.mrp || 195;
+    const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
+    const categoryName = product?.category?.name || "Unpolished Pulses & Dals";
+    const rating = product?.rating?.average || 5.0;
+    const reviews = product?.rating?.totalReviews || 48;
+    const description = product?.description || "Sourced directly from native non-GMO crop clusters in Maharashtra, our Toor Dal is left unpolished with zero chemical gloss agents, ensuring the nutrient-packed bran layer remains 100% intact.";
+
+    const isWishlisted = wishlistItems.some((item) => String(item.id) === String(productId || "1"));
+
+    const galleryImages = product?.images && product.images.length > 0
+        ? product.images.map((img: any) => img.url)
+        : defaultGallery;
 
     const handleCart = () => {
-        dispatch(setButton({ cart: true }))
-    }
+        dispatch(addToCart({
+            id: productId || 1,
+            name,
+            price,
+            originalPrice,
+            weight: selectedWeight,
+            image: mainImage || img1,
+            quantity,
+        }));
+        dispatch(setButton({ cart: true }));
+    };
 
+    const handleToggleWishlist = () => {
+        dispatch(toggleWishlist({
+            id: productId || 1,
+            name,
+            price,
+            originalPrice,
+            weight: selectedWeight,
+            category: categoryName,
+            image: mainImage || img1,
+            rating,
+            inStock: true,
+        }));
+    };
 
     return (
-        <div className='py-5'>
-            <div className="lg:flex">
-                <div className="flex-1">
-                    <div className="flex items-center flex-col-reverse lg:flex-row">
-                        <div className="flex gap-3 mt-5 lg:mt-0 lg:gap-0 lg:flex-col">
-                            {arrImg.map((item, i) => <div key={i} className='h-20 w-20 mb-2'>
-                                <img src={item} className={`rounded-sm h-full w-full object-cover cursor-pointer duration-75 ${item === mainImage && 'shadow-lg border-2 border-[#006039] scale-[1.1]'}`} alt="product" onMouseOver={() => handleImage(item)} />
-                            </div>)}
+        <div className="py-6 sm:py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                
+                {/* Left: Gallery (6 cols) */}
+                <div className="lg:col-span-6 flex flex-col-reverse sm:flex-row gap-4">
+                    {/* Thumbnails */}
+                    <div className="flex sm:flex-col gap-3 justify-center sm:justify-start">
+                        {galleryImages.map((item: string, i: number) => (
+                            <button
+                                key={i}
+                                type="button"
+                                className={`h-16 w-16 sm:h-20 sm:w-20 rounded-2xl p-1.5 bg-white border-2 cursor-pointer transition-all duration-200 ${
+                                    (mainImage === item || (i === 0 && mainImage === img1))
+                                        ? 'border-emerald-700 shadow-md scale-105' 
+                                        : 'border-slate-200 hover:border-emerald-300'
+                                }`}
+                                onClick={() => setMainImage(item)}
+                            >
+                                <img src={item} className="h-full w-full object-contain" alt={`Thumbnail ${i + 1}`} />
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Main Image Showcase */}
+                    <div className="relative flex-1 h-[320px] sm:h-[420px] bg-slate-50/80 rounded-3xl p-6 border border-slate-100 flex items-center justify-center overflow-hidden">
+                        <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
+                            <span className="bg-emerald-800 text-amber-300 text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                                100% Unpolished
+                            </span>
+                            <span className="bg-amber-500 text-emerald-950 text-xs font-extrabold px-3 py-1 rounded-full shadow-xs">
+                                {discount}% OFF
+                            </span>
                         </div>
-                        <div className='lg:ms-15'>
-                            <img src={mainImage} className='h-96 w-96 max-w-none  rounded-sm object-cover lg:max-w-none' alt="" />
-                        </div>
+
+                        <img 
+                            src={mainImage} 
+                            alt={name}
+                            className="max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300"
+                        />
                     </div>
                 </div>
-                <div className="flex-1">
-                    <div className='mb-3'>
-                        <h1 className='text-green font-bold text-lg mt-5 lg:mt-0 lg:text-lg'>Pulses <span className='font-normal  bg-[#9DCFBB] p-1 rounded-sm ms-1 text-[13px]  lg:text-[12px]'>In Stock</span></h1>
-                    </div>
-                    <div className='flex items-center gap-3 '>
-                        <div className='flex items-center gap-1'>
-                            {Array.from({ length: 5 }).map((_, i) =>
-                                <FaStar key={i} className='text-[#FF8A00] text-[13px]' />
-                            )}
-                            <span className='capitalize text-[15px] lg:text-[12px] text-[#666666]'>4 Review</span>
-                        </div>
-                        <span>.</span>
-                        <div>
-                            <span className='text-[15px] lg:text-[12px] text-[#666666]'><b>SKU:</b> 2,51,594</span>
-                        </div>
-                    </div>
-                    <p className='text-[#B3B3B3] mt-3 flex items-center '>$48.00 <span className='text-2xl lg:text-lg font-bold text-green ms-1'>$17.28</span> <span className='inline-block bg-[#EA4B481A] text-[#EA4B48] rounded-full p-1 font-bold ms-3  lg:text-[11px]'>64% Off</span></p>
 
-                    <Divider />
-                    <div className="flex items-center gap-3 justify-between">
-                        <div className="flex items-center gap-3">
-                            <h1 className='text-sm'>Brand:</h1>
-                            <div className='rounded-sm p-[2px] h-12 w-12 flex items-center justify-center border border-[#E6E6E6]'>
-                                <img src={logo} className='h-full w-full object-contain' alt="logo" />
-                            </div>
+                {/* Right: Product Details & Buying Actions (6 cols) */}
+                <div className="lg:col-span-6 space-y-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100/70 px-3 py-0.5 rounded-full">
+                                {categoryName}
+                            </span>
+                            <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                                <HiOutlineSparkles /> Certified Farm Harvest
+                            </span>
                         </div>
-                        <div className="flex items-center ">
-                            <h1 className='text-sm mr-2'>Share Item: </h1>
-                            <div className="flex items-center">
-                                {socialLinks?.map((items, i) =>
-                                    <Link className='flex items-center justify-center w-8 h-8 duration-75  hover:text-white hover:bg-[#006039] rounded-full cursor-pointer text-lg text-[#4D4D4D]' to={items.link} target='_blank' title={items.name} key={i}>
-                                        {items.icon}
-                                    </Link>)}
+
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                            {name}
+                        </h1>
+
+                        {/* Rating & In-Stock */}
+                        <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-amber-200/60">
+                                <FaStar className="text-amber-500" />
+                                <span>{rating}</span>
+                                <span className="text-slate-400 font-normal">({reviews} reviews)</span>
                             </div>
+                            <span className="h-4 w-[1px] bg-slate-200"></span>
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+                                <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                In Stock & Farm Fresh
+                            </span>
                         </div>
                     </div>
-                    <p className='text-md lg:text-sm text-[#808080] mt-3'>Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nulla nibh diam, blandit vel consequat nec, ultrices et ipsum. Nulla varius magna a consequat pulvinar. </p>
-                    <Divider />
 
-                    <div className="flex items-center gap-3 mt-5">
-                        {/* Stock Item */}
-                        <div className="rounded-full py-1 px-3 border border-[#E6E6E6] w-fit flex items-center gap-3">
-                            <button className='h-7 w-7 rounded-full cursor-pointer flex items-center justify-center bg-[#F2F2F2] duration-75 text-[#666666] text-3xl hover:bg-[#666666] hover:text-white' onClick={() => stockItem >= 2 && setStockItem(stockItem - 1)}>-</button>
-                            <p>{stockItem}</p>
-                            <button className='h-7 w-7 rounded-full cursor-pointer flex items-center justify-center bg-[#F2F2F2] duration-75 text-[#666666] text-2xl hover:bg-[#666666] hover:text-white' onClick={() => setStockItem(stockItem + 1)}>+</button>
+                    {/* Pricing */}
+                    <div className="flex items-baseline gap-3 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100/80">
+                        <span className="text-3xl font-black text-emerald-950 font-heading">
+                            ₹{price * quantity}
+                        </span>
+                        <span className="text-sm text-slate-400 line-through font-semibold">
+                            ₹{originalPrice * quantity}
+                        </span>
+                        <span className="text-xs font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                            Save ₹{(originalPrice - price) * quantity}
+                        </span>
+                    </div>
+
+                    {/* Short Description */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        {description}
+                    </p>
+
+                    {/* Pack Size Selector */}
+                    <div>
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
+                            Select Pack Size: <strong className="text-emerald-800">{selectedWeight}</strong>
+                        </span>
+                        <div className="flex flex-wrap gap-2.5">
+                            {weights.map((w) => (
+                                <button
+                                    key={w}
+                                    type="button"
+                                    onClick={() => setSelectedWeight(w)}
+                                    className={`py-2 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        selectedWeight === w
+                                            ? "bg-emerald-800 text-white shadow-md shadow-emerald-900/20 scale-102"
+                                            : "bg-white text-slate-700 border border-slate-200 hover:border-emerald-300"
+                                    }`}
+                                >
+                                    {w}
+                                </button>
+                            ))}
                         </div>
-                        {/* Button */}
-                        <button onClick={handleCart} className=' bg-[#FFD75E] rounded-sm w-full flex items-center justify-center gap-1  py-2 font-bold cursor-pointer border border-[#FFD75E] hover:bg-[white] lg:text-sm'>Add To Cart <HiOutlineShoppingBag className='text-lg' /></button>
-                        {/* Wishlist */}
-                        <button className="group duration-75 cursor-pointer rounded-full p-2 text-sm bg-[#9DCFBB] hover:bg-[#00603A] active:bg-[#004D30]">
-                            <FaRegHeart className="text-[#00603A] text-lg duration-75 group-hover:text-white active:text-md" />
+                    </div>
+
+                    {/* Quantity & CTA Buttons */}
+                    <div className="flex flex-wrap items-center gap-4 pt-2">
+                        {/* Quantity Counter */}
+                        <div className="flex items-center border border-slate-200 rounded-2xl p-1 bg-white shadow-2xs">
+                            <button
+                                type="button"
+                                onClick={() => quantity > 1 && setQuantity(quantity - 1)}
+                                className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 text-base font-bold transition cursor-pointer"
+                            >
+                                -
+                            </button>
+                            <span className="px-4 font-extrabold text-sm text-slate-800 font-heading">
+                                {quantity}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setQuantity(quantity + 1)}
+                                className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 text-base font-bold transition cursor-pointer"
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        {/* Add To Cart */}
+                        <button
+                            type="button"
+                            onClick={handleCart}
+                            className="flex-1 bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-md shadow-emerald-900/20 flex items-center justify-center gap-2 cursor-pointer transition duration-150"
+                        >
+                            <HiOutlineShoppingBag className="text-lg text-amber-300" />
+                            <span>Add to Harvest Bag</span>
+                        </button>
+
+                        {/* Wishlist Button */}
+                        <button
+                            type="button"
+                            onClick={handleToggleWishlist}
+                            className={`h-12 w-12 rounded-2xl border flex items-center justify-center text-lg transition cursor-pointer ${
+                                isWishlisted 
+                                    ? "bg-red-50 border-red-200 text-red-500 shadow-2xs" 
+                                    : "bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200"
+                            }`}
+                            aria-label="Add to Wishlist"
+                        >
+                            {isWishlisted ? <FaHeart /> : <FaRegHeart />}
                         </button>
                     </div>
 
-                    <Divider />
-                    <div>
-                        <h1 className='lg:text-[13px] font-bold'>Category: <span className='text-[#808080] font-medium lg:text-[13px] '>Vegetables</span></h1>
+                    {/* Trust Badges */}
+                    <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 text-[11px] text-slate-600 font-medium">
+                        <div className="flex items-center gap-2">
+                            <FaTruck className="text-emerald-700 text-sm shrink-0" />
+                            <span>2-Hour Express Delivery</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <FaShieldAlt className="text-emerald-700 text-sm shrink-0" />
+                            <span>100% Money-Back Guarantee</span>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className='lg:text-[13px] font-bold mt-1'>Tags: {tags.map((tag, i) => <Link to={tag.link} key={i} className='text-[#808080]  font-medium capitalize mx-1 cursor-pointer border-b border-white inline-block hover:border-black hover:text-black lg:text-[13px]'>{tag.name}</Link>)}
-                        </h1>
+
+                    {/* Share on Socials */}
+                    <div className="flex items-center gap-3 pt-2">
+                        <span className="text-xs font-semibold text-slate-400">Share:</span>
+                        <div className="flex items-center gap-2">
+                            {socialLinks.map((item, idx) => (
+                                <Link 
+                                    key={idx} 
+                                    to={item.link} 
+                                    target="_blank"
+                                    className="h-8 w-8 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-600 flex items-center justify-center text-xs transition"
+                                >
+                                    {item.icon}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
+
                 </div>
+
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default ProductView
+export default ProductView;
