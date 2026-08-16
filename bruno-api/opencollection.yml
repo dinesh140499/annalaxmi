@@ -19,7 +19,7 @@ request:
     - name: Local_URL
       value: http://localhost:3000/api/v1/
     - name: Production_URL
-      value: https://annalaxmi-backend.onrender.com/api/v1/
+      value: https://grainpulse-api.onrender.com/api/v1/
 bundled: false
 extensions:
   bruno:
