@@ -93,6 +93,7 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://grainpulse-qes3.onrender.com",
   "null" // needed when the HTML file is opened directly via file:// in the browser
 ].filter(Boolean);
 
