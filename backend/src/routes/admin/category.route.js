@@ -11,7 +11,7 @@ const { authorize } = require("../../middleware/role.middleware");
 const { validate } = require("../../middleware/validate.middleware");
 const { createCategorySchema, updateCategorySchema } = require("../../schemas/category.schema");
 
-router.use(protect, authorize("admin"));
+router.use(protect, authorize("admin", "superadmin"));
 
 router
     .route('/')
