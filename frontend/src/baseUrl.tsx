@@ -5,7 +5,7 @@ import axios, {
 } from "axios";
 
 const BASE_URLS = {
-  default: "http://localhost:3000/api/v1/",
+  default: import.meta.env.VITE_API_URL,
 };
 
 const createAxiosInstance = (
