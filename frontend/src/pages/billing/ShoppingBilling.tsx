@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Breadcrumbs from "../../components/reusable/Breadcrumps";
-import { FaCheckCircle, FaLock, FaArrowRight } from "react-icons/fa";
+import { FaCheckCircle, FaLock, FaArrowRight, FaShoppingBag } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store/store";
@@ -10,6 +10,7 @@ const ShoppingBilling = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: cartItems, coupon } = useSelector((state: RootState) => state.cart);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const discountAmount = coupon.applied ? coupon.discount : 0;
@@ -17,19 +18,32 @@ const ShoppingBilling = () => {
   const grandTotal = Math.max(0, subtotal - discountAmount + shipping);
 
   const [formData, setFormData] = useState({
-    firstName: "Ramesh",
-    lastName: "Kumar",
-    email: "ramesh.kumar@gmail.com",
-    phone: "+91 98765-43210",
-    street: "Plot 42, Block B, Main Market",
+    firstName: user?.firstname || "",
+    lastName: user?.lastname || "",
+    email: user?.email || "",
+    phone: user?.phoneNo || "",
+    street: "",
     city: "New Delhi",
     state: "Delhi",
-    pincode: "110023",
+    pincode: "110001",
     paymentMethod: "upi",
     notes: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || user.firstname || "",
+        lastName: prev.lastName || user.lastname || "",
+        email: prev.email || user.email || "",
+        phone: prev.phone || user.phoneNo || "",
+      }));
+    }
+  }, [user]);
+
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -38,13 +52,42 @@ const ShoppingBilling = () => {
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    setOrderPlaced(true);
     const orderId = `GP-${Math.floor(10000 + Math.random() * 90000)}`;
+    setCreatedOrderId(orderId);
+    setOrderPlaced(true);
     dispatch(clearCart());
     setTimeout(() => {
       navigate(`/order-confirmation/${orderId}`);
     }, 400);
   };
+
+  if (cartItems.length === 0 && !orderPlaced) {
+    return (
+      <div className="bg-slate-50/50 min-h-screen">
+        <Breadcrumbs />
+        <div className="max-w-[95%] mx-auto py-12 sm:py-16">
+          <div className="max-w-md mx-auto bg-white rounded-3xl p-8 sm:p-12 border border-slate-100 shadow-xs text-center space-y-4">
+            <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-800 text-2xl">
+              <FaShoppingBag />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Your Basket is Empty</h2>
+            <p className="text-xs text-slate-500">
+              Please add items to your harvest basket before proceeding to checkout.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-6 py-3 rounded-2xl shadow-md transition"
+              >
+                <span>Browse Organic Catalog</span>
+                <FaArrowRight className="text-xs text-amber-300" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-50/50 min-h-screen">
@@ -61,7 +104,7 @@ const ShoppingBilling = () => {
               Thank You For Choosing GrainPulse!
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Your order <strong className="text-slate-900 font-bold">#GP-91823</strong> has been received and is being prepared for express delivery to <strong className="text-slate-800">{formData.city}</strong>.
+              Your order <strong className="text-slate-900 font-bold">#{createdOrderId || "GP-91823"}</strong> has been received and is being prepared for express delivery to <strong className="text-slate-800">{formData.city}</strong>.
             </p>
             <div className="pt-4 space-y-2">
               <Link
@@ -103,6 +146,7 @@ const ShoppingBilling = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
+                      placeholder="Enter first name"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition"
                     />
                   </div>
@@ -114,6 +158,7 @@ const ShoppingBilling = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
+                      placeholder="Enter last name"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition"
                     />
                   </div>
@@ -128,6 +173,7 @@ const ShoppingBilling = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      placeholder="name@example.com"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition"
                     />
                   </div>
@@ -139,6 +185,7 @@ const ShoppingBilling = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
+                      placeholder="10-digit mobile number"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition"
                     />
                   </div>
@@ -152,6 +199,7 @@ const ShoppingBilling = () => {
                     name="street"
                     value={formData.street}
                     onChange={handleInputChange}
+                    placeholder="House no, Street name, Landmark"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition"
                   />
                 </div>
@@ -320,7 +368,7 @@ const ShoppingBilling = () => {
                     className="w-full mt-4 bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                   >
                     <FaLock className="text-xs text-amber-300" />
-                    <span>Place Order (₹715.00)</span>
+                    <span>Place Order (₹{grandTotal.toFixed(0)})</span>
                   </button>
                 </div>
 

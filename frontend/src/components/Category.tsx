@@ -1,70 +1,18 @@
 import { Link } from 'react-router-dom';
 import { FaLeaf, FaArrowRight } from 'react-icons/fa';
 import pulse from '../assets/images/products/pulse.png';
-import spices from '../assets/images/products/spices.png';
-import oils from '../assets/images/products/oils.png';
-import grains from '../assets/images/products/grains.png';
-import dryfruit from '../assets/images/products/dry-fruit.png';
-
-export interface CategoryCardData {
-  id: number;
-  name: string;
-  subtitle: string;
-  count: string;
-  image: string;
-  tag: string;
-  subcategories: string[];
-}
-
-export const grainPulseCategories: CategoryCardData[] = [
-  {
-    id: 1,
-    name: 'Organic Pulses & Dals',
-    subtitle: 'Unpolished, pesticide-free, high-protein native lentils',
-    count: '24+ Varieties',
-    image: pulse,
-    tag: '100% Unpolished',
-    subcategories: ['Toor Dal', 'Moong Yellow', 'Chana Dal', 'Urad Whole', 'Rajma'],
-  },
-  {
-    id: 2,
-    name: 'Ancient Grains & Millets',
-    subtitle: 'Nutrient-dense heritage rice, foxtail, and ragi millets',
-    count: '32+ Varieties',
-    image: grains,
-    tag: 'Gluten-Free',
-    subcategories: ['Himalayan Red Rice', 'Foxtail Millet', 'Finger Millet / Ragi', 'Sorghum / Jowar'],
-  },
-  {
-    id: 3,
-    name: 'Cold-Pressed Virgin Oils',
-    subtitle: 'Stone-pressed oils extracted below 40°C for peak nutrients',
-    count: '18+ Varieties',
-    image: oils,
-    tag: 'Stone-Pressed',
-    subcategories: ['Kachi Ghani Mustard Oil', 'Virgin Coconut Oil', 'Cold-Pressed Sesame Oil', 'Groundnut Oil'],
-  },
-  {
-    id: 4,
-    name: 'Authentic Indian Spices',
-    subtitle: 'Sun-dried, high-curcumin whole and freshly ground spices',
-    count: '45+ Varieties',
-    image: spices,
-    tag: 'High Curcumin',
-    subcategories: ['Salem Turmeric', 'Kashmiri Chilli', 'Single-Origin Pepper', 'Organic Cumin'],
-  },
-  {
-    id: 5,
-    name: 'Dry Fruits & Super Seeds',
-    subtitle: 'Handpicked raw almonds, walnuts, and organic chia & flax seeds',
-    count: '28+ Varieties',
-    image: dryfruit,
-    tag: 'Nutrient Rich',
-    subcategories: ['Mamra Almonds', 'Walnut Kernels', 'Raw Chia Seeds', 'Flax Seeds', 'Golden Raisins'],
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { get } from '../baseUrl';
 
 const Category = () => {
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => get('default', 'categories'),
+    retry: 1,
+  });
+
+  const categories = apiData?.categories || [];
+
   return (
     <section className="py-10 bg-slate-50/50 min-h-screen">
       <div className="max-w-[95%] mx-auto w-full">
@@ -83,23 +31,30 @@ const Category = () => {
           </p>
         </div>
 
+        {/* Loading Indicator */}
+        {isLoading && (
+          <div className="py-12 text-center text-xs text-emerald-800 font-semibold animate-pulse">
+            Loading farm categories from database...
+          </div>
+        )}
+
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {grainPulseCategories.map((cat) => (
+          {categories.map((cat: any) => (
             <div
-              key={cat.id}
+              key={cat._id}
               className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs hover:shadow-xl hover:border-emerald-300 transition-all duration-300 card-hover-effect flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="h-20 w-20 rounded-2xl bg-emerald-50 p-2 flex items-center justify-center shrink-0">
-                    <img src={cat.image} alt={cat.name} className="h-full w-full object-contain" />
+                    <img src={cat.image?.url || pulse} alt={cat.name} className="h-full w-full object-contain" />
                   </div>
                   <div className="text-right">
                     <span className="inline-block bg-emerald-800 text-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                      {cat.tag}
+                      100% Organic
                     </span>
-                    <p className="text-xs text-slate-400 mt-1 font-semibold">{cat.count}</p>
+                    <p className="text-xs text-slate-400 mt-1 font-semibold">Fresh Harvest</p>
                   </div>
                 </div>
 
@@ -107,23 +62,14 @@ const Category = () => {
                   {cat.name}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {cat.subtitle}
+                  {cat.description || "Farm-fresh certified organic harvest."}
                 </p>
-
-                {/* Subcategory Pills */}
-                <div className="flex flex-wrap gap-1.5 mt-4">
-                  {cat.subcategories.map((sub, i) => (
-                    <span key={i} className="text-[11px] text-slate-600 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 px-2 py-1 rounded-lg transition">
-                      {sub}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               {/* Action Link */}
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                 <Link
-                  to="/categories"
+                  to="/shop"
                   className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 group"
                 >
                   <span>Browse Products</span>

@@ -1,78 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaFire, FaTag, FaClock, FaShoppingCart, FaPercent } from 'react-icons/fa';
+import { FaFire, FaClock, FaShoppingCart, FaPercent } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
 import pulse from '../../assets/images/products/pulse.png';
-import grains from '../../assets/images/products/grains.png';
-import oils from '../../assets/images/products/oils.png';
-
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../features/cartSlice';
 import { setButton } from '../../features/commonSlice';
-
-interface DealItem {
-  id: number;
-  name: string;
-  category: string;
-  originalPrice: number;
-  dealPrice: number;
-  discountPercentage: number;
-  stockLeft: number;
-  image: string;
-  tag: string;
-  endsInMinutes: number;
-}
-
-const flashDeals: DealItem[] = [
-  {
-    id: 1,
-    name: "Organic Toor Dal (5kg Bulk Harvest Pack)",
-    category: "Pulses & Dals",
-    originalPrice: 975,
-    dealPrice: 749,
-    discountPercentage: 23,
-    stockLeft: 14,
-    image: pulse,
-    tag: "Bulk Harvest Deal",
-    endsInMinutes: 180,
-  },
-  {
-    id: 2,
-    name: "Cold-Pressed Mustard Oil + Sesame Oil Duo (1L Each)",
-    category: "Virgin Oils",
-    originalPrice: 440,
-    dealPrice: 329,
-    discountPercentage: 25,
-    stockLeft: 8,
-    image: oils,
-    tag: "Wood-Churned Combo",
-    endsInMinutes: 120,
-  },
-  {
-    id: 3,
-    name: "Ancient Millets Heritage Box (Foxtail, Kodo, Ragi)",
-    category: "Grains & Millets",
-    originalPrice: 520,
-    dealPrice: 389,
-    discountPercentage: 25,
-    stockLeft: 19,
-    image: grains,
-    tag: "Bestseller Super Saver",
-    endsInMinutes: 240,
-  },
-  {
-    id: 4,
-    name: "Sun-Dried Kashmiri Chili & Salem Turmeric Duo",
-    category: "Spices",
-    originalPrice: 280,
-    dealPrice: 199,
-    discountPercentage: 29,
-    stockLeft: 22,
-    image: pulse,
-    tag: "Aroma Kitchen Pack",
-    endsInMinutes: 300,
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { get } from '../../baseUrl';
 
 const coupons = [
   { code: "GRAINPULSE", discount: "10% OFF", desc: "Flat 10% instant discount on orders above ₹499", expiry: "Valid Today" },
@@ -85,14 +20,23 @@ const Deals = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 5, minutes: 42, seconds: 18 });
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
 
-  const handleClaimDeal = (item: DealItem) => {
+  // Fetch live backend products
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ['dealsProducts'],
+    queryFn: () => get('default', 'products?limit=8'),
+    retry: 1,
+  });
+
+  const products = apiData?.products || [];
+
+  const handleClaimDeal = (item: any) => {
     dispatch(addToCart({
-      id: item.id,
+      id: item._id,
       name: item.name,
-      price: item.dealPrice,
-      originalPrice: item.originalPrice,
-      weight: item.tag,
-      image: item.image,
+      price: item.pricing?.sellingPrice || 0,
+      originalPrice: item.pricing?.mrp || item.pricing?.sellingPrice || 0,
+      weight: item.specifications?.weight || "Standard",
+      image: item.images?.[0]?.url || pulse,
       quantity: 1,
     }));
     dispatch(setButton({ cart: true }));
@@ -164,126 +108,129 @@ const Deals = () => {
           </div>
         </div>
 
-        {/* Coupons Showcase */}
+        {/* Coupon Codes Row */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
-              <FaTag className="text-emerald-800" />
-              <span>Active Promo Codes & Vouchers</span>
-            </h2>
-            <span className="text-xs text-slate-500 font-medium">Click code to copy</span>
-          </div>
-
+          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <FaPercent className="text-amber-500" />
+            <span>Available Harvest Coupons & Vouchers</span>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {coupons.map((c) => (
+            {coupons.map((coupon, i) => (
               <div
-                key={c.code}
-                onClick={() => copyToClipboard(c.code)}
-                className="bg-white rounded-2xl p-5 border-2 border-dashed border-emerald-200 hover:border-emerald-700 transition cursor-pointer shadow-xs relative group flex flex-col justify-between"
+                key={i}
+                className="bg-white border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex items-center justify-between shadow-xs hover:border-emerald-500 transition"
               >
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span className="bg-emerald-100 text-emerald-900 font-extrabold text-xs px-2.5 py-1 rounded-lg tracking-wider">
-                      {c.code}
-                    </span>
-                    <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
-                      <FaPercent className="text-[10px]" />
-                      <span>{c.discount}</span>
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">{c.desc}</p>
+                  <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">{coupon.discount}</div>
+                  <div className="text-xs text-slate-600 mt-1 font-medium">{coupon.desc}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{coupon.expiry}</div>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">{c.expiry}</span>
-                  <span className="font-bold text-emerald-800 group-hover:underline">
-                    {copiedCoupon === c.code ? "✓ Copied!" : "Tap to Copy"}
-                  </span>
-                </div>
+                <button
+                  onClick={() => copyToClipboard(coupon.code)}
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1.5 rounded-xl text-xs font-mono font-bold cursor-pointer transition shrink-0 ml-2"
+                >
+                  {copiedCoupon === coupon.code ? "COPIED!" : coupon.code}
+                </button>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Flash Deals Product Grid */}
+        {/* Flash Deals Grid */}
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                Flash Harvest Bundle Discounts
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">High demand items with special wholesale-equivalent savings</p>
-            </div>
-            <Link
-              to="/shop"
-              className="text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:underline"
-            >
-              View Full Catalog →
-            </Link>
+          <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+              Limited Harvest Flash Deals
+            </h2>
+            <span className="text-xs text-slate-500 font-medium">
+              Showing {products.length} live items
+            </span>
           </div>
 
+          {isLoading && (
+            <div className="py-12 text-center text-xs text-emerald-800 font-semibold animate-pulse">
+              Loading active flash deals...
+            </div>
+          )}
+
+          {!isLoading && products.length === 0 && (
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 max-w-md mx-auto space-y-3">
+              <h3 className="text-base font-bold text-slate-800">No Flash Deals Currently Active</h3>
+              <p className="text-xs text-slate-500">Check back later for fresh harvest promotions or browse our catalog.</p>
+              <Link to="/shop" className="inline-block bg-emerald-800 text-white font-bold text-xs py-2.5 px-6 rounded-xl">
+                Shop All Harvest
+              </Link>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {flashDeals.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs hover:shadow-md transition flex flex-col justify-between relative group"
-              >
-                {/* Discount Badge */}
-                <div className="absolute top-4 left-4 z-10 bg-amber-500 text-emerald-950 text-xs font-extrabold px-2.5 py-1 rounded-full shadow-xs">
-                  {item.discountPercentage}% OFF
-                </div>
+            {products.map((item: any) => {
+              const price = item.pricing?.sellingPrice || 0;
+              const originalPrice = item.pricing?.mrp || price;
+              const discount = originalPrice > price 
+                ? Math.round(((originalPrice - price) / originalPrice) * 100)
+                : 15;
+              const image = item.images?.[0]?.url || pulse;
+              const weight = item.specifications?.weight || "Standard";
 
-                <div>
-                  <div className="bg-slate-50 rounded-2xl p-4 mb-4 flex items-center justify-center h-48 overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-36 w-36 object-contain group-hover:scale-105 transition duration-300"
-                    />
-                  </div>
-
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
-                    {item.tag}
-                  </span>
-                  <Link
-                    to={`/product/${item.id}`}
-                    className="font-bold text-slate-900 text-sm hover:text-emerald-800 transition line-clamp-2 mt-1"
-                  >
-                    {item.name}
-                  </Link>
-
-                  {/* Stock progress bar */}
-                  <div className="mt-3">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-600 mb-1">
-                      <span>Stock Status</span>
-                      <span className="text-amber-600 font-extrabold">{item.stockLeft} packs left</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-amber-500 to-emerald-600 h-1.5 rounded-full"
-                        style={{ width: `${(item.stockLeft / 30) * 100}%` }}
+              return (
+                <div
+                  key={item._id}
+                  className="bg-white rounded-3xl p-5 border border-slate-100 shadow-xs hover:shadow-lg hover:border-emerald-300 transition duration-200 flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Image & Discount Badge */}
+                    <div className="relative bg-slate-50 rounded-2xl p-4 mb-4 flex items-center justify-center h-44 overflow-hidden">
+                      <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md z-10 shadow-xs">
+                        {discount}% OFF
+                      </span>
+                      <img
+                        src={image}
+                        alt={item.name}
+                        className="h-32 w-32 object-contain group-hover:scale-108 transition duration-300"
                       />
                     </div>
+
+                    {/* Tag / Category */}
+                    <span className="inline-block bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md mb-2">
+                      {item.category?.name || "Organic Staple"}
+                    </span>
+
+                    {/* Title */}
+                    <Link
+                      to={`/product/${item._id}`}
+                      className="font-bold text-slate-900 text-sm hover:text-emerald-800 transition line-clamp-2 block"
+                    >
+                      {item.name}
+                    </Link>
+
+                    {/* Stock Alert */}
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="font-semibold text-emerald-700">{weight}</span>
+                      <span className="text-amber-700 font-bold">Limited Harvest</span>
+                    </div>
+                  </div>
+
+                  {/* Price & Claim Button */}
+                  <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="text-lg font-black text-slate-900">₹{price}</div>
+                      {originalPrice > price && (
+                        <div className="text-[11px] text-slate-400 line-through">₹{originalPrice}</div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleClaimDeal(item)}
+                      className="bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                    >
+                      <FaShoppingCart className="text-xs text-amber-300" />
+                      <span>Claim Deal</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div>
-                    <div className="text-lg font-extrabold text-emerald-950">₹{item.dealPrice}</div>
-                    <div className="text-xs text-slate-400 line-through">₹{item.originalPrice}</div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleClaimDeal(item)}
-                    className="bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-                  >
-                    <FaShoppingCart className="text-xs text-amber-300" />
-                    <span>Claim Deal</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

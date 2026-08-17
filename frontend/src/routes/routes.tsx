@@ -18,6 +18,7 @@ const Home = lazy(() => import("../pages/home/Home"));
 const Shop = lazy(() => import("../pages/shop/Shop"));
 const ProductDetails = lazy(() => import("../pages/shop/ProductDetails"));
 const ShopLayout = lazy(() => import("../pages/shop/Layout"));
+const Category = lazy(() => import("../components/Category"));
 const Search = lazy(() => import("../pages/search/Search"));
 const Deals = lazy(() => import("../pages/deals/Deals"));
 
@@ -123,10 +124,13 @@ export const router = createBrowserRouter([
       },
       {
         path: "categories",
+        element: withSuspense(Category),
+      },
+      {
+        path: "categories/:productId",
         element: withSuspense(ShopLayout),
         children: [
-          { index: true, element: withSuspense(Shop) },
-          { path: ":productId", element: withSuspense(ProductDetails) },
+          { index: true, element: withSuspense(ProductDetails) },
         ],
       },
       {
@@ -165,7 +169,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "checkout",
-        element: withSuspense(Checkout),
+        element: withSuspense(ShoppingBilling),
       },
       {
         path: "billing",
