@@ -101,8 +101,12 @@ const Login = () => {
         });
 
         setTimeout(() => {
-          navigate('/admin/dashboard');
-        }, 800);
+          if (response.user.role === 'admin' || response.user.role === 'superadmin') {
+            navigate('/admin/dashboard', { replace: true });
+          } else {
+            navigate('/account/dashboard', { replace: true });
+          }
+        }, 400);
       } else {
         throw new Error('Invalid response from authentication server');
       }

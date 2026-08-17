@@ -55,8 +55,12 @@ const Otp = ({ phone, dialCode, onBack }: OtpProps) => {
         show: true,
       });
       setTimeout(() => {
-        navigate("/account/dashboard");
-      }, 700);
+        if (data?.user?.role === "admin" || data?.user?.role === "superadmin") {
+          navigate("/admin/dashboard", { replace: true });
+        } else {
+          navigate("/account/dashboard", { replace: true });
+        }
+      }, 400);
     },
 
     onError: (err: any) => {

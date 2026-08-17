@@ -253,6 +253,16 @@ export const router = createBrowserRouter([
         ],
       },
 
+      // Top-level aliases for direct navigation
+      {
+        path: "profile",
+        element: <Navigate to="/account/settings" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <Navigate to="/account/dashboard" replace />,
+      },
+
       // 9. Brand Information & Customer Support
       {
         path: "about",

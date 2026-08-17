@@ -8,25 +8,26 @@ import Loader from "../components/common/Loader";
 
 const ProtectedPage = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
 
-  const { data, isLoading, isError } = useAuth(true);
+  // Query server only if user is not already present in memory
+  const { data, isLoading, isError } = useAuth(!user);
 
   useEffect(() => {
     if (data?.user) {
       dispatch(setUser(data.user));
     }
 
-    if (isError) {
+    if (isError && !user) {
       dispatch(logoutUser());
     }
-  }, [data, isError, dispatch]);
+  }, [data, isError, user, dispatch]);
 
-  if (isLoading) {
-    return <Loader/>;
+  if (loading && !user) {
+    return <Loader />;
   }
 
-  if (!user && !data?.user) {
+  if (!user && !data?.user && !isLoading) {
     return <Navigate to="/login" replace />;
   }
 
