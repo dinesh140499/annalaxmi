@@ -106,10 +106,19 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: withSuspense(Shop) },
           { path: "product/:productId", element: withSuspense(ProductDetails) },
+          { path: ":productId", element: withSuspense(ProductDetails) },
         ],
       },
       {
         path: "catalog",
+        element: <Navigate to="/shop" replace />,
+      },
+      {
+        path: "products",
+        element: <Navigate to="/shop" replace />,
+      },
+      {
+        path: "product",
         element: <Navigate to="/shop" replace />,
       },
       {
@@ -122,7 +131,17 @@ export const router = createBrowserRouter([
       },
       {
         path: "product/:productId",
-        element: withSuspense(ProductDetails),
+        element: withSuspense(ShopLayout),
+        children: [
+          { index: true, element: withSuspense(ProductDetails) },
+        ],
+      },
+      {
+        path: "products/:productId",
+        element: withSuspense(ShopLayout),
+        children: [
+          { index: true, element: withSuspense(ProductDetails) },
+        ],
       },
 
       // 4. Universal Search & Deals Engine
