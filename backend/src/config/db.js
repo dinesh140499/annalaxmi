@@ -9,6 +9,8 @@ try {
   // ignore if already configured
 }
 
+console.log(process.env.MONGODB_URI)
+
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {

@@ -35,8 +35,8 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-    maxAge: Number(process.env.COOKIE_EXPIRY),
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: Number(process.env.COOKIE_EXPIRY) || 86400000,
   });
 
   return res.status(200).json({
@@ -80,8 +80,8 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-    maxAge: Number(process.env.COOKIE_EXPIRY),
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: Number(process.env.COOKIE_EXPIRY) || 86400000,
   });
 
   return res.status(200).json({

@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import type { RootState } from '../../store/store';
 import { FaShieldAlt, FaArrowRight, FaLock } from 'react-icons/fa';
+import Loader from './Loader';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -9,7 +10,12 @@ interface AdminRouteProps {
 }
 
 const AdminRoute = ({ children, requiredRole }: AdminRouteProps) => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
+  // While validating/hydrating auth state on initial refresh, show Loader instead of blocking
+  if (loading && !user) {
+    return <Loader />;
+  }
 
   // If user is not logged in or role is not admin/superadmin
   const isAuthorized = user && (user.role === 'admin' || user.role === 'superadmin');

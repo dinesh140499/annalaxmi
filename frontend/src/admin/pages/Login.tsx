@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../../features/authSlice';
+import type { RootState } from '../../store/store';
 import { 
   FaShieldAlt, 
   FaLeaf, 
@@ -21,6 +22,14 @@ import { post } from '../../baseUrl';
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // Auto-redirect if admin is already authenticated
+  useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const [identifier, setIdentifier] = useState('admin@mail.com');

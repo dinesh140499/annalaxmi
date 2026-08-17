@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Breadcrumbs from "../../components/reusable/Breadcrumps";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
@@ -7,9 +7,10 @@ import { useMutation } from "@tanstack/react-query";
 import { post } from "../../baseUrl";
 import Alert from "../../components/common/Alert";
 import { FaLeaf, FaShieldAlt, FaTruck, FaLock, FaEnvelope, FaKey, FaEye, FaEyeSlash } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../features/authSlice";
 import { useNavigate } from "react-router-dom";
+import type { RootState } from "../../store/store";
 
 export type PhoneInputState = {
   phone: string;
@@ -30,6 +31,18 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // Auto-redirect if user is already authenticated
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin" || user.role === "superadmin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/account/dashboard", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   // Alert Notification State
   const [alertData, setAlertData] = useState({
