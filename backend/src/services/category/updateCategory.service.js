@@ -3,7 +3,7 @@ const ErrorHandler = require("../../utils/errorHandler");
 const slugify = require("slugify");
 
 exports.updateCategory = async (id, body, file) => {
-    const { name, slug } = body;
+    const { name, slug, description, isActive } = body;
 
     const category = await categoryRepository.findById(id);
     if (!category) {
@@ -14,6 +14,12 @@ exports.updateCategory = async (id, body, file) => {
     if (name) updateData.name = name;
     if (slug || name) {
         updateData.slug = slugify(slug || name, { lower: true, strict: true, trim: true });
+    }
+    if (description !== undefined) {
+        updateData.description = description;
+    }
+    if (isActive !== undefined) {
+        updateData.isActive = isActive === true || isActive === 'true';
     }
     if (file) {
         updateData.image = {

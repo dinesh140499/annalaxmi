@@ -11,6 +11,10 @@ const categorySchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    description: {
+      type: String,
+      default: "",
+    },
     image: {
       url: String,
       public_id: String,

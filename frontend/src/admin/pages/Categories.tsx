@@ -105,9 +105,12 @@ const Categories = () => {
 
   // 2. CREATE: POST /admin/categories
   const createCategoryMutation = useMutation({
-    mutationFn: (payload: { name: string; file: File | null }) => {
+    mutationFn: (payload: { name: string; description?: string; file: File | null }) => {
       const fd = new FormData();
       fd.append('name', payload.name);
+      if (payload.description) {
+        fd.append('description', payload.description);
+      }
       fd.append('isActive', 'true');
       if (payload.file) {
         fd.append('image', payload.file);
@@ -140,9 +143,12 @@ const Categories = () => {
 
   // 3. UPDATE: PUT /admin/categories/:id
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { name: string; isActive: boolean; file: File | null } }) => {
+    mutationFn: ({ id, payload }: { id: string; payload: { name: string; description?: string; isActive: boolean; file: File | null } }) => {
       const fd = new FormData();
       fd.append('name', payload.name);
+      if (payload.description !== undefined) {
+        fd.append('description', payload.description);
+      }
       fd.append('isActive', String(payload.isActive));
       if (payload.file) {
         fd.append('image', payload.file);
@@ -218,6 +224,7 @@ const Categories = () => {
     if (!createForm.name.trim()) return;
     createCategoryMutation.mutate({
       name: createForm.name.trim(),
+      description: createForm.description.trim(),
       file: createImageFile,
     });
   };
@@ -229,6 +236,7 @@ const Categories = () => {
       id: selectedCategory._id || selectedCategory.id,
       payload: {
         name: editForm.name.trim(),
+        description: editForm.description.trim(),
         isActive: editForm.status === 'Active',
         file: editImageFile,
       },
@@ -371,6 +379,17 @@ const Categories = () => {
                 />
               </div>
 
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Category Description</label>
+                <textarea
+                  rows={2}
+                  value={createForm.description}
+                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  placeholder="Brief description of this organic product category..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
+                />
+              </div>
+
               {/* Category Image Upload */}
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Category Banner Image *</label>
@@ -453,6 +472,16 @@ const Categories = () => {
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Category Description</label>
+                <textarea
+                  rows={2}
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
                 />
               </div>
 

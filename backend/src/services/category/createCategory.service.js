@@ -3,10 +3,10 @@ const ErrorHandler = require("../../utils/errorHandler");
 const slugify = require("slugify");
 
 exports.createCategory = async (body, file) => {
-    const { name, slug } = body;
+    const { name, slug, description, isActive } = body;
 
     if (!name) {
-        throw new ErrorHandler("All fields are required", 400);
+        throw new ErrorHandler("Category name is required", 400);
     }
 
     if (!file) {
@@ -22,6 +22,8 @@ exports.createCategory = async (body, file) => {
     return await categoryRepository.create({
         name,
         slug: slugify(slug || name, { lower: true, strict: true, trim: true }),
+        description: description || "",
+        isActive: isActive !== undefined ? (isActive === true || isActive === 'true') : true,
         image: {
             url: file.path,
             public_id: file.filename,

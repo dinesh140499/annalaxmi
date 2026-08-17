@@ -11,7 +11,9 @@ import {
   FaEdit, 
   FaTrashAlt, 
   FaExclamationTriangle,
-  FaCloudUploadAlt
+  FaCloudUploadAlt,
+  FaTags,
+  FaSlidersH
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 import pulse from '../../assets/images/products/pulse.png';
@@ -33,10 +35,12 @@ interface ProductItem {
   mrp: number;
   discountPrice?: number;
   weight: string;
-  stock: number;
-  stockStatus: 'Available' | 'Out Of Stock';
   spec_type: string;
+  color?: string;
   countryOfOrigin?: string;
+  stock: number;
+  lowStockAlert?: number;
+  stockStatus: 'Available' | 'Out Of Stock';
   tags?: string[];
   rating: number;
   image: string;
@@ -44,10 +48,40 @@ interface ProductItem {
   description?: string;
   isFeatured?: boolean;
   isBestSeller?: boolean;
+  isTrending?: boolean;
+  isNewArrival?: boolean;
+  isActive?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string[];
   badge?: string;
 }
 
-
+const emptyProductForm = {
+  name: '',
+  categoryId: '',
+  brand: 'GrainPulse Organic',
+  description: '',
+  sellingPrice: '',
+  mrp: '',
+  discountPrice: '',
+  weight: '1 Kg',
+  spec_type: 'Agricultural Produce',
+  color: '',
+  countryOfOrigin: 'India',
+  tags: '',
+  stock: '50',
+  lowStockAlert: '5',
+  stockStatus: 'Available' as 'Available' | 'Out Of Stock',
+  isBestSeller: false,
+  isFeatured: false,
+  isTrending: false,
+  isNewArrival: false,
+  isActive: true,
+  metaTitle: '',
+  metaDescription: '',
+  keywords: '',
+};
 
 const Products = () => {
   const queryClient = useQueryClient();
@@ -74,41 +108,9 @@ const Products = () => {
   const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
 
-  // Create Form
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    categoryId: '',
-    brand: 'GrainPulse Organic',
-    description: '',
-    sellingPrice: '',
-    mrp: '',
-    discountPrice: '',
-    weight: '1 Kg',
-    spec_type: 'Agricultural Produce',
-    countryOfOrigin: 'India',
-    tags: '',
-    stock: '50',
-    isBestSeller: false,
-    isFeatured: false,
-  });
-
-  // Edit Form
-  const [editForm, setEditForm] = useState({
-    name: '',
-    categoryId: '',
-    brand: 'GrainPulse Organic',
-    description: '',
-    sellingPrice: '',
-    mrp: '',
-    discountPrice: '',
-    weight: '1 Kg',
-    spec_type: 'Agricultural Produce',
-    countryOfOrigin: 'India',
-    tags: '',
-    stock: '50',
-    isBestSeller: false,
-    isFeatured: false,
-  });
+  // Forms
+  const [createForm, setCreateForm] = useState(emptyProductForm);
+  const [editForm, setEditForm] = useState(emptyProductForm);
 
   const [alertData, setAlertData] = useState<{
     message: string;
@@ -149,8 +151,10 @@ const Products = () => {
     discountPrice: p.pricing?.discountPrice,
     weight: p.specifications?.weight || 'Standard',
     spec_type: p.specifications?.spec_type || 'Agricultural Produce',
+    color: p.specifications?.color || '',
     countryOfOrigin: p.specifications?.countryOfOrigin || 'India',
     stock: p.inventory?.stock ?? p.inventory?.stockQuantity ?? 0,
+    lowStockAlert: p.inventory?.lowStockAlert ?? 5,
     stockStatus: p.inventory?.stockStatus || ((p.inventory?.stock ?? p.inventory?.stockQuantity ?? 0) > 0 ? 'Available' : 'Out Of Stock'),
     tags: p.tags || [],
     rating: p.rating?.average || 5.0,
@@ -159,6 +163,12 @@ const Products = () => {
     description: p.description || '',
     isBestSeller: p.isBestSeller,
     isFeatured: p.isFeatured,
+    isTrending: p.isTrending,
+    isNewArrival: p.isNewArrival,
+    isActive: p.isActive !== false,
+    metaTitle: p.seo?.metaTitle || '',
+    metaDescription: p.seo?.metaDescription || '',
+    keywords: p.seo?.keywords || [],
     badge: p.isBestSeller ? 'Best Seller' : undefined,
   }));
 
@@ -205,21 +215,28 @@ const Products = () => {
     mutationFn: (payload: typeof createForm) => {
       const fd = new FormData();
       fd.append('name', payload.name);
-      fd.append('category', payload.categoryId || (backendCategories[0]?._id || '66ba9a2636fa000000000001'));
+      fd.append('category', payload.categoryId || (backendCategories[0]?._id || ''));
       if (payload.brand) fd.append('brand', payload.brand);
       fd.append('description', payload.description || `${payload.name} - 100% Certified Native Harvest Organically Cultivated`);
       fd.append('mrp', payload.mrp);
       fd.append('sellingPrice', payload.sellingPrice);
       if (payload.discountPrice) fd.append('discountPrice', payload.discountPrice);
       fd.append('stock', payload.stock);
-      fd.append('stockStatus', Number(payload.stock) > 0 ? 'Available' : 'Out Of Stock');
+      fd.append('lowStockAlert', payload.lowStockAlert || '5');
+      fd.append('stockStatus', payload.stockStatus || (Number(payload.stock) > 0 ? 'Available' : 'Out Of Stock'));
       fd.append('weight', payload.weight);
       fd.append('spec_type', payload.spec_type || 'Agricultural Produce');
+      if (payload.color) fd.append('color', payload.color);
       if (payload.countryOfOrigin) fd.append('countryOfOrigin', payload.countryOfOrigin);
       if (payload.tags) fd.append('tags', payload.tags);
+      if (payload.metaTitle) fd.append('metaTitle', payload.metaTitle);
+      if (payload.metaDescription) fd.append('metaDescription', payload.metaDescription);
+      if (payload.keywords) fd.append('keywords', payload.keywords);
       fd.append('isBestSeller', String(payload.isBestSeller));
       fd.append('isFeatured', String(payload.isFeatured));
-      fd.append('isActive', 'true');
+      fd.append('isTrending', String(payload.isTrending));
+      fd.append('isNewArrival', String(payload.isNewArrival));
+      fd.append('isActive', String(payload.isActive));
 
       // Append Image Files
       createFiles.forEach((file) => {
@@ -241,22 +258,7 @@ const Products = () => {
       setCreateModalOpen(false);
       setCreateFiles([]);
       setCreatePreviews([]);
-      setCreateForm({
-        name: '',
-        categoryId: '',
-        brand: 'GrainPulse Organic',
-        description: '',
-        sellingPrice: '',
-        mrp: '',
-        discountPrice: '',
-        weight: '1 Kg',
-        spec_type: 'Agricultural Produce',
-        countryOfOrigin: 'India',
-        tags: '',
-        stock: '50',
-        isBestSeller: false,
-        isFeatured: false,
-      });
+      setCreateForm(emptyProductForm);
     },
     onError: (err: any) => {
       setAlertData({
@@ -279,13 +281,21 @@ const Products = () => {
       fd.append('sellingPrice', payload.sellingPrice);
       if (payload.discountPrice) fd.append('discountPrice', payload.discountPrice);
       fd.append('stock', payload.stock);
-      fd.append('stockStatus', Number(payload.stock) > 0 ? 'Available' : 'Out Of Stock');
+      fd.append('lowStockAlert', payload.lowStockAlert || '5');
+      fd.append('stockStatus', payload.stockStatus || (Number(payload.stock) > 0 ? 'Available' : 'Out Of Stock'));
       fd.append('weight', payload.weight);
       fd.append('spec_type', payload.spec_type || 'Agricultural Produce');
+      if (payload.color) fd.append('color', payload.color);
       if (payload.countryOfOrigin) fd.append('countryOfOrigin', payload.countryOfOrigin);
       if (payload.tags) fd.append('tags', payload.tags);
+      if (payload.metaTitle) fd.append('metaTitle', payload.metaTitle);
+      if (payload.metaDescription) fd.append('metaDescription', payload.metaDescription);
+      if (payload.keywords) fd.append('keywords', payload.keywords);
       fd.append('isBestSeller', String(payload.isBestSeller));
       fd.append('isFeatured', String(payload.isFeatured));
+      fd.append('isTrending', String(payload.isTrending));
+      fd.append('isNewArrival', String(payload.isNewArrival));
+      fd.append('isActive', String(payload.isActive));
 
       // Append Removed Images
       if (removedImageIds.length > 0) {
@@ -359,11 +369,20 @@ const Products = () => {
       discountPrice: p.discountPrice ? String(p.discountPrice) : '',
       weight: p.weight,
       spec_type: p.spec_type || 'Agricultural Produce',
+      color: p.color || '',
       countryOfOrigin: p.countryOfOrigin || 'India',
       tags: p.tags?.join(', ') || '',
       stock: String(p.stock),
+      lowStockAlert: String(p.lowStockAlert || 5),
+      stockStatus: p.stockStatus || (p.stock > 0 ? 'Available' : 'Out Of Stock'),
       isBestSeller: !!p.isBestSeller,
       isFeatured: !!p.isFeatured,
+      isTrending: !!p.isTrending,
+      isNewArrival: !!p.isNewArrival,
+      isActive: p.isActive !== false,
+      metaTitle: p.metaTitle || '',
+      metaDescription: p.metaDescription || '',
+      keywords: p.keywords?.join(', ') || '',
     });
     setExistingImages(p.images || []);
     setRemovedImageIds([]);
@@ -426,7 +445,7 @@ const Products = () => {
             Products & Inventory Management
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Complete CRUD: Create, View, Update, Delete with multi-image gallery upload and backend schema validation.
+            Complete product manager: pricing, stock alerts, specifications, SEO tags, visibility flags, and gallery.
           </p>
         </div>
 
@@ -434,6 +453,7 @@ const Products = () => {
           onClick={() => {
             setCreateFiles([]);
             setCreatePreviews([]);
+            setCreateForm(emptyProductForm);
             setCreateModalOpen(true);
           }}
           className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
@@ -449,54 +469,67 @@ const Products = () => {
           <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
           <input
             type="text"
+            placeholder="Search items by name or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search products by name..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-600 transition"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 transition"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
-          {categories.map((c) => (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {categories.map((cat) => (
             <button
-              key={c}
-              onClick={() => setSelectedCategory(c)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
-                selectedCategory === c
-                  ? 'bg-white text-emerald-800 font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                selectedCategory === cat
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {c}
+              {cat}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto custom-scrollbar">
+      {/* Product Table */}
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs sm:text-sm">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-                <th className="py-3.5 px-4 sm:px-6">Product Details</th>
-                <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">Selling Price / MRP</th>
-                <th className="py-3.5 px-4">Stock Level</th>
-                <th className="py-3.5 px-4">Rating</th>
-                <th className="py-3.5 px-4 text-right pr-6">Actions</th>
+            <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+              <tr>
+                <th className="py-4 px-6">Product & Pack</th>
+                <th className="py-4 px-4">Category</th>
+                <th className="py-4 px-4">Pricing</th>
+                <th className="py-4 px-4">Stock Status</th>
+                <th className="py-4 px-4">Rating</th>
+                <th className="py-4 px-4 text-right pr-6">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/80 transition group">
-                  <td className="py-4 px-4 sm:px-6">
+            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    No products found matching "{searchQuery}".
+                  </td>
+                </tr>
+              ) : filtered.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                  <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                      <div className="h-12 w-12 rounded-xl bg-slate-50 p-1 shrink-0 border border-slate-100 flex items-center justify-center">
                         <img src={item.image} alt={item.name} className="h-full w-full object-contain" />
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-bold text-slate-900 block truncate">{item.name}</span>
+                      <div>
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                          <span>{item.name}</span>
+                          {item.badge && (
+                            <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-1.5 py-0.5 rounded">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[11px] text-slate-500">Pack: {item.weight} &bull; {item.brand || 'Organic'}</span>
                       </div>
                     </div>
@@ -512,11 +545,11 @@ const Products = () => {
                   </td>
                   <td className="py-4 px-4">
                     <span className={`inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full ${
-                      item.stock > 10 
+                      item.stock > (item.lowStockAlert || 5) 
                         ? 'text-emerald-800 bg-emerald-50' 
                         : 'text-amber-800 bg-amber-50'
                     }`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${item.stock > 10 ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+                      <span className={`h-1.5 w-1.5 rounded-full ${item.stock > (item.lowStockAlert || 5) ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
                       <span>{item.stock} in stock</span>
                     </span>
                   </td>
@@ -554,15 +587,15 @@ const Products = () => {
       {/* 1. CREATE PRODUCT MODAL */}
       {createModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
                   <FaBoxes />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Add Catalog Item</h3>
-                  <p className="text-xs text-slate-500">POST /api/v1/admin/products (with multi-image upload)</p>
+                  <h3 className="text-lg font-bold text-slate-900">Add New Product</h3>
+                  <p className="text-xs text-slate-500">Register harvest catalog entry with full specifications & images</p>
                 </div>
               </div>
               <button onClick={() => setCreateModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
@@ -570,131 +603,248 @@ const Products = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs sm:text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Product Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                    placeholder="e.g. Organic Kabuli Chana"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
+            <form onSubmit={handleCreateSubmit} className="space-y-5 text-xs sm:text-sm">
+              
+              {/* SECTION: BASIC INFO */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaLeaf />
+                  <span>1. General Information</span>
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Product Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                      placeholder="e.g. Organic Unpolished Toor Dal"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Brand Name</label>
+                    <input
+                      type="text"
+                      value={createForm.brand}
+                      onChange={(e) => setCreateForm({ ...createForm, brand: e.target.value })}
+                      placeholder="GrainPulse Organic"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Category *</label>
+                    <select
+                      required
+                      value={createForm.categoryId}
+                      onChange={(e) => setCreateForm({ ...createForm, categoryId: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
+                    >
+                      <option value="">Select Category</option>
+                      {backendCategories.map((c: any) => (
+                        <option key={c._id} value={c._id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Pack Size (Weight) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.weight}
+                      onChange={(e) => setCreateForm({ ...createForm, weight: e.target.value })}
+                      placeholder="1 Kg / 500 g / 2 Litres"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Specification Type *</label>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.spec_type}
+                      onChange={(e) => setCreateForm({ ...createForm, spec_type: e.target.value })}
+                      placeholder="Unpolished Lentil / Stone-Pressed Oil"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Color / Grade</label>
+                    <input
+                      type="text"
+                      value={createForm.color}
+                      onChange={(e) => setCreateForm({ ...createForm, color: e.target.value })}
+                      placeholder="e.g. Golden Yellow / Single Origin"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Country of Origin</label>
+                    <input
+                      type="text"
+                      value={createForm.countryOfOrigin}
+                      onChange={(e) => setCreateForm({ ...createForm, countryOfOrigin: e.target.value })}
+                      placeholder="India"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Brand Name</label>
-                  <input
-                    type="text"
-                    value={createForm.brand}
-                    onChange={(e) => setCreateForm({ ...createForm, brand: e.target.value })}
-                    placeholder="GrainPulse Organic"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
+                  <label className="block text-slate-700 font-semibold mb-1">Product Description *</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                    placeholder="Detailed description of the harvest item (min 10 characters)..."
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Category *</label>
-                  <select
-                    value={createForm.categoryId}
-                    onChange={(e) => setCreateForm({ ...createForm, categoryId: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
-                  >
-                    <option value="">Select Category</option>
-                    {backendCategories.map((c: any) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+              {/* SECTION: PRICING & INVENTORY */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaSlidersH />
+                  <span>2. Pricing & Stock Inventory</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">MRP Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={createForm.mrp}
+                      onChange={(e) => setCreateForm({ ...createForm, mrp: e.target.value })}
+                      placeholder="220"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Selling Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={createForm.sellingPrice}
+                      onChange={(e) => setCreateForm({ ...createForm, sellingPrice: e.target.value })}
+                      placeholder="180"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Discount Promo Price (₹)</label>
+                    <input
+                      type="number"
+                      value={createForm.discountPrice}
+                      onChange={(e) => setCreateForm({ ...createForm, discountPrice: e.target.value })}
+                      placeholder="165 (Optional)"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Pack Size (Weight) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={createForm.weight}
-                    onChange={(e) => setCreateForm({ ...createForm, weight: e.target.value })}
-                    placeholder="1 Kg"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Initial Stock *</label>
+                    <input
+                      type="number"
+                      required
+                      value={createForm.stock}
+                      onChange={(e) => setCreateForm({ ...createForm, stock: e.target.value })}
+                      placeholder="50"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Low Stock Alert</label>
+                    <input
+                      type="number"
+                      value={createForm.lowStockAlert}
+                      onChange={(e) => setCreateForm({ ...createForm, lowStockAlert: e.target.value })}
+                      placeholder="5"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Stock Status</label>
+                    <select
+                      value={createForm.stockStatus}
+                      onChange={(e) => setCreateForm({ ...createForm, stockStatus: e.target.value as any })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Out Of Stock">Out Of Stock</option>
+                    </select>
+                  </div>
                 </div>
+              </div>
+
+              {/* SECTION: SEO & SEARCH TAGS */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaTags />
+                  <span>3. Search Tags & SEO Metadata</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Search Tags (Comma separated)</label>
+                    <input
+                      type="text"
+                      value={createForm.tags}
+                      onChange={(e) => setCreateForm({ ...createForm, tags: e.target.value })}
+                      placeholder="organic, pulses, unpolished, native"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">SEO Meta Title</label>
+                    <input
+                      type="text"
+                      value={createForm.metaTitle}
+                      onChange={(e) => setCreateForm({ ...createForm, metaTitle: e.target.value })}
+                      placeholder="Buy Organic Toor Dal Online"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Specification Type *</label>
-                  <input
-                    type="text"
-                    required
-                    value={createForm.spec_type}
-                    onChange={(e) => setCreateForm({ ...createForm, spec_type: e.target.value })}
-                    placeholder="Agricultural Produce"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
+                  <label className="block text-slate-700 font-semibold mb-1">SEO Meta Description</label>
+                  <textarea
+                    rows={2}
+                    value={createForm.metaDescription}
+                    onChange={(e) => setCreateForm({ ...createForm, metaDescription: e.target.value })}
+                    placeholder="Short summary for Google search engines..."
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Selling Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={createForm.sellingPrice}
-                    onChange={(e) => setCreateForm({ ...createForm, sellingPrice: e.target.value })}
-                    placeholder="180"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">MRP Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={createForm.mrp}
-                    onChange={(e) => setCreateForm({ ...createForm, mrp: e.target.value })}
-                    placeholder="220"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Stock Quantity *</label>
-                  <input
-                    type="number"
-                    required
-                    value={createForm.stock}
-                    onChange={(e) => setCreateForm({ ...createForm, stock: e.target.value })}
-                    placeholder="50"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Product Description *</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={createForm.description}
-                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                  placeholder="Detailed description of the harvest item (min 10 chars)..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
-                />
-              </div>
-
-              {/* Multi-Image Upload */}
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Product Gallery Images (Up to 5 images)</label>
+              {/* SECTION: IMAGES */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <label className="block text-slate-700 font-semibold">4. Product Image Gallery (Up to 5 files)</label>
                 <div 
                   onClick={() => createFileInputRef.current?.click()}
-                  className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer transition bg-slate-50/50 flex flex-col items-center justify-center gap-2"
+                  className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer transition bg-white flex flex-col items-center justify-center gap-1.5"
                 >
-                  <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                    <FaCloudUploadAlt className="text-lg" />
+                  <div className="h-9 w-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <FaCloudUploadAlt className="text-base" />
                   </div>
-                  <span className="text-xs text-slate-600 font-semibold">Click to upload product photographs</span>
-                  <span className="text-[10px] text-slate-400">Select multiple files (PNG, JPG, WEBP)</span>
+                  <span className="text-xs text-slate-700 font-semibold">Click to select photographs</span>
+                  <span className="text-[10px] text-slate-400">PNG, JPG, WEBP formats</span>
                   <input
                     ref={createFileInputRef}
                     type="file"
@@ -706,7 +856,7 @@ const Products = () => {
                 </div>
 
                 {createPreviews.length > 0 && (
-                  <div className="grid grid-cols-5 gap-2 mt-3">
+                  <div className="grid grid-cols-5 gap-2 mt-2">
                     {createPreviews.map((src, i) => (
                       <div key={i} className="relative h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
                         <img src={src} alt="Preview" className="w-full h-full object-cover" />
@@ -717,24 +867,43 @@ const Products = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-4 pt-1">
+              {/* SECTION: VISIBILITY FLAGS */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={createForm.isBestSeller}
                     onChange={(e) => setCreateForm({ ...createForm, isBestSeller: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
-                  <span>Mark as Best Seller</span>
+                  <span>Best Seller</span>
                 </label>
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={createForm.isFeatured}
                     onChange={(e) => setCreateForm({ ...createForm, isFeatured: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
-                  <span>Featured on Home Page</span>
+                  <span>Featured Home</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createForm.isTrending}
+                    onChange={(e) => setCreateForm({ ...createForm, isTrending: e.target.checked })}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>Trending Pick</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createForm.isNewArrival}
+                    onChange={(e) => setCreateForm({ ...createForm, isNewArrival: e.target.checked })}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>New Arrival</span>
                 </label>
               </div>
 
@@ -762,7 +931,7 @@ const Products = () => {
       {/* 2. EDIT PRODUCT MODAL */}
       {editModalOpen && selectedProduct && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
@@ -770,7 +939,7 @@ const Products = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Update Product</h3>
-                  <p className="text-xs text-slate-500">PUT /api/v1/admin/products/:id</p>
+                  <p className="text-xs text-slate-500">Edit product catalog parameters and specifications</p>
                 </div>
               </div>
               <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
@@ -778,146 +947,255 @@ const Products = () => {
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="space-y-4 text-xs sm:text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Product Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Brand Name</label>
-                  <input
-                    type="text"
-                    value={editForm.brand}
-                    onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Category</label>
-                  <select
-                    value={editForm.categoryId}
-                    onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
-                  >
-                    <option value="">Keep current category</option>
-                    {backendCategories.map((c: any) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Pack Size (Weight) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.weight}
-                    onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Specification Type *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.spec_type}
-                    onChange={(e) => setEditForm({ ...editForm, spec_type: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Selling Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={editForm.sellingPrice}
-                    onChange={(e) => setEditForm({ ...editForm, sellingPrice: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">MRP Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={editForm.mrp}
-                    onChange={(e) => setEditForm({ ...editForm, mrp: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Stock Units *</label>
-                  <input
-                    type="number"
-                    required
-                    value={editForm.stock}
-                    onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Description *</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
-                />
-              </div>
-
-              {/* Existing Images Gallery */}
-              {existingImages.length > 0 && (
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Current Active Images</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {existingImages.map((img, i) => (
-                      <div key={i} className="relative h-20 rounded-xl overflow-hidden border border-slate-200 group bg-slate-100">
-                        <img src={img.url} alt="Product" className="w-full h-full object-cover" />
-                        {img.public_id && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExistingImage(img.public_id)}
-                            className="absolute top-1 right-1 bg-red-600 text-white h-5 w-5 rounded-full flex items-center justify-center text-[10px] opacity-90 hover:opacity-100 transition cursor-pointer"
-                            title="Remove Image"
-                          >
-                            <FaTimes />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+            <form onSubmit={handleEditSubmit} className="space-y-5 text-xs sm:text-sm">
+              
+              {/* SECTION: BASIC INFO */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaLeaf />
+                  <span>1. General Information</span>
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Product Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Brand Name</label>
+                    <input
+                      type="text"
+                      value={editForm.brand}
+                      onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* Upload Additional Images */}
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Upload Additional / New Images</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Category</label>
+                    <select
+                      value={editForm.categoryId}
+                      onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
+                    >
+                      <option value="">Keep current category</option>
+                      {backendCategories.map((c: any) => (
+                        <option key={c._id} value={c._id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Pack Size (Weight) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.weight}
+                      onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Specification Type *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.spec_type}
+                      onChange={(e) => setEditForm({ ...editForm, spec_type: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Color / Grade</label>
+                    <input
+                      type="text"
+                      value={editForm.color}
+                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Country of Origin</label>
+                    <input
+                      type="text"
+                      value={editForm.countryOfOrigin}
+                      onChange={(e) => setEditForm({ ...editForm, countryOfOrigin: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Product Description *</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* SECTION: PRICING & INVENTORY */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaSlidersH />
+                  <span>2. Pricing & Stock Inventory</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">MRP Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={editForm.mrp}
+                      onChange={(e) => setEditForm({ ...editForm, mrp: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Selling Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={editForm.sellingPrice}
+                      onChange={(e) => setEditForm({ ...editForm, sellingPrice: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Discount Promo Price (₹)</label>
+                    <input
+                      type="number"
+                      value={editForm.discountPrice}
+                      onChange={(e) => setEditForm({ ...editForm, discountPrice: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Available Stock *</label>
+                    <input
+                      type="number"
+                      required
+                      value={editForm.stock}
+                      onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Low Stock Alert</label>
+                    <input
+                      type="number"
+                      value={editForm.lowStockAlert}
+                      onChange={(e) => setEditForm({ ...editForm, lowStockAlert: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Stock Status</label>
+                    <select
+                      value={editForm.stockStatus}
+                      onChange={(e) => setEditForm({ ...editForm, stockStatus: e.target.value as any })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Out Of Stock">Out Of Stock</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: SEO & SEARCH TAGS */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <FaTags />
+                  <span>3. Search Tags & SEO Metadata</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">Search Tags (Comma separated)</label>
+                    <input
+                      type="text"
+                      value={editForm.tags}
+                      onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-semibold mb-1">SEO Meta Title</label>
+                    <input
+                      type="text"
+                      value={editForm.metaTitle}
+                      onChange={(e) => setEditForm({ ...editForm, metaTitle: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:border-emerald-600 transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">SEO Meta Description</label>
+                  <textarea
+                    rows={2}
+                    value={editForm.metaDescription}
+                    onChange={(e) => setEditForm({ ...editForm, metaDescription: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-900 outline-none focus:border-emerald-600 transition resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* SECTION: GALLERY & IMAGES */}
+              <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70 space-y-3">
+                <label className="block text-slate-700 font-semibold">4. Product Image Gallery</label>
+
+                {existingImages.length > 0 && (
+                  <div>
+                    <span className="text-[11px] text-slate-500 font-semibold block mb-2">Existing Uploaded Images:</span>
+                    <div className="grid grid-cols-5 gap-2">
+                      {existingImages.map((img, i) => (
+                        <div key={i} className="relative h-20 rounded-xl overflow-hidden border border-slate-200 bg-white group">
+                          <img src={img.url} alt="Gallery" className="w-full h-full object-contain p-1" />
+                          {img.public_id && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingImage(img.public_id)}
+                              className="absolute top-1 right-1 h-5 w-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition shadow-xs cursor-pointer"
+                              title="Delete this image"
+                            >
+                              <FaTimes className="text-[10px]" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div 
                   onClick={() => editFileInputRef.current?.click()}
-                  className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer transition bg-slate-50/50 flex flex-col items-center justify-center gap-2"
+                  className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer transition bg-white flex flex-col items-center justify-center gap-1.5 mt-2"
                 >
                   <div className="h-9 w-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
                     <FaCloudUploadAlt className="text-base" />
                   </div>
-                  <span className="text-xs text-slate-600 font-semibold">Click to select extra images</span>
+                  <span className="text-xs text-slate-700 font-semibold">Click to upload additional images</span>
                   <input
                     ref={editFileInputRef}
                     type="file"
@@ -929,16 +1207,16 @@ const Products = () => {
                 </div>
 
                 {editPreviews.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mt-3">
-                    {editPreviews.map((src, idx) => (
-                      <div key={idx} className="relative h-20 rounded-xl overflow-hidden border border-emerald-300 bg-slate-100">
-                        <img src={src} alt="New upload" className="w-full h-full object-cover" />
+                  <div className="grid grid-cols-5 gap-2 mt-2">
+                    {editPreviews.map((src, i) => (
+                      <div key={i} className="relative h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                        <img src={src} alt="Preview" className="w-full h-full object-cover" />
                         <button
                           type="button"
-                          onClick={() => handleRemoveNewEditFile(idx)}
-                          className="absolute top-1 right-1 bg-red-600 text-white h-5 w-5 rounded-full flex items-center justify-center text-[10px] cursor-pointer"
+                          onClick={() => handleRemoveNewEditFile(i)}
+                          className="absolute top-1 right-1 h-5 w-5 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xs cursor-pointer"
                         >
-                          <FaTimes />
+                          <FaTimes className="text-[10px]" />
                         </button>
                       </div>
                     ))}
@@ -946,13 +1224,14 @@ const Products = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-4 pt-1">
+              {/* SECTION: VISIBILITY FLAGS */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/60 p-4 rounded-2xl border border-slate-200/70">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={editForm.isBestSeller}
                     onChange={(e) => setEditForm({ ...editForm, isBestSeller: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
                   <span>Best Seller</span>
                 </label>
@@ -961,9 +1240,27 @@ const Products = () => {
                     type="checkbox"
                     checked={editForm.isFeatured}
                     onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
-                  <span>Featured Product</span>
+                  <span>Featured Home</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.isTrending}
+                    onChange={(e) => setEditForm({ ...editForm, isTrending: e.target.checked })}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>Trending Pick</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.isNewArrival}
+                    onChange={(e) => setEditForm({ ...editForm, isNewArrival: e.target.checked })}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>New Arrival</span>
                 </label>
               </div>
 
@@ -988,7 +1285,7 @@ const Products = () => {
         </div>
       )}
 
-      {/* 3. DELETE PRODUCT MODAL */}
+      {/* 3. DELETE CONFIRMATION MODAL */}
       {deleteModalOpen && selectedProduct && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 text-center">
@@ -997,9 +1294,9 @@ const Products = () => {
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Delete Product Entry?</h3>
+              <h3 className="text-lg font-bold text-slate-900">Delete Product?</h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Are you sure you want to delete <strong className="text-slate-900">"{selectedProduct.name}"</strong>? This will remove the harvest listing from active catalog search and storefront display.
+                Are you sure you want to remove <strong className="text-slate-900">"{selectedProduct.name}"</strong>? This will delete the SKU from inventory.
               </p>
             </div>
 
