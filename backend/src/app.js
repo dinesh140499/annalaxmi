@@ -103,6 +103,11 @@ app.use(
       // allow requests with no origin (curl, Postman, mobile apps, server-to-server)
       if (!origin) return callback(null, true);
 
+      // Check if origin is expli`citly in allowed list or is a vercel preview deployment
+      if (
+        allowedOrigins.includes(origin) ) {
+        return callback(null, true);
+      }
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
