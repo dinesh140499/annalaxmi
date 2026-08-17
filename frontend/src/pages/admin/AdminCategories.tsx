@@ -4,15 +4,6 @@ import { get } from '../../baseUrl';
 import { FaTags, FaPlus, FaSearch, FaTimes, FaSeedling } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 
-const fallbackCategories = [
-  { id: '1', name: 'Organic Pulses & Dals', count: 24, status: 'Active', description: 'Unpolished native lentils and split grams' },
-  { id: '2', name: 'Ancient Grains & Millets', count: 32, status: 'Active', description: 'Heirloom rice, foxtail, ragi, and jowar' },
-  { id: '3', name: 'Cold-Pressed Virgin Oils', count: 18, status: 'Active', description: 'Wood-churned expeller oils without chemical heating' },
-  { id: '4', name: 'Authentic Indian Spices', count: 45, status: 'Active', description: 'High-curcumin single origin spices and whole peppers' },
-  { id: '5', name: 'Dry Fruits & Super Seeds', count: 28, status: 'Active', description: 'Raw Kashmiri mamra almonds, walnuts, and chia seeds' },
-  { id: '6', name: 'Stone-Ground Flours & Atta', count: 14, status: 'Active', description: 'Traditional stone-ground multi-grain flours' },
-];
-
 const AdminCategories = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -35,15 +26,13 @@ const AdminCategories = () => {
   });
 
   const backendCategories = apiData?.categories || [];
-  const categoryList = backendCategories.length > 0
-    ? backendCategories.map((c: any) => ({
-        id: c._id,
-        name: c.name,
-        count: 'Fresh Batch',
-        status: 'Active',
-        description: c.description || 'Certified organic cluster crop',
-      }))
-    : fallbackCategories;
+  const categoryList = backendCategories.map((c: any) => ({
+    id: c._id,
+    name: c.name,
+    count: 'Active',
+    status: 'Active',
+    description: c.description || 'Certified organic cluster crop',
+  }));
 
   const filtered = categoryList.filter((item: any) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())

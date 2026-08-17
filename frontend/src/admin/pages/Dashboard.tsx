@@ -58,9 +58,9 @@ const Dashboard = () => {
     retry: 1,
   });
 
-  const adminsCount = adminsData?.admins?.length || 3;
-  const productsCount = productsData?.pagination?.totalProducts || productsData?.products?.length || 8;
-  const categoriesCount = categoriesData?.categories?.length || 6;
+  const adminsCount = adminsData?.admins?.length ?? 0;
+  const productsCount = productsData?.pagination?.totalProducts ?? productsData?.products?.length ?? 0;
+  const categoriesCount = categoriesData?.categories?.length ?? 0;
 
   const quickStats = [
     {

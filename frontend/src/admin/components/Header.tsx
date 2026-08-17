@@ -19,10 +19,8 @@ interface HeaderProps {
   onOpenSidebar: () => void;
 }
 
-const mockNotifications = [
-  { id: 1, text: 'New order #GP-90182 placed for ₹505', time: '10m ago', unread: true },
-  { id: 2, text: 'New Admin "Pooja Sharma" assigned Catalog role', time: '1h ago', unread: true },
-  { id: 3, text: 'Inventory low: Kashmiri Mamra Almonds (18 left)', time: '3h ago', unread: false },
+const notifications = [
+  { id: 1, text: 'System connected to live MongoDB database', time: 'Active', unread: false },
 ];
 
 const Header = ({ onOpenSidebar }: HeaderProps) => {
@@ -133,7 +131,7 @@ const Header = ({ onOpenSidebar }: HeaderProps) => {
                 <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">2 New</span>
               </div>
               <div className="space-y-2">
-                {mockNotifications.map((n) => (
+                {notifications.map((n) => (
                   <div key={n.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-1">
                     <p className="text-slate-800 leading-snug font-medium">{n.text}</p>
                     <span className="text-[10px] text-slate-400 block">{n.time}</span>

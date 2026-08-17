@@ -1,9 +1,5 @@
 import { FaStar, FaShoppingBag } from 'react-icons/fa';
 import pulse from '../../assets/images/products/pulse.png';
-import spices from '../../assets/images/products/spices.png';
-import oils from '../../assets/images/products/oils.png';
-import grains from '../../assets/images/products/grains.png';
-import dryfruit from '../../assets/images/products/dry-fruit.png';
 import Pagination from '../reusable/Pagination';
 import { useState } from 'react';
 import { IoFilter } from 'react-icons/io5';
@@ -34,6 +30,7 @@ interface BackendProduct {
         weight?: string;
     };
     category?: {
+        _id?: string;
         name?: string;
     };
     images?: {
@@ -48,45 +45,35 @@ interface BackendProduct {
     isFeatured?: boolean;
 }
 
-const fallbackCatalog = [
-    { id: "1", name: "Organic Toor / Arhar Dal (Unpolished)", weight: "1 Kg", category: "Pulses", image: pulse, price: 165, originalPrice: 195, rating: 5, reviews: 42, badge: "Best Seller" },
-    { id: "2", name: "Himalayan Red Rice (Single Origin)", weight: "1 Kg", category: "Grains", image: grains, price: 210, originalPrice: 260, rating: 5, reviews: 28, badge: "Organic" },
-    { id: "3", name: "Cold-Pressed Kachi Ghani Mustard Oil", weight: "1 Litre", category: "Oils", image: oils, price: 175, originalPrice: 220, rating: 4.8, reviews: 56, badge: "Cold-Pressed" },
-    { id: "4", name: "Salem Pure Turmeric Powder (Curcumin 5%)", weight: "250 g", category: "Spices", image: spices, price: 120, originalPrice: 150, rating: 4.9, reviews: 39, badge: "Sun-Dried" },
-    { id: "5", name: "Kashmiri Mamra Almonds", weight: "500 g", category: "Dry Fruits", image: dryfruit, price: 650, originalPrice: 799, rating: 5, reviews: 67, badge: "Premium" },
-    { id: "6", name: "Organic Moong Dal (Yellow Split)", weight: "1 Kg", category: "Pulses", image: pulse, price: 145, originalPrice: 170, rating: 4.7, reviews: 18 },
-    { id: "7", name: "Organic Foxtail Millet (Kangni)", weight: "1 Kg", category: "Grains", image: grains, price: 130, originalPrice: 160, rating: 4.8, reviews: 24, badge: "Gluten-Free" },
-    { id: "8", name: "Single-Origin Whole Black Pepper", weight: "200 g", category: "Spices", image: spices, price: 180, originalPrice: 240, rating: 4.9, reviews: 31 },
-];
-
 const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, selectedCategory = "All", priceRange }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState('Featured');
     const dispatch = useDispatch();
 
-    // Query backend products API
+    // Query live backend products API (no dummy data)
     const { data: apiData, isLoading } = useQuery({
-        queryKey: ['products', currentPage, sortBy],
+        queryKey: ['products', currentPage, sortBy, selectedCategory],
         queryFn: () => get('default', `products?page=${currentPage}&limit=12`),
         retry: 1,
     });
 
     const backendProducts: BackendProduct[] = apiData?.products || [];
-    const pagination = apiData?.pagination || { totalPages: 1, totalProducts: fallbackCatalog.length };
+    const totalPages = apiData?.totalPages || 1;
+    const totalCount = apiData?.count || backendProducts.length;
 
-    // Format products from API or use fallback catalog
-    const rawProducts = backendProducts.length > 0 ? backendProducts.map((p) => ({
+    // Transform pure backend products
+    const rawProducts = backendProducts.map((p) => ({
         id: p._id,
         name: p.name,
-        weight: p.specifications?.weight || "1 Kg",
+        weight: p.specifications?.weight || "Standard",
         category: p.category?.name || "Organic",
         image: p.images?.[0]?.url || pulse,
-        price: p.pricing.sellingPrice,
-        originalPrice: p.pricing.mrp || Math.round(p.pricing.sellingPrice * 1.2),
+        price: p.pricing?.sellingPrice || 0,
+        originalPrice: p.pricing?.mrp || p.pricing?.sellingPrice || 0,
         rating: p.rating?.average || 5,
-        reviews: p.rating?.totalReviews || 12,
+        reviews: p.rating?.totalReviews || 0,
         badge: p.isBestSeller ? "Best Seller" : (p.isFeatured ? "Featured" : undefined),
-    })) : fallbackCatalog;
+    }));
 
     // Filter by category and price
     const displayProducts = rawProducts
@@ -106,9 +93,6 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
             if (sortBy === "Newest") return String(b.id).localeCompare(String(a.id));
             return 0;
         });
-
-    const totalCount = displayProducts.length;
-    const totalPages = pagination.totalPages || 1;
 
     const handleAddToCart = (item: any) => {
         dispatch(addToCart({
@@ -139,7 +123,7 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
                     </button>
                     
                     <p className="text-xs sm:text-sm text-slate-600">
-                        Showing <strong className="text-slate-900 font-bold">{displayProducts.length}</strong> of {totalCount} organic items
+                        Showing <strong className="text-slate-900 font-bold">{displayProducts.length}</strong> of {totalCount} items
                     </p>
                 </div>
 
@@ -163,15 +147,30 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
 
             {/* Loading Indicator */}
             {isLoading && (
-                <div className="text-center py-6 text-xs text-emerald-800 font-semibold animate-pulse">
-                    Refreshing fresh harvest catalog...
+                <div className="text-center py-12 text-sm text-emerald-800 font-semibold animate-pulse">
+                    Loading live products from database...
+                </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && displayProducts.length === 0 && (
+                <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm space-y-3">
+                    <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-400 text-2xl">
+                        🌾
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800">No Products Available</h3>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        There are currently no products matching this category or price filter in the live inventory.
+                    </p>
                 </div>
             )}
 
             {/* Products Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-5">
                 {displayProducts.map((item) => {
-                    const discount = Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100);
+                    const discount = item.originalPrice > item.price 
+                        ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
+                        : 0;
 
                     return (
                         <div key={item.id} className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 shadow-xs hover:shadow-lg hover:border-emerald-300 transition-all duration-300 card-hover-effect flex flex-col justify-between">
@@ -181,7 +180,7 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
                                 <Link to={`/categories/${item.id}`} className="block relative h-36 sm:h-44 w-full bg-slate-50 rounded-xl overflow-hidden mb-3 p-2">
                                     {item.badge && (
                                         <span className="absolute top-2 left-2 bg-emerald-800 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs z-10">
-                                            {item.badge}
+                                             {item.badge}
                                         </span>
                                     )}
                                     {discount > 0 && (
@@ -227,9 +226,11 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
                                     <div className="text-sm sm:text-base font-extrabold text-emerald-900 leading-none">
                                         ₹{item.price}
                                     </div>
-                                    <div className="text-[11px] text-slate-400 line-through mt-0.5">
-                                        ₹{item.originalPrice}
-                                    </div>
+                                    {item.originalPrice > item.price && (
+                                        <div className="text-[11px] text-slate-400 line-through mt-0.5">
+                                            ₹{item.originalPrice}
+                                        </div>
+                                    )}
                                 </div>
                                 <button 
                                     onClick={() => handleAddToCart(item)}

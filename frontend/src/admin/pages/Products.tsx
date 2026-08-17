@@ -15,10 +15,6 @@ import {
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 import pulse from '../../assets/images/products/pulse.png';
-import grains from '../../assets/images/products/grains.png';
-import oils from '../../assets/images/products/oils.png';
-import spices from '../../assets/images/products/spices.png';
-import dryfruit from '../../assets/images/products/dry-fruit.png';
 
 interface ProductImage {
   url: string;
@@ -51,13 +47,7 @@ interface ProductItem {
   badge?: string;
 }
 
-const fallbackAdminProducts: ProductItem[] = [
-  { id: '1', name: 'Organic Toor / Arhar Dal (Unpolished)', category: 'Pulses', price: 165, mrp: 195, weight: '1 Kg', stock: 48, stockStatus: 'Available', spec_type: 'Agricultural Produce', rating: 5.0, image: pulse, badge: 'Best Seller' },
-  { id: '2', name: 'Himalayan Red Rice (Single Origin)', category: 'Grains', price: 210, mrp: 260, weight: '1 Kg', stock: 32, stockStatus: 'Available', spec_type: 'Agricultural Produce', rating: 5.0, image: grains, badge: 'Organic' },
-  { id: '3', name: 'Cold-Pressed Kachi Ghani Mustard Oil', category: 'Oils', price: 175, mrp: 220, weight: '1 Litre', stock: 24, stockStatus: 'Available', spec_type: 'Agricultural Produce', rating: 4.8, image: oils, badge: 'Cold-Pressed' },
-  { id: '4', name: 'Salem Pure Turmeric Powder (Curcumin 5%)', category: 'Spices', price: 120, mrp: 150, weight: '250 g', stock: 65, stockStatus: 'Available', spec_type: 'Agricultural Produce', rating: 4.9, image: spices, badge: 'Sun-Dried' },
-  { id: '5', name: 'Kashmiri Mamra Almonds', category: 'Dry Fruits', price: 650, mrp: 799, weight: '500 g', stock: 18, stockStatus: 'Available', spec_type: 'Agricultural Produce', rating: 5.0, image: dryfruit, badge: 'Premium' },
-];
+
 
 const Products = () => {
   const queryClient = useQueryClient();
@@ -147,34 +137,32 @@ const Products = () => {
   const backendCategories = catData?.categories || [];
 
   const backendProducts = apiData?.products || [];
-  const productList: ProductItem[] = backendProducts.length > 0
-    ? backendProducts.map((p: any) => ({
-        id: p._id,
-        _id: p._id,
-        name: p.name,
-        category: p.category?.name || 'Organic',
-        categoryId: p.category?._id || p.category,
-        brand: p.brand || 'GrainPulse Organic',
-        price: p.pricing?.sellingPrice || 165,
-        mrp: p.pricing?.mrp || 195,
-        discountPrice: p.pricing?.discountPrice,
-        weight: p.specifications?.weight || '1 Kg',
-        spec_type: p.specifications?.spec_type || 'Agricultural Produce',
-        countryOfOrigin: p.specifications?.countryOfOrigin || 'India',
-        stock: p.inventory?.stock ?? p.inventory?.stockQuantity ?? 35,
-        stockStatus: p.inventory?.stockStatus || (p.inventory?.stock > 0 ? 'Available' : 'Out Of Stock'),
-        tags: p.tags || [],
-        rating: p.rating?.average || 5.0,
-        image: p.images?.[0]?.url || pulse,
-        images: p.images || [],
-        description: p.description || '',
-        isBestSeller: p.isBestSeller,
-        isFeatured: p.isFeatured,
-        badge: p.isBestSeller ? 'Best Seller' : undefined,
-      }))
-    : fallbackAdminProducts;
+  const productList: ProductItem[] = backendProducts.map((p: any) => ({
+    id: p._id,
+    _id: p._id,
+    name: p.name,
+    category: p.category?.name || 'Organic',
+    categoryId: p.category?._id || p.category,
+    brand: p.brand || 'GrainPulse Organic',
+    price: p.pricing?.sellingPrice || 0,
+    mrp: p.pricing?.mrp || p.pricing?.sellingPrice || 0,
+    discountPrice: p.pricing?.discountPrice,
+    weight: p.specifications?.weight || 'Standard',
+    spec_type: p.specifications?.spec_type || 'Agricultural Produce',
+    countryOfOrigin: p.specifications?.countryOfOrigin || 'India',
+    stock: p.inventory?.stock ?? p.inventory?.stockQuantity ?? 0,
+    stockStatus: p.inventory?.stockStatus || ((p.inventory?.stock ?? p.inventory?.stockQuantity ?? 0) > 0 ? 'Available' : 'Out Of Stock'),
+    tags: p.tags || [],
+    rating: p.rating?.average || 5.0,
+    image: p.images?.[0]?.url || pulse,
+    images: p.images || [],
+    description: p.description || '',
+    isBestSeller: p.isBestSeller,
+    isFeatured: p.isFeatured,
+    badge: p.isBestSeller ? 'Best Seller' : undefined,
+  }));
 
-  const categories = ['All', 'Pulses', 'Grains', 'Oils', 'Spices', 'Dry Fruits'];
+  const categories = ['All', ...backendCategories.map((c: any) => c.name)];
 
   const filtered = productList.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());

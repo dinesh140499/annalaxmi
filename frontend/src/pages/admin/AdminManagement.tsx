@@ -65,46 +65,7 @@ const AdminManagement = () => {
     retry: 1,
   });
 
-  // Fallback demo data if backend is offline or empty
-  const fallbackAdmins: AdminUser[] = [
-    {
-      _id: 'adm-001',
-      firstName: 'Dinesh',
-      lastName: 'Kumar',
-      email: 'superadmin@grainpulse.demo',
-      phoneNo: '+91 9876543210',
-      role: 'superadmin',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLogin: 'Today, 10:45 AM',
-    },
-    {
-      _id: 'adm-002',
-      firstName: 'Pooja',
-      lastName: 'Sharma',
-      email: 'pooja.catalog@grainpulse.demo',
-      phoneNo: '+91 9811223344',
-      role: 'admin',
-      isActive: true,
-      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      lastLogin: 'Yesterday, 4:20 PM',
-    },
-    {
-      _id: 'adm-003',
-      firstName: 'Rahul',
-      lastName: 'Mehta',
-      email: 'rahul.ops@grainpulse.demo',
-      phoneNo: '+91 9988776655',
-      role: 'admin',
-      isActive: true,
-      createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-      lastLogin: '3 days ago',
-    },
-  ];
-
-  const adminsList: AdminUser[] = (apiData?.admins && apiData.admins.length > 0)
-    ? apiData.admins
-    : fallbackAdmins;
+  const adminsList: AdminUser[] = apiData?.admins || [];
 
   // 2. Create Admin Mutation via POST /superadmin/create-admin
   const createAdminMutation = useMutation({

@@ -28,15 +28,6 @@ interface CategoryItem {
   createdAt?: string;
 }
 
-const fallbackCategories: CategoryItem[] = [
-  { id: 'cat-1', name: 'Organic Pulses & Dals', count: 24, status: 'Active', description: 'Unpolished native lentils and split grams', image: pulse },
-  { id: 'cat-2', name: 'Ancient Grains & Millets', count: 32, status: 'Active', description: 'Heirloom rice, foxtail, ragi, and jowar', image: pulse },
-  { id: 'cat-3', name: 'Cold-Pressed Virgin Oils', count: 18, status: 'Active', description: 'Wood-churned expeller oils without chemical heating', image: pulse },
-  { id: 'cat-4', name: 'Authentic Indian Spices', count: 45, status: 'Active', description: 'High-curcumin single origin spices and whole peppers', image: pulse },
-  { id: 'cat-5', name: 'Dry Fruits & Super Seeds', count: 28, status: 'Active', description: 'Raw Kashmiri mamra almonds, walnuts, and chia seeds', image: pulse },
-  { id: 'cat-6', name: 'Stone-Ground Flours & Atta', count: 14, status: 'Active', description: 'Stone-ground multi-grain flours', image: pulse },
-];
-
 const Categories = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,18 +70,16 @@ const Categories = () => {
   });
 
   const backendCategories = apiData?.categories || [];
-  const categoryList: CategoryItem[] = backendCategories.length > 0
-    ? backendCategories.map((c: any) => ({
-        id: c._id,
-        _id: c._id,
-        name: c.name,
-        slug: c.slug,
-        count: c.productCount || 'Active',
-        status: c.isActive !== false ? 'Active' : 'Inactive',
-        description: c.description || 'Certified organic cluster crop',
-        image: c.image?.url || c.image || pulse,
-      }))
-    : fallbackCategories;
+  const categoryList: CategoryItem[] = backendCategories.map((c: any) => ({
+    id: c._id,
+    _id: c._id,
+    name: c.name,
+    slug: c.slug,
+    count: c.productCount || 'Active',
+    status: c.isActive !== false ? 'Active' : 'Inactive',
+    description: c.description || 'Certified organic cluster crop',
+    image: c.image?.url || c.image || pulse,
+  }));
 
   const filtered = categoryList.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())

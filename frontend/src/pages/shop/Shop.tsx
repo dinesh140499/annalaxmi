@@ -17,23 +17,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../../baseUrl';
 
-const fallbackShopCategories = [
-  { name: 'Organic Pulses & Dals', count: 24 },
-  { name: 'Ancient Grains & Millets', count: 32 },
-  { name: 'Cold-Pressed Virgin Oils', count: 18 },
-  { name: 'Authentic Indian Spices', count: 45 },
-  { name: 'Dry Fruits & Super Seeds', count: 28 },
-  { name: 'Stone-Ground Flours & Atta', count: 14 },
-];
-
-const products = [
-  { id: 1, name: 'Organic Toor Dal (Unpolished)' },
-  { id: 2, name: 'Himalayan Red Rice' },
-  { id: 3, name: 'Cold-Pressed Mustard Oil' },
-  { id: 4, name: 'Salem Turmeric Powder' },
-  { id: 5, name: 'Kashmiri Mamra Almonds' },
-];
-
 const Shop = () => {
   const [filterBtnToggle, setFilterBtnToggle] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -48,18 +31,23 @@ const Shop = () => {
   const navigate = useNavigate();
 
   // Query backend categories API
-  const { data: apiData } = useQuery({
+  const { data: catData } = useQuery({
     queryKey: ['categories'],
     queryFn: () => get('default', 'categories'),
     retry: 1,
   });
 
-  const backendCategories = apiData?.categories || [];
+  // Query backend products API for global search bar auto-complete
+  const { data: prodData } = useQuery({
+    queryKey: ['products-search-list'],
+    queryFn: () => get('default', 'products?limit=50'),
+    retry: 1,
+  });
+
+  const backendCategories = catData?.categories || [];
   const rawCategories = [
     { name: 'All', count: 'All Items' },
-    ...(backendCategories.length > 0
-      ? backendCategories.map((c: any) => ({ name: c.name, count: "Fresh" }))
-      : fallbackShopCategories)
+    ...backendCategories.map((c: any) => ({ name: c.name, count: "Fresh" }))
   ];
 
   // Deduplicate categories by lowercase name
@@ -76,9 +64,12 @@ const Shop = () => {
   };
 
   useEffect(() => {
-    dispatch(setSearchConfig({ items: products, getLabelKey: 'name' }));
-    searchManager.setOnSelect((item) => navigate(`/product/${item.id}`));
-  }, [dispatch, navigate]);
+    const products = prodData?.products || [];
+    if (products.length > 0) {
+      dispatch(setSearchConfig({ items: products, getLabelKey: 'name' }));
+      searchManager.setOnSelect((item) => navigate(`/categories/${item._id}`));
+    }
+  }, [dispatch, navigate, prodData]);
 
   return (
     <div className="bg-slate-50/50 min-h-screen py-6 sm:py-8">

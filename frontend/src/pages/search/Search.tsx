@@ -3,14 +3,14 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { FaSearch, FaLeaf, FaSlidersH, FaStar, FaShoppingCart, FaEye } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
 import pulse from '../../assets/images/products/pulse.png';
-import grains from '../../assets/images/products/grains.png';
-import oils from '../../assets/images/products/oils.png';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../features/cartSlice';
 import { setButton } from '../../features/commonSlice';
+import { useQuery } from '@tanstack/react-query';
+import { get } from '../../baseUrl';
 
 interface ProductItem {
-  id: number;
+  id: string;
   name: string;
   category: string;
   price: number;
@@ -23,89 +23,6 @@ interface ProductItem {
   inStock: boolean;
 }
 
-const mockSearchProducts: ProductItem[] = [
-  {
-    id: 1,
-    name: "Organic Toor Dal (Unpolished)",
-    category: "Pulses & Dals",
-    price: 165,
-    originalPrice: 195,
-    rating: 4.9,
-    reviewsCount: 128,
-    image: pulse,
-    badge: "100% Unpolished",
-    weight: "1 Kg",
-    inStock: true,
-  },
-  {
-    id: 2,
-    name: "Himalayan Red Rice (Single Origin)",
-    category: "Grains & Millets",
-    price: 210,
-    originalPrice: 260,
-    rating: 4.8,
-    reviewsCount: 94,
-    image: grains,
-    badge: "Native Grain",
-    weight: "1 Kg",
-    inStock: true,
-  },
-  {
-    id: 3,
-    name: "Cold-Pressed Kachi Ghani Mustard Oil",
-    category: "Virgin Oils",
-    price: 175,
-    originalPrice: 220,
-    rating: 4.9,
-    reviewsCount: 210,
-    image: oils,
-    badge: "Wood Churned",
-    weight: "1 Litre",
-    inStock: true,
-  },
-  {
-    id: 4,
-    name: "Salem Pure Golden Turmeric Powder",
-    category: "Spices",
-    price: 95,
-    originalPrice: 120,
-    rating: 5.0,
-    reviewsCount: 76,
-    image: pulse,
-    badge: "High Curcumin",
-    weight: "250g",
-    inStock: true,
-  },
-  {
-    id: 5,
-    name: "Kashmiri Organic Mamra Almonds",
-    category: "Dry Fruits & Seeds",
-    price: 490,
-    originalPrice: 580,
-    rating: 4.7,
-    reviewsCount: 45,
-    image: grains,
-    badge: "Raw Harvest",
-    weight: "500g",
-    inStock: true,
-  },
-  {
-    id: 6,
-    name: "Ancient Foxtail Millet (Kangni)",
-    category: "Grains & Millets",
-    price: 130,
-    originalPrice: 160,
-    rating: 4.8,
-    reviewsCount: 62,
-    image: grains,
-    badge: "Diabetic Friendly",
-    weight: "1 Kg",
-    inStock: true,
-  }
-];
-
-const categories = ["All", "Pulses & Dals", "Grains & Millets", "Virgin Oils", "Spices", "Dry Fruits & Seeds"];
-
 const Search = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -114,8 +31,41 @@ const Search = () => {
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortBy, setSortBy] = useState<string>("relevance");
-  const [maxPrice, setMaxPrice] = useState<number>(600);
+  const [maxPrice, setMaxPrice] = useState<number>(3000);
   const [filterDrawer, setFilterDrawer] = useState<boolean>(false);
+
+  // 1. Fetch live backend products
+  const { data: prodData, isLoading } = useQuery({
+    queryKey: ['search-products'],
+    queryFn: () => get('default', 'products?limit=100'),
+    retry: 1,
+  });
+
+  // 2. Fetch live backend categories
+  const { data: catData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => get('default', 'categories'),
+    retry: 1,
+  });
+
+  const backendProducts = prodData?.products || [];
+  const backendCategories = catData?.categories || [];
+
+  const categories = ["All", ...backendCategories.map((c: any) => c.name)];
+
+  const allProducts: ProductItem[] = backendProducts.map((p: any) => ({
+    id: p._id,
+    name: p.name,
+    category: p.category?.name || "Organic",
+    price: p.pricing?.sellingPrice || 0,
+    originalPrice: p.pricing?.mrp || p.pricing?.sellingPrice || 0,
+    rating: p.rating?.average || 5.0,
+    reviewsCount: p.rating?.totalReviews || 0,
+    image: p.images?.[0]?.url || pulse,
+    badge: p.isBestSeller ? "Best Seller" : (p.isFeatured ? "Featured" : undefined),
+    weight: p.specifications?.weight || "Standard",
+    inStock: (p.inventory?.stock ?? p.inventory?.stockQuantity ?? 1) > 0,
+  }));
 
   const handleAddToCart = (product: ProductItem) => {
     dispatch(addToCart({
@@ -140,13 +90,13 @@ const Search = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    return mockSearchProducts
+    return allProducts
       .filter((p) => {
         const matchesQuery = queryParam
           ? p.name.toLowerCase().includes(queryParam.toLowerCase()) ||
             p.category.toLowerCase().includes(queryParam.toLowerCase())
           : true;
-        const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+        const matchesCategory = selectedCategory === "All" || p.category.toLowerCase().includes(selectedCategory.toLowerCase());
         const matchesPrice = p.price <= maxPrice;
         return matchesQuery && matchesCategory && matchesPrice;
       })
@@ -156,7 +106,7 @@ const Search = () => {
         if (sortBy === "rating") return b.rating - a.rating;
         return 0;
       });
-  }, [queryParam, selectedCategory, maxPrice, sortBy]);
+  }, [allProducts, queryParam, selectedCategory, maxPrice, sortBy]);
 
   return (
     <div className="bg-slate-50/50 min-h-screen">
@@ -207,11 +157,11 @@ const Search = () => {
                 <FaSlidersH className="text-emerald-800" />
                 <span>Refine Search</span>
               </span>
-              {(selectedCategory !== "All" || maxPrice < 600) && (
+              {(selectedCategory !== "All" || maxPrice < 3000) && (
                 <button
                   onClick={() => {
                     setSelectedCategory("All");
-                    setMaxPrice(600);
+                    setMaxPrice(3000);
                   }}
                   className="text-xs text-amber-600 font-semibold hover:underline cursor-pointer"
                 >
@@ -248,15 +198,15 @@ const Search = () => {
               <input
                 type="range"
                 min={50}
-                max={600}
-                step={25}
+                max={3000}
+                step={50}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-emerald-700 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
               />
               <div className="flex justify-between text-[11px] text-slate-400">
                 <span>₹50</span>
-                <span>₹600</span>
+                <span>₹3,000</span>
               </div>
             </div>
           </aside>
@@ -296,7 +246,11 @@ const Search = () => {
             </div>
 
             {/* Results Grid */}
-            {filteredProducts.length > 0 ? (
+            {isLoading ? (
+              <div className="py-12 text-center text-xs text-emerald-800 font-semibold animate-pulse">
+                Searching live catalog database...
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <div
@@ -323,7 +277,7 @@ const Search = () => {
                         {product.category}
                       </span>
                       <Link
-                        to={`/product/${product.id}`}
+                        to={`/categories/${product.id}`}
                         className="font-bold text-slate-900 text-sm hover:text-emerald-800 transition line-clamp-2 mt-1"
                       >
                         {product.name}
@@ -344,12 +298,14 @@ const Search = () => {
                     <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
                       <div>
                         <div className="text-base font-extrabold text-slate-900">₹{product.price}</div>
-                        <div className="text-[11px] text-slate-400 line-through">₹{product.originalPrice}</div>
+                        {product.originalPrice > product.price && (
+                          <div className="text-[11px] text-slate-400 line-through">₹{product.originalPrice}</div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
                         <Link
-                          to={`/product/${product.id}`}
+                          to={`/categories/${product.id}`}
                           className="p-2.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-900 transition"
                           title="Quick View"
                         >
