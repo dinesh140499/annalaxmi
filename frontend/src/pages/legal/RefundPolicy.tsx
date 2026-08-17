@@ -1,4 +1,5 @@
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
+import { Link } from 'react-router-dom';
 import { FaShieldAlt, FaUndoAlt, FaPhoneAlt, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const RefundPolicy = () => {
@@ -65,7 +66,7 @@ const RefundPolicy = () => {
               <span>4. How to Raise a Refund / Replacement Request</span>
             </h2>
             <p>
-              You can raise a return or quality ticket directly through your <a href="/account/orders" className="text-emerald-800 font-bold hover:underline">Order History</a>, or contact our customer support desk:
+              You can raise a return or quality ticket directly through your <Link to="/account/orders" className="text-emerald-800 font-bold hover:underline">Order History</Link>, or contact our customer support desk:
             </p>
             <div className="bg-slate-50 rounded-2xl p-4 text-xs space-y-1 text-slate-800 border border-slate-200">
               <p>• <strong>WhatsApp Support:</strong> +91 90000-00000 (Instant 5-minute reply)</p>

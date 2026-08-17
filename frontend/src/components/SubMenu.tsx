@@ -97,6 +97,11 @@ const SubMenu = ({ setToggleSidebar, toggleSidebar }: SubMenuProps) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Automatically close sidebar when navigating to a new page
+    useEffect(() => {
+        setToggleSidebar(false);
+    }, [location.pathname]);
+
     // Prevent background scrolling when mobile sidebar is open
     useEffect(() => {
         if (toggleSidebar && !isDesktop) {

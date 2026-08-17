@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import SubMenu from "../components/SubMenu";
 import Footer from "../components/Footer";
@@ -8,6 +8,7 @@ import { useState } from "react";
 
 const MainLayout = () => {
     const [toggleSidebar, setToggleSidebar] = useState<boolean>(false);
+    const location = useLocation();
 
     return (
         <div className="custom-scrollbar pb-16 lg:pb-0">
@@ -15,7 +16,7 @@ const MainLayout = () => {
             <SubMenu toggleSidebar={toggleSidebar} setToggleSidebar={setToggleSidebar} />
             <ScrollToTop />
 
-            <Outlet />
+            <Outlet key={location.pathname} />
             <Footer />
 
             {/* Sticky Mobile Bottom Navigation */}

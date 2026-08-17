@@ -1,4 +1,5 @@
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
+import { Link } from 'react-router-dom';
 import { FaTruck, FaClock, FaBoxOpen, FaShieldAlt, FaMapMarkerAlt, FaLeaf } from 'react-icons/fa';
 
 const ShippingPolicy = () => {
@@ -63,7 +64,7 @@ const ShippingPolicy = () => {
               <span>4. Real-Time Transit Tracking</span>
             </h2>
             <p>
-              Once your harvest order is dispatched, you will receive an SMS and WhatsApp notification containing a live GPS tracking link. You can also track your status anytime at our <a href="/track-order" className="text-emerald-800 font-bold hover:underline">Live Track Order</a> page.
+              Once your harvest order is dispatched, you will receive an SMS and WhatsApp notification containing a live GPS tracking link. You can also track your status anytime at our <Link to="/track-order" className="text-emerald-800 font-bold hover:underline">Live Track Order</Link> page.
             </p>
           </section>
 

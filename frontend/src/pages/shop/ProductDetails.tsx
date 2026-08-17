@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import ProductView from "../../components/shop/details/ProductView";
 import AdditionalInformation from "../../components/shop/details/tabs-content/AdditionalInformation";
 import Description from "../../components/shop/details/tabs-content/Description";
@@ -21,13 +22,19 @@ const tabs: TabItem[] = [
 ];
 
 const ProductDetails = () => {
+  const { productId } = useParams<{ productId: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>("description");
 
+  // Reset tab and scroll when productId changes
+  useEffect(() => {
+    setActiveTab("description");
+  }, [productId]);
+
   return (
-    <div className="bg-slate-50/50 min-h-screen py-4">
+    <div key={productId} className="bg-slate-50/50 min-h-screen py-4">
       {/* Product Hero & Details */}
       <div className="max-w-[95%] mx-auto bg-white rounded-3xl p-4 sm:p-8 border border-slate-100 shadow-xs mb-8">
-        <ProductView />
+        <ProductView key={productId} />
       </div>
 
       {/* Tabs Section */}
