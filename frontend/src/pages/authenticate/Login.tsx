@@ -102,6 +102,13 @@ const Login = () => {
       post("default", "auth/login-with-password", payload),
 
     onSuccess: (data) => {
+      if (data?.token) {
+        try {
+          localStorage.setItem("token", data.token);
+        } catch (e) {
+          console.error("Error storing token:", e);
+        }
+      }
       if (data?.user) {
         dispatch(setUser(data.user));
       }

@@ -42,6 +42,7 @@ exports.loginWithPassword = asyncHandler(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Logged in successfully",
+    token,
     user: {
       id: user._id,
       firstname: user.firstname,
@@ -87,6 +88,7 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "OTP verified successfully",
+    token,
     user: {
       id: user._id,
       firstname: user.firstname,

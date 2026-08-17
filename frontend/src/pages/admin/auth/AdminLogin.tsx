@@ -86,6 +86,13 @@ const AdminLogin = () => {
       const response = await post('default', 'auth/login-with-password', payload);
 
       if (response && response.user) {
+        if (response.token) {
+          try {
+            localStorage.setItem('token', response.token);
+          } catch (e) {
+            console.error('Error saving token to localStorage:', e);
+          }
+        }
         dispatch(setUser(response.user));
         setAlertData({
           message: response.message || `Welcome! Authenticated as ${response.user.role?.toUpperCase() || 'ADMIN'}.`,

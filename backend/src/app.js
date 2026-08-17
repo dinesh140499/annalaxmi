@@ -94,14 +94,20 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://grainpulse-qes3.onrender.com",
-  "null" // needed when the HTML file is opened directly via file:// in the browser
+  "null"
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // allow requests with no origin (curl, Postman, mobile apps, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      // Check if origin is explicitly in allowed list or is a vercel preview deployment
+      if (
+        allowedOrigins.includes(origin) ||
+        /^https:\/\/.*\.vercel\.app$/.test(origin)
+      ) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));

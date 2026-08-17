@@ -11,10 +11,25 @@ const BASE_URLS = {
 const createAxiosInstance = (
   base: keyof typeof BASE_URLS = "default",
 ): AxiosInstance => {
-  return axios.create({
+  const instance = axios.create({
     baseURL: BASE_URLS[base],
     withCredentials: true,
   });
+
+  // Attach token from localStorage if available (for robust cross-domain production support)
+  instance.interceptors.request.use((config) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      console.error("Error reading token from storage:", e);
+    }
+    return config;
+  });
+
+  return instance;
 };
 
 export const apiCall = async (

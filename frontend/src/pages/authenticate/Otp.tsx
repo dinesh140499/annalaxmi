@@ -39,6 +39,13 @@ const Otp = ({ phone, dialCode, onBack }: OtpProps) => {
       }),
 
     onSuccess: (data) => {
+      if (data?.token) {
+        try {
+          localStorage.setItem("token", data.token);
+        } catch (e) {
+          console.error("Error storing token:", e);
+        }
+      }
       if (data?.user) {
         dispatch(setUser(data.user));
       }
