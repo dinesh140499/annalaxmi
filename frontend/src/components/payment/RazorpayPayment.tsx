@@ -42,8 +42,10 @@ export const openRazorpayPayment = ({
     return;
   }
 
+  const razorpayKey = "rzp_test_TR7O0nkXCBjprn";
+
   const options = {
-    key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+    key: razorpayKey,
     amount: Math.round(amount * 100), // convert rupees to paise
     currency: "INR",
     name: name,

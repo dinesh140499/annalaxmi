@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="100%" height="100%">
+  <defs>
+    <!-- Gold Wheat Gradient -->
+    <linearGradient id="hGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+
+    <!-- Emerald Pulse Gradient -->
+    <linearGradient id="hPulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <linearGradient id="hLeafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+
+    <linearGradient id="iconBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064E3B" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Icon Emblem Box -->
+  <g transform="translate(10, 10)">
+    <rect width="80" height="80" rx="20" fill="url(#iconBgGrad)" />
+    
+    <!-- Central Wheat Stem -->
+    <path d="M 40 45 C 40 32, 38 20, 40 14" fill="none" stroke="url(#hGoldGrad)" stroke-width="2" stroke-linecap="round" />
+    <path d="M 40 13 C 37 16, 37 20, 40 23 C 43 20, 43 16, 40 13 Z" fill="url(#hGoldGrad)" />
+
+    <!-- Left Grains -->
+    <path d="M 39 23 C 33 21, 29 25, 30 29 C 34 30, 38 27, 39 23 Z" fill="url(#hGoldGrad)" />
+    <path d="M 39 30 C 32 29, 28 33, 29 37 C 34 38, 38 35, 39 30 Z" fill="url(#hGoldGrad)" />
+
+    <!-- Right Grains -->
+    <path d="M 41 23 C 47 21, 51 25, 50 29 C 46 30, 42 27, 41 23 Z" fill="url(#hGoldGrad)" />
+    <path d="M 41 30 C 48 29, 52 33, 51 37 C 46 38, 42 35, 41 30 Z" fill="url(#hLeafGrad)" />
+
+    <!-- Dynamic Pulse Line across bottom of emblem -->
+    <path d="M 16 54 L 28 54 L 33 46 L 37 60 L 42 38 L 47 62 L 51 52 L 54 56 L 64 54" 
+          fill="none" 
+          stroke="url(#hPulseGrad)" 
+          stroke-width="3" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+  </g>
+
+  <!-- Typography: GRAIN PULSE -->
+  <g transform="translate(105, 0)">
+    <text x="0" y="55" 
+          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Outfit', sans-serif" 
+          font-weight="900" 
+          font-size="36" 
+          letter-spacing="0.5" 
+          fill="#064E3B">
+      Grain<tspan fill="#F59E0B">Pulse</tspan>
+    </text>
+
+    <!-- Tagline -->
+    <text x="2" y="74" 
+          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" 
+          font-weight="700" 
+          font-size="10.5" 
+          letter-spacing="3" 
+          fill="#059669">
+      ORGANIC &amp; FRESH HARVEST
+    </text>
+  </g>
+</svg>
