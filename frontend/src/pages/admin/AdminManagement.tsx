@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post } from '../../baseUrl';
+import { get, post, patch } from '../../baseUrl';
 import { 
   FaUserPlus, 
   FaShieldAlt, 
@@ -11,7 +11,8 @@ import {
   FaTimes, 
   FaCopy, 
   FaCheck, 
-  FaUserTie 
+  FaUserTie,
+  FaSpinner
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 
@@ -37,6 +38,7 @@ const AdminManagement = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const [alertData, setAlertData] = useState<{
     message: string;
@@ -95,6 +97,37 @@ const AdminManagement = () => {
       });
     },
   });
+
+  // 3. Update Role Mutation via PATCH /superadmin/update-role/:id
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: 'superadmin' | 'admin' | 'user' }) =>
+      patch('default', `superadmin/update-role/${id}`, { role }),
+    onMutate: ({ id }) => {
+      setUpdatingUserId(id);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-admins'] });
+      setAlertData({
+        message: data?.message || 'User role updated successfully!',
+        variant: 'success',
+        show: true,
+      });
+    },
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || err?.message || 'Failed to update role.',
+        variant: 'error',
+        show: true,
+      });
+    },
+    onSettled: () => {
+      setUpdatingUserId(null);
+    },
+  });
+
+  const handleRoleChange = (userId: string, newRole: 'superadmin' | 'admin' | 'user') => {
+    updateRoleMutation.mutate({ id: userId, role: newRole });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -294,16 +327,38 @@ const AdminManagement = () => {
                         </div>
                       </td>
 
-                      {/* Role Badge */}
+                      {/* Role Badge / Interactive Dropdown */}
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md ${
-                          isSuper
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        }`}>
-                          <FaShieldAlt className="text-[9px]" />
-                          <span>{item.role}</span>
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="relative inline-block">
+                            <select
+                              value={item.role}
+                              disabled={updatingUserId === item._id}
+                              onChange={(e) =>
+                                handleRoleChange(
+                                  item._id,
+                                  e.target.value as 'superadmin' | 'admin' | 'user'
+                                )
+                              }
+                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none cursor-pointer transition ${
+                                isSuper
+                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/40 hover:border-amber-400 focus:ring-1 focus:ring-amber-500'
+                                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/40 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500'
+                              } ${updatingUserId === item._id ? 'opacity-50 cursor-wait' : ''}`}
+                            >
+                              <option value="admin" className="bg-slate-900 text-white">Admin</option>
+                              <option value="superadmin" className="bg-slate-900 text-white">SuperAdmin</option>
+                              <option value="user" className="bg-slate-900 text-white">User (Revoke)</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400">
+                              {updatingUserId === item._id ? (
+                                <FaSpinner className="animate-spin text-[10px] text-emerald-400" />
+                              ) : (
+                                <FaShieldAlt className="text-[9px]" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </td>
 
                       {/* Status */}

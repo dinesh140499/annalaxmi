@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post } from '../../baseUrl';
-import { 
-  FaUserPlus, 
-  FaShieldAlt, 
-  FaSearch, 
-  FaEnvelope, 
-  FaPhoneAlt, 
-  FaCheckCircle, 
-  FaTimes, 
-  FaCopy, 
-  FaCheck, 
-  FaUserTie 
+import { get, post, patch } from '../../baseUrl';
+import {
+  FaUserPlus,
+  FaShieldAlt,
+  FaSearch,
+  FaEnvelope,
+  FaPhoneAlt,
+  FaCheckCircle,
+  FaTimes,
+  FaCopy,
+  FaCheck,
+  FaUserTie,
+  FaSpinner
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 
@@ -37,6 +38,7 @@ const Users = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const [alertData, setAlertData] = useState<{
     message: string;
@@ -96,6 +98,37 @@ const Users = () => {
     },
   });
 
+  // 3. Update Role Mutation via PATCH /superadmin/update-role/:id
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: 'superadmin' | 'admin' | 'user' }) =>
+      patch('default', `superadmin/update-role/${id}`, { role }),
+    onMutate: ({ id }) => {
+      setUpdatingUserId(id);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-admins'] });
+      setAlertData({
+        message: data?.message || 'User role updated successfully!',
+        variant: 'success',
+        show: true,
+      });
+    },
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || err?.message || 'Failed to update role.',
+        variant: 'error',
+        show: true,
+      });
+    },
+    onSettled: () => {
+      setUpdatingUserId(null);
+    },
+  });
+
+  const handleRoleChange = (userId: string, newRole: 'superadmin' | 'admin' | 'user') => {
+    updateRoleMutation.mutate({ id: userId, role: newRole });
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -142,7 +175,7 @@ const Users = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans">
-      
+
       {/* Header with Title and Create CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
@@ -218,11 +251,10 @@ const Users = () => {
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition cursor-pointer whitespace-nowrap ${
-                roleFilter === r
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition cursor-pointer whitespace-nowrap ${roleFilter === r
                   ? 'bg-white text-emerald-800 font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               {r === 'all' ? 'All Roles' : r}
             </button>
@@ -255,11 +287,10 @@ const Users = () => {
                     <tr key={item._id} className="hover:bg-slate-50/80 transition duration-150">
                       <td className="py-4 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                          <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                            isSuper 
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                          <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${isSuper
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
                               : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                          }`}>
+                            }`}>
                             {firstName.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -292,14 +323,35 @@ const Users = () => {
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md ${
-                          isSuper
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        }`}>
-                          <FaShieldAlt className="text-[9px]" />
-                          <span>{item.role}</span>
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="relative inline-block">
+                            <select
+                              value={item.role}
+                              disabled={updatingUserId === item._id}
+                              onChange={(e) =>
+                                handleRoleChange(
+                                  item._id,
+                                  e.target.value as 'superadmin' | 'admin' | 'user'
+                                )
+                              }
+                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none cursor-pointer transition ${isSuper
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400 focus:ring-1 focus:ring-amber-500'
+                                  : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500'
+                                } ${updatingUserId === item._id ? 'opacity-50 cursor-wait' : ''}`}
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="superadmin">SuperAdmin</option>
+                              <option value="user">User (Revoke)</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-500">
+                              {updatingUserId === item._id ? (
+                                <FaSpinner className="animate-spin text-[10px] text-emerald-700" />
+                              ) : (
+                                <FaShieldAlt className="text-[9px]" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </td>
 
                       <td className="py-4 px-4">

@@ -1,0 +1,23 @@
+info:
+  name: Update Admin Role
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{Local_URL}}superadmin/update-role/67b43f9641d91834e569941a"
+  body:
+    type: json
+    data: |-
+      {
+        "role": "admin"
+      }
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
