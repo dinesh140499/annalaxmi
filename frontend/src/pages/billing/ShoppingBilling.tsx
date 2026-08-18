@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../store/store";
 import { clearCart, type CartItem } from "../../features/cartSlice";
+import { openRazorpayPayment } from "../../components/payment/RazorpayPayment";
 
 const ShoppingBilling = () => {
   const navigate = useNavigate();
@@ -50,8 +51,7 @@ const ShoppingBilling = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  const completeOrder = () => {
     const orderId = `GP-${Math.floor(10000 + Math.random() * 90000)}`;
     setCreatedOrderId(orderId);
     setOrderPlaced(true);
@@ -59,6 +59,29 @@ const ShoppingBilling = () => {
     setTimeout(() => {
       navigate(`/order-confirmation/${orderId}`);
     }, 400);
+  };
+
+  const handlePlaceOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.paymentMethod === "cod") {
+      completeOrder();
+      return;
+    }
+
+    // Online payment via Razorpay
+    openRazorpayPayment({
+      amount: grandTotal,
+      name: "Annalaxmi",
+      description: "Order Payment",
+      customerName: `${formData.firstName} ${formData.lastName}`.trim() || "Customer",
+      customerEmail: formData.email || "customer@example.com",
+      customerContact: formData.phone || "9876543210",
+      themeColor: "#166534",
+      onSuccess: () => {
+        completeOrder();
+      },
+    });
   };
 
   if (cartItems.length === 0 && !orderPlaced) {
@@ -125,7 +148,7 @@ const ShoppingBilling = () => {
         ) : (
           <form onSubmit={handlePlaceOrder}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
+
               {/* Left Column: Delivery & Address Form (7 cols) */}
               <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-10 border border-slate-100 shadow-xs space-y-6">
                 <div>
@@ -255,7 +278,7 @@ const ShoppingBilling = () => {
 
               {/* Right Column: Order Summary & Payment Selector (5 cols) */}
               <div className="lg:col-span-5 space-y-6">
-                
+
                 {/* Order Review Card */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
                   <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
@@ -306,11 +329,10 @@ const ShoppingBilling = () => {
                     Select Payment Mode
                   </h3>
 
-                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${
-                    formData.paymentMethod === 'upi' 
-                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold' 
+                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${formData.paymentMethod === 'upi'
+                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold'
                       : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}>
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -325,11 +347,10 @@ const ShoppingBilling = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${
-                    formData.paymentMethod === 'cod' 
-                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold' 
+                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${formData.paymentMethod === 'cod'
+                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold'
                       : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}>
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -344,11 +365,10 @@ const ShoppingBilling = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${
-                    formData.paymentMethod === 'card' 
-                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold' 
+                  <label className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${formData.paymentMethod === 'card'
+                      ? 'bg-emerald-50/80 border-emerald-600 text-emerald-950 font-semibold'
                       : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}>
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -368,7 +388,11 @@ const ShoppingBilling = () => {
                     className="w-full mt-4 bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                   >
                     <FaLock className="text-xs text-amber-300" />
-                    <span>Place Order (₹{grandTotal.toFixed(0)})</span>
+                    <span>
+                      {formData.paymentMethod === "cod"
+                        ? `Place Order (₹${grandTotal.toFixed(0)})`
+                        : `Pay Now (₹${grandTotal.toFixed(0)})`}
+                    </span>
                   </button>
                 </div>
 
