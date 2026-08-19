@@ -1,12 +1,14 @@
-import React, { lazy, Suspense } from "react";
+import React, { Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import AuthProvider from "../components/AuthProvider";
 import ProtectedPage from "../utils/ProtectedPage";
 import PublicRoute from "../utils/PublicRoute";
 import RouteLoadingSkeleton from "../components/common/RouteLoadingSkeleton";
+import RouteErrorBoundary from "../components/common/RouteErrorBoundary";
+import { lazyWithRetry } from "../utils/lazyWithRetry";
 
-// Helper to wrap lazy components in Suspense
+// Helper to wrap lazy components in Suspense with graceful fallback
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<RouteLoadingSkeleton />}>
     <Component />
@@ -14,60 +16,60 @@ const withSuspense = (Component: React.ComponentType) => (
 );
 
 // Customer Discovery Pages
-const Home = lazy(() => import("../pages/home/Home"));
-const Shop = lazy(() => import("../pages/shop/Shop"));
-const ProductDetails = lazy(() => import("../pages/shop/ProductDetails"));
-const ShopLayout = lazy(() => import("../pages/shop/Layout"));
-const Category = lazy(() => import("../components/Category"));
-const Search = lazy(() => import("../pages/search/Search"));
-const Deals = lazy(() => import("../pages/deals/Deals"));
+const Home = lazyWithRetry(() => import("../pages/home/Home"));
+const Shop = lazyWithRetry(() => import("../pages/shop/Shop"));
+const ProductDetails = lazyWithRetry(() => import("../pages/shop/ProductDetails"));
+const ShopLayout = lazyWithRetry(() => import("../pages/shop/Layout"));
+const Category = lazyWithRetry(() => import("../components/Category"));
+const Search = lazyWithRetry(() => import("../pages/search/Search"));
+const Deals = lazyWithRetry(() => import("../pages/deals/Deals"));
 
 // Customer Cart & Checkout Flow
-const Checkout = lazy(() => import("../pages/cart/Checkout")); // Cart page
-const ShoppingBilling = lazy(() => import("../pages/billing/ShoppingBilling")); // Checkout & payment page
-const OrderConfirmation = lazy(() => import("../pages/order-confirmation/OrderConfirmation"));
+const Checkout = lazyWithRetry(() => import("../pages/cart/Checkout")); // Cart page
+const ShoppingBilling = lazyWithRetry(() => import("../pages/billing/ShoppingBilling")); // Checkout & payment page
+const OrderConfirmation = lazyWithRetry(() => import("../pages/order-confirmation/OrderConfirmation"));
 
 // Customer Account & Profile (Protected)
-const Account = lazy(() => import("../pages/accounts/Account"));
-const Dashboard = lazy(() => import("../components/accounts/dashboard/Dashboard"));
-const OrderHistory = lazy(() => import("../components/accounts/order-history/OrderHistory"));
-const OrderDetails = lazy(() => import("../components/accounts/order-history/OrderDetails"));
-const ManageAddress = lazy(() => import("../components/accounts/manage-address/ManageAddress"));
-const Setting = lazy(() => import("../components/accounts/setting/Setting"));
+const Account = lazyWithRetry(() => import("../pages/accounts/Account"));
+const Dashboard = lazyWithRetry(() => import("../components/accounts/dashboard/Dashboard"));
+const OrderHistory = lazyWithRetry(() => import("../components/accounts/order-history/OrderHistory"));
+const OrderDetails = lazyWithRetry(() => import("../components/accounts/order-history/OrderDetails"));
+const ManageAddress = lazyWithRetry(() => import("../components/accounts/manage-address/ManageAddress"));
+const Setting = lazyWithRetry(() => import("../components/accounts/setting/Setting"));
 
 // Utility & Support Pages
-const TrackOrder = lazy(() => import("../pages/track-order/TrackOrder"));
-const Wishlist = lazy(() => import("../pages/wishlist/Wishlist"));
-const About = lazy(() => import("../pages/about/About"));
-const Contact = lazy(() => import("../pages/contact/Contact"));
-const Faq = lazy(() => import("../pages/faq/Faq"));
+const TrackOrder = lazyWithRetry(() => import("../pages/track-order/TrackOrder"));
+const Wishlist = lazyWithRetry(() => import("../pages/wishlist/Wishlist"));
+const About = lazyWithRetry(() => import("../pages/about/About"));
+const Contact = lazyWithRetry(() => import("../pages/contact/Contact"));
+const Faq = lazyWithRetry(() => import("../pages/faq/Faq"));
 
 // Legal & Trust Policies
-const PrivacyPolicy = lazy(() => import("../pages/legal/PrivacyPolicy"));
-const TermsConditions = lazy(() => import("../pages/legal/TermsConditions"));
-const ShippingPolicy = lazy(() => import("../pages/legal/ShippingPolicy"));
-const RefundPolicy = lazy(() => import("../pages/legal/RefundPolicy"));
+const PrivacyPolicy = lazyWithRetry(() => import("../pages/legal/PrivacyPolicy"));
+const TermsConditions = lazyWithRetry(() => import("../pages/legal/TermsConditions"));
+const ShippingPolicy = lazyWithRetry(() => import("../pages/legal/ShippingPolicy"));
+const RefundPolicy = lazyWithRetry(() => import("../pages/legal/RefundPolicy"));
 
 // Customer Authentication
-const Login = lazy(() => import("../pages/authenticate/Login"));
-const Register = lazy(() => import("../pages/authenticate/Register"));
-const ForgotPassword = lazy(() => import("../pages/authenticate/ForgotPassword"));
+const Login = lazyWithRetry(() => import("../pages/authenticate/Login"));
+const Register = lazyWithRetry(() => import("../pages/authenticate/Register"));
+const ForgotPassword = lazyWithRetry(() => import("../pages/authenticate/ForgotPassword"));
 
 // =========================================================================
 // ADMIN PLATFORM MODULES (admin/)
 // =========================================================================
-const AdminLogin = lazy(() => import("../admin/pages/Login"));
-const AdminLayout = lazy(() => import("../admin/layouts/AdminLayout"));
-const AdminRoute = lazy(() => import("../components/common/AdminRoute"));
-const AdminDashboard = lazy(() => import("../admin/pages/Dashboard"));
-const AdminUsers = lazy(() => import("../admin/pages/Users"));
-const AdminProducts = lazy(() => import("../admin/pages/Products"));
-const AdminCategories = lazy(() => import("../admin/pages/Categories"));
-const AdminOrders = lazy(() => import("../admin/pages/Orders"));
-const AdminSettings = lazy(() => import("../admin/pages/Settings"));
+const AdminLogin = lazyWithRetry(() => import("../admin/pages/Login"));
+const AdminLayout = lazyWithRetry(() => import("../admin/layouts/AdminLayout"));
+const AdminRoute = lazyWithRetry(() => import("../components/common/AdminRoute"));
+const AdminDashboard = lazyWithRetry(() => import("../admin/pages/Dashboard"));
+const AdminUsers = lazyWithRetry(() => import("../admin/pages/Users"));
+const AdminProducts = lazyWithRetry(() => import("../admin/pages/Products"));
+const AdminCategories = lazyWithRetry(() => import("../admin/pages/Categories"));
+const AdminOrders = lazyWithRetry(() => import("../admin/pages/Orders"));
+const AdminSettings = lazyWithRetry(() => import("../admin/pages/Settings"));
 
 // 404 Not Found
-const PageNotFound = lazy(() => import("../components/PageNotFound"));
+const PageNotFound = lazyWithRetry(() => import("../components/PageNotFound"));
 
 export const router = createBrowserRouter([
   // =========================================================================
@@ -80,7 +82,7 @@ export const router = createBrowserRouter([
         <MainLayout />
       </AuthProvider>
     ),
-    errorElement: withSuspense(PageNotFound),
+    errorElement: <RouteErrorBoundary />,
     children: [
       // 1. Home / Landing
       { 
@@ -368,7 +370,7 @@ export const router = createBrowserRouter([
         </Suspense>
       </AuthProvider>
     ),
-    errorElement: withSuspense(PageNotFound),
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,

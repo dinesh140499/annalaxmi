@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaChevronDown, FaLeaf, FaSearch } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
+import SEO from '../../components/common/SEO';
 
 interface FaqItem {
     id: number;
@@ -71,8 +72,27 @@ const Faq = () => {
         setOpenId(openId === id ? null : id);
     };
 
+    const faqJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqData.map((f) => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: f.answer,
+            },
+        })),
+    };
+
     return (
         <div className="bg-slate-50/50 min-h-screen">
+            <SEO
+                title="Frequently Asked Questions (FAQ) - GrainPulse"
+                description="Got questions about our unpolished dals, express delivery, organic certifications, and storage tips? Find all answers here."
+                canonicalUrl="/faq"
+                jsonLd={faqJsonLd}
+            />
             <Breadcrumbs />
 
             <div className="max-w-[95%] mx-auto py-10 sm:py-16">

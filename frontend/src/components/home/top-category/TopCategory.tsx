@@ -1,22 +1,30 @@
 import pulse from '../../../assets/images/products/pulse.png';
+import grains from '../../../assets/images/products/grains.png';
+import oils from '../../../assets/images/products/oils.png';
+import spices from '../../../assets/images/products/spices.png';
+import dryFruit from '../../../assets/images/products/dry-fruit.png';
 import { Link } from 'react-router-dom';
 import { FaLeaf, FaArrowRight } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../../../baseUrl';
 
+const DEFAULT_CATEGORIES = [
+    { _id: 'cat-pulse', name: 'Organic Pulses & Dals', image: { url: pulse } },
+    { _id: 'cat-grains', name: 'Ancient Heritage Grains', image: { url: grains } },
+    { _id: 'cat-oils', name: 'Cold-Pressed Oils', image: { url: oils } },
+    { _id: 'cat-spices', name: 'Sun-Dried Spices', image: { url: spices } },
+    { _id: 'cat-dryfruit', name: 'Dry Fruits & Seeds', image: { url: dryFruit } },
+];
+
 const TopCategory = () => {
     // Query backend categories API
-    const { data: apiData, isLoading } = useQuery({
+    const { data: apiData } = useQuery({
         queryKey: ['categories'],
         queryFn: () => get('default', 'categories'),
         retry: 1,
     });
 
-    const backendCategories = apiData?.categories || [];
-
-    if (!isLoading && backendCategories.length === 0) {
-        return null;
-    }
+    const backendCategories = apiData?.categories?.length > 0 ? apiData.categories : DEFAULT_CATEGORIES;
 
     return (
         <section className="py-8 sm:py-12">

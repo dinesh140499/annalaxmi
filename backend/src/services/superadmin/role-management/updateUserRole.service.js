@@ -6,12 +6,16 @@ exports.updateUserRole = async (id, body) => {
     throw new ErrorHandler("Role is required", 400);
   }
 
-  const updatedAdmin = await adminRepository.updateAdminRole(id, body.role);
+  const user = await adminRepository.findUserById(id);
 
-  if (!updatedAdmin) {
+  if (!user) {
     throw new ErrorHandler("User not found", 404);
   }
 
-  return updatedAdmin;
+  user.role = body.role;
+  user.updatedAt = new Date();
+  await user.save();
+
+  return user;
 };
              

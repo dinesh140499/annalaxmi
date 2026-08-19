@@ -8,6 +8,7 @@ const { getAdmins } = require("../../controllers/superadmin/read.admin.controlle
 const { userRoleUpdate } = require("../../controllers/superadmin/updateAdmin.controller");
 const { updateAdminRoleSchema } = require("../../schemas/admin.schema");
 const { validate } = require("../../middleware/validate.middleware");
+const { deleteAdmin } = require("../../controllers/superadmin/deleteAdmin.controller");
 
 const router = express.Router();
 
@@ -28,6 +29,7 @@ router.post(
 
 // Role management
 router.patch("/update-role/:id", validate(updateAdminRoleSchema), userRoleUpdate);
+router.delete("/delete-admin/:id", deleteAdmin);
 
 
 module.exports = router;

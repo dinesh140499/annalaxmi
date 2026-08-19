@@ -17,6 +17,8 @@ type ProductProps = {
     priceRange?: { min: number; max: number };
 };
 
+import ProductCardSkeleton from '../common/ProductCardSkeleton';
+
 interface BackendProduct {
     _id: string;
     name: string;
@@ -145,13 +147,6 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
 
             </div>
 
-            {/* Loading Indicator */}
-            {isLoading && (
-                <div className="text-center py-12 text-sm text-emerald-800 font-semibold animate-pulse">
-                    Loading live products from database...
-                </div>
-            )}
-
             {/* Empty State */}
             {!isLoading && displayProducts.length === 0 && (
                 <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm space-y-3">
@@ -167,7 +162,8 @@ const Product: React.FC<ProductProps> = ({ filterBtnToggle, setFilterBtnToggle, 
 
             {/* Products Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-5">
-                {displayProducts.map((item) => {
+                {isLoading && <ProductCardSkeleton count={8} />}
+                {!isLoading && displayProducts.map((item) => {
                     const discount = item.originalPrice > item.price 
                         ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
                         : 0;

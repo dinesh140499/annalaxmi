@@ -2,6 +2,7 @@ import { FaLeaf, FaSeedling, FaShieldAlt, FaAward, FaTruck, FaUsers } from 'reac
 import veg from '../../assets/images/veg.jpg';
 import { Link } from 'react-router-dom';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
+import SEO from '../../components/common/SEO';
 
 const stats = [
     { value: "10,000+", label: "Happy Families Fed" },
@@ -36,6 +37,11 @@ const pillars = [
 const About = () => {
     return (
         <div className="bg-slate-50/50 min-h-screen">
+            <SEO
+                title="About GrainPulse - Heritage Grains & Pure Organic Nutrition"
+                description="Discover GrainPulse's mission: connecting certified regenerative farmers directly with households for pure, unpolished pulses and heritage grains."
+                canonicalUrl="/about"
+            />
             <Breadcrumbs />
 
             <div className="max-w-[95%] mx-auto py-10 sm:py-16">

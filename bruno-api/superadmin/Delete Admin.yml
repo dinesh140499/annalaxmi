@@ -1,0 +1,19 @@
+info:
+  name: Delete Admin
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{Local_URL}}superadmin/delete-admin/67b43f9641d91834e569941a"
+  body:
+    type: none
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

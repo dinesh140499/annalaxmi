@@ -1,10 +1,7 @@
 const User = require("../../models/userSchema");
 
 class SuperAdminUpdateRespository {
-    async updateAdminRole(userId, role) {
-        if (role.includes('superadmin')) {
-            throw new ErrorHandler("Super admin role cannot be updated", 400);
-        }
+    async findById(userId) {
         return await User.findById(userId);
     }
 }

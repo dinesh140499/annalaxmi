@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { FaSearch, FaLeaf, FaSlidersH, FaStar, FaShoppingCart, FaEye } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
 import pulse from '../../assets/images/products/pulse.png';
+import SEO from '../../components/common/SEO';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../features/cartSlice';
 import { setButton } from '../../features/commonSlice';
@@ -110,6 +111,11 @@ const Search = () => {
 
   return (
     <div className="bg-slate-50/50 min-h-screen">
+      <SEO
+        title={queryParam ? `Search: ${queryParam}` : 'Search Organic Farm Staples'}
+        description={`Search unpolished pulses, heritage grains, and cold-pressed oils. ${queryParam ? `Results for ${queryParam}.` : ''}`}
+        noIndex={true}
+      />
       <Breadcrumbs />
 
       <div className="max-w-[95%] mx-auto py-8 sm:py-12">

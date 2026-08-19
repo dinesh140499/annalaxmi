@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaWhatsapp, FaLeaf, FaClock, FaCheckCircle } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
+import SEO from '../../components/common/SEO';
 
 const contactMethods = [
     {
@@ -53,6 +54,11 @@ const Contact = () => {
 
     return (
         <div className="bg-slate-50/50 min-h-screen">
+            <SEO
+                title="Contact Customer Support & Farm Partnerships"
+                description="Get in touch with GrainPulse for customer support, bulk purchase inquiries, and farmer partnerships. We're here to help."
+                canonicalUrl="/contact"
+            />
             <Breadcrumbs />
 
             <div className="max-w-[95%] mx-auto py-10 sm:py-16">

@@ -1,0 +1,20 @@
+# Robots.txt for GrainPulse Storefront
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /deals
+Allow: /product/
+
+# Disallow private user accounts and admin routes
+Disallow: /admin/
+Disallow: /account/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /billing
+Disallow: /order-confirmation
+
+# Sitemap
+Sitemap: https://grainpulse.com/sitemap.xml

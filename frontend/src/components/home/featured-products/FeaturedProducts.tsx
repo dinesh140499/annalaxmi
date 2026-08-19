@@ -1,5 +1,9 @@
 import { useState } from 'react';
+import ProductCardSkeleton from '../../common/ProductCardSkeleton';
 import pulse from '../../../assets/images/products/pulse.png';
+import grains from '../../../assets/images/products/grains.png';
+import oils from '../../../assets/images/products/oils.png';
+import spices from '../../../assets/images/products/spices.png';
 import veg from '../../../assets/images/veg.jpg';
 import { FaStar, FaShoppingBag, FaLeaf, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -8,6 +12,57 @@ import { get } from '../../../baseUrl';
 import { useDispatch } from 'react-redux';
 import { setButton } from '../../../features/commonSlice';
 import { addToCart } from '../../../features/cartSlice';
+
+const DEFAULT_FEATURED = [
+    {
+        id: 'fp-1',
+        name: 'Organic Unpolished Toor Dal (Pigeon Pea)',
+        weight: '1 Kg',
+        category: 'Organic Pulses',
+        image: pulse,
+        price: 185,
+        originalPrice: 220,
+        rating: 4.9,
+        reviews: 38,
+        badge: 'Best Seller',
+    },
+    {
+        id: 'fp-2',
+        name: 'Cold-Pressed Virgin Mustard Oil (Kachi Ghani)',
+        weight: '1 Litre',
+        category: 'Cold-Pressed Oils',
+        image: oils,
+        price: 240,
+        originalPrice: 280,
+        rating: 4.8,
+        reviews: 24,
+        badge: 'Featured',
+    },
+    {
+        id: 'fp-3',
+        name: 'Ancient Heirloom Foxtail Millet (Kangni)',
+        weight: '1 Kg',
+        category: 'Ancient Grains',
+        image: grains,
+        price: 160,
+        originalPrice: 195,
+        rating: 5.0,
+        reviews: 19,
+        badge: 'High Fiber',
+    },
+    {
+        id: 'fp-4',
+        name: 'Sun-Dried Malabar Black Peppercorns',
+        weight: '250 g',
+        category: 'Whole Spices',
+        image: spices,
+        price: 290,
+        originalPrice: 350,
+        rating: 4.9,
+        reviews: 15,
+        badge: 'Single Origin',
+    },
+];
 
 const FeaturedProducts = () => {
     const [activeTab, setActiveTab] = useState("All");
@@ -22,18 +77,20 @@ const FeaturedProducts = () => {
 
     const backendProducts = apiData?.products || [];
 
-    const productList = backendProducts.map((p: any) => ({
-        id: p._id,
-        name: p.name,
-        weight: p.specifications?.weight || "Standard",
-        category: p.category?.name || "Organic",
-        image: p.images?.[0]?.url || pulse,
-        price: p.pricing?.sellingPrice || 0,
-        originalPrice: p.pricing?.mrp || p.pricing?.sellingPrice || 0,
-        rating: p.rating?.average || 5,
-        reviews: p.rating?.totalReviews || 0,
-        badge: p.isBestSeller ? "Best Seller" : (p.isFeatured ? "Featured" : undefined),
-    }));
+    const productList = backendProducts.length > 0
+        ? backendProducts.map((p: any) => ({
+            id: p._id,
+            name: p.name,
+            weight: p.specifications?.weight || "Standard",
+            category: p.category?.name || "Organic",
+            image: p.images?.[0]?.url || pulse,
+            price: p.pricing?.sellingPrice || 0,
+            originalPrice: p.pricing?.mrp || p.pricing?.sellingPrice || 0,
+            rating: p.rating?.average || 5,
+            reviews: p.rating?.totalReviews || 0,
+            badge: p.isBestSeller ? "Best Seller" : (p.isFeatured ? "Featured" : undefined),
+        }))
+        : DEFAULT_FEATURED;
 
     // Dynamic category tabs based on loaded products
     const categorySet = new Set<string>();
@@ -58,10 +115,6 @@ const FeaturedProducts = () => {
         }));
         dispatch(setButton({ cart: true }));
     };
-
-    if (!isLoading && productList.length === 0) {
-        return null;
-    }
 
     return (
         <section className="py-8 sm:py-12 bg-slate-50/50">
@@ -104,7 +157,8 @@ const FeaturedProducts = () => {
                     
                     {/* Products Grid */}
                     <div className="lg:col-span-8 xl:col-span-9 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-                        {filtered.map((item: any) => {
+                        {isLoading && <ProductCardSkeleton count={4} />}
+                        {!isLoading && filtered.map((item: any) => {
                             const discount = item.originalPrice > item.price 
                                 ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
                                 : 0;

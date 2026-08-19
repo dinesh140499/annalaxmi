@@ -1,4 +1,7 @@
 import pulse from '../../../assets/images/products/pulse.png';
+import grains from '../../../assets/images/products/grains.png';
+import oils from '../../../assets/images/products/oils.png';
+import spices from '../../../assets/images/products/spices.png';
 import { FaFireAlt, FaStar, FaShoppingBag, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +9,45 @@ import { get } from '../../../baseUrl';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../features/cartSlice';
 import { setButton } from '../../../features/commonSlice';
+
+const DEFAULT_SUPERSAVER = [
+    {
+        _id: 'ss-1',
+        name: 'Organic Unpolished Yellow Moong Dal',
+        specifications: { weight: '1 Kg' },
+        category: { name: 'Organic Pulses' },
+        images: [{ url: pulse }],
+        pricing: { sellingPrice: 165, mrp: 210 },
+        rating: { average: 4.9, totalReviews: 29 },
+    },
+    {
+        _id: 'ss-2',
+        name: 'Wood-Pressed Pure Sesame Oil (Til Oil)',
+        specifications: { weight: '1 Litre' },
+        category: { name: 'Cold-Pressed Oils' },
+        images: [{ url: oils }],
+        pricing: { sellingPrice: 320, mrp: 390 },
+        rating: { average: 5.0, totalReviews: 18 },
+    },
+    {
+        _id: 'ss-3',
+        name: 'Heritage Barnyard Millet (Sanwa)',
+        specifications: { weight: '1 Kg' },
+        category: { name: 'Ancient Grains' },
+        images: [{ url: grains }],
+        pricing: { sellingPrice: 155, mrp: 190 },
+        rating: { average: 4.8, totalReviews: 14 },
+    },
+    {
+        _id: 'ss-4',
+        name: 'Stone-Ground Salem Turmeric Powder',
+        specifications: { weight: '500 g' },
+        category: { name: 'Whole Spices' },
+        images: [{ url: spices }],
+        pricing: { sellingPrice: 190, mrp: 240 },
+        rating: { average: 4.9, totalReviews: 32 },
+    },
+];
 
 const Supersaver = () => {
     const dispatch = useDispatch();
@@ -17,11 +59,7 @@ const Supersaver = () => {
         retry: 1,
     });
 
-    const products = apiData?.products || [];
-
-    if (products.length === 0) {
-        return null;
-    }
+    const products = apiData?.products?.length > 0 ? apiData.products : DEFAULT_SUPERSAVER;
 
     const handleAddToCart = (item: any) => {
         dispatch(addToCart({

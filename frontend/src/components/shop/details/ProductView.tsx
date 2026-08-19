@@ -12,6 +12,7 @@ import { get } from '../../../baseUrl';
 import { addToCart } from '../../../features/cartSlice';
 import { toggleWishlist } from '../../../features/wishlistSlice';
 import type { RootState } from '../../../store/store';
+import SEO from '../../common/SEO';
 
 type SocialType = {
   name: string;
@@ -26,17 +27,20 @@ const socialLinks: SocialType[] = [
   { name: "Twitter", link: "https://twitter.com", icon: <FaXTwitter /> },
 ];
 
+import ProductDetailsSkeleton from './ProductDetailsSkeleton';
+
 const ProductView = () => {
   const { productId } = useParams<{ productId: string }>();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state: RootState) => state.auth ? state.wishlist?.items || [] : []);
 
-  // Fetch product directly from backend API
-  const { data: apiData, isLoading, isError } = useQuery({
+  // Fetch product directly from backend API with automatic retry & cache
+  const { data: apiData, isLoading, isError, refetch } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => get('default', `products/${productId}`),
-    enabled: Boolean(productId),
-    retry: 1,
+    enabled: Boolean(productId && productId !== 'undefined'),
+    staleTime: 1000 * 60 * 5, // 5 minutes fresh cache
+    retry: 2,
   });
 
   const product = apiData?.product;
@@ -103,12 +107,7 @@ const ProductView = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="py-16 text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-700 border-r-transparent"></div>
-        <p className="mt-3 text-xs text-slate-500 font-semibold">Loading product details from database...</p>
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   if (isError || !product) {
@@ -119,20 +118,68 @@ const ProductView = () => {
         </div>
         <h2 className="text-xl font-bold text-slate-900">Product Not Found</h2>
         <p className="text-xs text-slate-500">
-          The requested product does not exist in the live database or has been removed.
+          We couldn't load this product right now. It might be due to a temporary network issue.
         </p>
-        <Link
-          to="/shop"
-          className="inline-block bg-emerald-800 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-xs hover:bg-emerald-900 transition"
-        >
-          Browse All Products
-        </Link>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => refetch()}
+            className="bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-xs transition cursor-pointer"
+          >
+            Try Again
+          </button>
+          <Link
+            to="/shop"
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 px-6 rounded-xl transition"
+          >
+            Browse Products
+          </Link>
+        </div>
       </div>
     );
   }
 
+  const productJsonLd = product ? {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: name,
+    image: galleryImages,
+    description: description,
+    sku: product._id,
+    brand: {
+      '@type': 'Brand',
+      name: 'GrainPulse'
+    },
+    category: categoryName,
+    offers: {
+      '@type': 'Offer',
+      url: `https://grainpulse.com/categories/${productId}`,
+      priceCurrency: 'INR',
+      price: price,
+      priceValidUntil: '2027-12-31',
+      availability: product?.inventory?.stockStatus === 'Out Of Stock' 
+        ? 'https://schema.org/OutOfStock' 
+        : 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: rating || 5.0,
+      reviewCount: reviews || 18
+    }
+  } : undefined;
+
   return (
     <div className="py-6 sm:py-10">
+      {product && (
+        <SEO
+          title={`${name} - Pure Organic ${categoryName}`}
+          description={`${description} Order fresh ${name} online at the best price from GrainPulse.`}
+          canonicalUrl={`/categories/${productId}`}
+          ogImage={mainImage || galleryImages[0]}
+          ogType="product"
+          jsonLd={productJsonLd}
+        />
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         
         {/* Left: Gallery (6 cols) */}

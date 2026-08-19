@@ -1,5 +1,9 @@
 import ReusableSwiper from '../../ReusableSwiper';
 import pulse from '../../../assets/images/products/pulse.png';
+import grains from '../../../assets/images/products/grains.png';
+import oils from '../../../assets/images/products/oils.png';
+import spices from '../../../assets/images/products/spices.png';
+import dryFruit from '../../../assets/images/products/dry-fruit.png';
 import { FaStar, FaShoppingBag, FaLeaf } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -7,6 +11,59 @@ import { addToCart } from '../../../features/cartSlice';
 import { setButton } from '../../../features/commonSlice';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../../../baseUrl';
+
+const DEFAULT_NEW_ARRIVALS = [
+    {
+        _id: 'na-1',
+        name: 'Organic Whole Green Moong (Sabut Moong)',
+        isBestSeller: true,
+        specifications: { weight: '1 Kg' },
+        category: { name: 'Organic Pulses' },
+        images: [{ url: pulse }],
+        pricing: { sellingPrice: 175, mrp: 215 },
+        rating: { average: 5.0, totalReviews: 21 },
+    },
+    {
+        _id: 'na-2',
+        name: 'Cold-Pressed Virgin Groundnut Oil (Peanut Oil)',
+        isBestSeller: false,
+        specifications: { weight: '1 Litre' },
+        category: { name: 'Cold-Pressed Oils' },
+        images: [{ url: oils }],
+        pricing: { sellingPrice: 280, mrp: 340 },
+        rating: { average: 4.9, totalReviews: 17 },
+    },
+    {
+        _id: 'na-3',
+        name: 'Himalayan Black Rice (Karuppu Kavuni)',
+        isBestSeller: true,
+        specifications: { weight: '1 Kg' },
+        category: { name: 'Ancient Grains' },
+        images: [{ url: grains }],
+        pricing: { sellingPrice: 260, mrp: 320 },
+        rating: { average: 5.0, totalReviews: 33 },
+    },
+    {
+        _id: 'na-4',
+        name: 'Organic Kashmiri Saffron (Kesar Threads)',
+        isBestSeller: false,
+        specifications: { weight: '1 g' },
+        category: { name: 'Whole Spices' },
+        images: [{ url: spices }],
+        pricing: { sellingPrice: 380, mrp: 450 },
+        rating: { average: 4.9, totalReviews: 12 },
+    },
+    {
+        _id: 'na-5',
+        name: 'Premium California Organic Raw Almonds',
+        isBestSeller: true,
+        specifications: { weight: '500 g' },
+        category: { name: 'Dry Fruits & Seeds' },
+        images: [{ url: dryFruit }],
+        pricing: { sellingPrice: 480, mrp: 580 },
+        rating: { average: 4.9, totalReviews: 41 },
+    },
+];
 
 const NewProducts = () => {
     const dispatch = useDispatch();
@@ -18,11 +75,7 @@ const NewProducts = () => {
         retry: 1,
     });
 
-    const products = apiData?.products || [];
-
-    if (products.length === 0) {
-        return null;
-    }
+    const products = apiData?.products?.length > 0 ? apiData.products : DEFAULT_NEW_ARRIVALS;
 
     const handleAddToCart = (item: any) => {
         dispatch(addToCart({

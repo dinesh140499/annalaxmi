@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post, patch } from '../../baseUrl';
+import { get, post, patch, del } from '../../baseUrl';
 import {
   FaUserPlus,
   FaShieldAlt,
@@ -12,7 +12,8 @@ import {
   FaCopy,
   FaCheck,
   FaUserTie,
-  FaSpinner
+  FaSpinner,
+  FaTrashAlt
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 
@@ -24,7 +25,7 @@ interface AdminUser {
   lastname?: string;
   email?: string;
   phoneNo?: string;
-  role: 'superadmin' | 'admin' | 'user';
+  role: 'superadmin' | 'admin' | 'manager' | 'editor' | 'viewer' | 'user';
   isActive?: boolean;
   isVerified?: boolean;
   createdAt?: string;
@@ -35,7 +36,7 @@ interface AdminUser {
 const Users = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin' | 'manager' | 'editor' | 'viewer'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
@@ -56,7 +57,7 @@ const Users = () => {
     lastName: '',
     email: '',
     phoneNo: '',
-    role: 'admin' as 'admin' | 'superadmin',
+    role: 'admin',
     password: '',
   });
 
@@ -100,7 +101,7 @@ const Users = () => {
 
   // 3. Update Role Mutation via PATCH /superadmin/update-role/:id
   const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: 'superadmin' | 'admin' | 'user' }) =>
+    mutationFn: ({ id, role }: { id: string; role: 'admin' | 'manager' | 'editor' | 'viewer' | 'user' }) =>
       patch('default', `superadmin/update-role/${id}`, { role }),
     onMutate: ({ id }) => {
       setUpdatingUserId(id);
@@ -125,8 +126,34 @@ const Users = () => {
     },
   });
 
-  const handleRoleChange = (userId: string, newRole: 'superadmin' | 'admin' | 'user') => {
+  const handleRoleChange = (userId: string, newRole: 'admin' | 'manager' | 'editor' | 'viewer' | 'user') => {
     updateRoleMutation.mutate({ id: userId, role: newRole });
+  };
+
+  // 4. Delete Admin Mutation via DELETE /superadmin/delete-admin/:id
+  const deleteAdminMutation = useMutation({
+    mutationFn: (id: string) => del('default', `superadmin/delete-admin/${id}`),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-admins'] });
+      setAlertData({
+        message: data?.message || 'Admin deleted successfully!',
+        variant: 'success',
+        show: true,
+      });
+    },
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || err?.message || 'Failed to delete admin.',
+        variant: 'error',
+        show: true,
+      });
+    },
+  });
+
+  const handleDeleteAdmin = (userId: string, name: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete "${name}"?`)) {
+      deleteAdminMutation.mutate(userId);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -247,7 +274,7 @@ const Users = () => {
         </div>
 
         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
-          {(['all', 'superadmin', 'admin'] as const).map((r) => (
+          {(['all', 'admin', 'manager', 'editor', 'viewer', 'superadmin'] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -272,7 +299,8 @@ const Users = () => {
                 <th className="py-3.5 px-4">Contact Coordinates</th>
                 <th className="py-3.5 px-4">Assigned Role</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right pr-6">Registered</th>
+                <th className="py-3.5 px-4 text-center">Registered</th>
+                <th className="py-3.5 px-4 text-right pr-6">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -327,20 +355,32 @@ const Users = () => {
                           <div className="relative inline-block">
                             <select
                               value={item.role}
-                              disabled={updatingUserId === item._id}
+                              disabled={updatingUserId === item._id || isSuper}
                               onChange={(e) =>
                                 handleRoleChange(
                                   item._id,
-                                  e.target.value as 'superadmin' | 'admin' | 'user'
+                                  e.target.value as 'admin' | 'manager' | 'editor' | 'viewer' | 'user'
                                 )
                               }
-                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none cursor-pointer transition ${isSuper
-                                  ? 'bg-amber-50 text-amber-900 border-amber-300 hover:border-amber-400 focus:ring-1 focus:ring-amber-500'
-                                  : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500'
-                                } ${updatingUserId === item._id ? 'opacity-50 cursor-wait' : ''}`}
+                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none transition ${
+                                isSuper
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300 cursor-not-allowed opacity-90'
+                                  : item.role === 'admin'
+                                  ? 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500 cursor-pointer'
+                                  : item.role === 'manager'
+                                  ? 'bg-blue-50 text-blue-900 border-blue-300 hover:border-blue-400 focus:ring-1 focus:ring-blue-500 cursor-pointer'
+                                  : item.role === 'editor'
+                                  ? 'bg-purple-50 text-purple-900 border-purple-300 hover:border-purple-400 focus:ring-1 focus:ring-purple-500 cursor-pointer'
+                                  : item.role === 'viewer'
+                                  ? 'bg-slate-100 text-slate-800 border-slate-300 hover:border-slate-400 focus:ring-1 focus:ring-slate-500 cursor-pointer'
+                                  : 'bg-rose-50 text-rose-800 border-rose-300 hover:border-rose-400 focus:ring-1 focus:ring-rose-500 cursor-pointer'
+                              } ${updatingUserId === item._id ? 'opacity-50 cursor-wait' : ''}`}
                             >
+                              {isSuper && <option value="superadmin">SuperAdmin</option>}
                               <option value="admin">Admin</option>
-                              <option value="superadmin">SuperAdmin</option>
+                              <option value="manager">Manager</option>
+                              <option value="editor">Editor</option>
+                              <option value="viewer">Viewer</option>
                               <option value="user">User (Revoke)</option>
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-500">
@@ -361,15 +401,30 @@ const Users = () => {
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-right pr-6 text-slate-500 text-[11px] font-mono">
+                      <td className="py-4 px-4 text-center text-slate-500 text-[11px] font-mono">
                         {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Active'}
+                      </td>
+
+                      <td className="py-4 px-4 text-right pr-6">
+                        {!isSuper ? (
+                          <button
+                            onClick={() => handleDeleteAdmin(item._id, fullName)}
+                            disabled={deleteAdminMutation.isPending}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="Delete Administrator"
+                          >
+                            <FaTrashAlt className="text-xs" />
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-amber-700/60 font-semibold italic">Protected</span>
+                        )}
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
                     No administrators match the search criteria.
                   </td>
                 </tr>
@@ -462,7 +517,9 @@ const Users = () => {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:border-emerald-600 transition cursor-pointer"
                   >
                     <option value="admin">Admin (Catalog & Operations)</option>
-                    <option value="superadmin">SuperAdmin (Full Root Control)</option>
+                    <option value="manager">Manager (Management & Operations)</option>
+                    <option value="editor">Editor (Content & Catalog)</option>
+                    <option value="viewer">Viewer (Read-Only Access)</option>
                   </select>
                 </div>
                 <div>

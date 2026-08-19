@@ -17,6 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../../baseUrl';
 
+import SEO from '../../components/common/SEO';
+
 const Shop = () => {
   const [filterBtnToggle, setFilterBtnToggle] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -73,6 +75,11 @@ const Shop = () => {
 
   return (
     <div className="bg-slate-50/50 min-h-screen py-6 sm:py-8">
+      <SEO
+        title="Shop Organic Pulses, Whole Grains, Oils & Spices"
+        description="Browse our complete catalog of farm-fresh organic pulses, ancient grains, stone-ground flours, and cold-pressed edible oils. Premium quality guaranteed."
+        canonicalUrl="/shop"
+      />
       <div className="max-w-[95%] mx-auto w-full">
         
         {/* Category Hero / Header Banner */}

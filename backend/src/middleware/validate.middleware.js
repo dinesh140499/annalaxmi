@@ -7,13 +7,16 @@ exports.validate = (schema) => (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: error.issues[0].message,
-        errors: error.issues,
+        errors: error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };

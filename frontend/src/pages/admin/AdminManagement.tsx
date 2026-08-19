@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, post, patch } from '../../baseUrl';
+import { get, post, patch, del } from '../../baseUrl';
 import { 
   FaUserPlus, 
   FaShieldAlt, 
@@ -12,7 +12,8 @@ import {
   FaCopy, 
   FaCheck, 
   FaUserTie,
-  FaSpinner
+  FaSpinner,
+  FaTrashAlt
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 
@@ -24,7 +25,7 @@ interface AdminUser {
   lastname?: string;
   email?: string;
   phoneNo?: string;
-  role: 'superadmin' | 'admin' | 'user';
+  role: 'superadmin' | 'admin' | 'manager' | 'editor' | 'viewer' | 'user';
   isActive?: boolean;
   isVerified?: boolean;
   createdAt?: string;
@@ -35,7 +36,7 @@ interface AdminUser {
 const AdminManagement = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin' | 'manager' | 'editor' | 'viewer'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
@@ -56,7 +57,7 @@ const AdminManagement = () => {
     lastName: '',
     email: '',
     phoneNo: '',
-    role: 'admin' as 'admin' | 'superadmin',
+    role: 'admin',
     password: '',
   });
 
@@ -100,7 +101,7 @@ const AdminManagement = () => {
 
   // 3. Update Role Mutation via PATCH /superadmin/update-role/:id
   const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: 'superadmin' | 'admin' | 'user' }) =>
+    mutationFn: ({ id, role }: { id: string; role: 'admin' | 'manager' | 'editor' | 'viewer' | 'user' }) =>
       patch('default', `superadmin/update-role/${id}`, { role }),
     onMutate: ({ id }) => {
       setUpdatingUserId(id);
@@ -125,8 +126,34 @@ const AdminManagement = () => {
     },
   });
 
-  const handleRoleChange = (userId: string, newRole: 'superadmin' | 'admin' | 'user') => {
+  const handleRoleChange = (userId: string, newRole: 'admin' | 'manager' | 'editor' | 'viewer' | 'user') => {
     updateRoleMutation.mutate({ id: userId, role: newRole });
+  };
+
+  // 4. Delete Admin Mutation via DELETE /superadmin/delete-admin/:id
+  const deleteAdminMutation = useMutation({
+    mutationFn: (id: string) => del('default', `superadmin/delete-admin/${id}`),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-admins'] });
+      setAlertData({
+        message: data?.message || 'Admin deleted successfully!',
+        variant: 'success',
+        show: true,
+      });
+    },
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || err?.message || 'Failed to delete admin.',
+        variant: 'error',
+        show: true,
+      });
+    },
+  });
+
+  const handleDeleteAdmin = (userId: string, name: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete "${name}"?`)) {
+      deleteAdminMutation.mutate(userId);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -246,7 +273,7 @@ const AdminManagement = () => {
 
         {/* Role Filter Pills */}
         <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
-          {(['all', 'superadmin', 'admin'] as const).map((r) => (
+          {(['all', 'admin', 'manager', 'editor', 'viewer', 'superadmin'] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -273,7 +300,8 @@ const AdminManagement = () => {
                 <th className="py-3.5 px-4">Contact Coordinates</th>
                 <th className="py-3.5 px-4">Assigned Role</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right pr-6">Registered</th>
+                <th className="py-3.5 px-4 text-center">Registered</th>
+                <th className="py-3.5 px-4 text-right pr-6">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -333,21 +361,32 @@ const AdminManagement = () => {
                           <div className="relative inline-block">
                             <select
                               value={item.role}
-                              disabled={updatingUserId === item._id}
+                              disabled={updatingUserId === item._id || isSuper}
                               onChange={(e) =>
                                 handleRoleChange(
                                   item._id,
-                                  e.target.value as 'superadmin' | 'admin' | 'user'
+                                  e.target.value as 'admin' | 'manager' | 'editor' | 'viewer' | 'user'
                                 )
                               }
-                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none cursor-pointer transition ${
+                              className={`text-[10px] font-extrabold uppercase pl-2.5 pr-6 py-1 rounded-lg border appearance-none outline-none transition ${
                                 isSuper
-                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/40 hover:border-amber-400 focus:ring-1 focus:ring-amber-500'
-                                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/40 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500'
+                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/40 cursor-not-allowed opacity-90'
+                                  : item.role === 'admin'
+                                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/40 hover:border-emerald-400 focus:ring-1 focus:ring-emerald-500 cursor-pointer'
+                                  : item.role === 'manager'
+                                  ? 'bg-blue-500/10 text-blue-300 border-blue-500/40 hover:border-blue-400 focus:ring-1 focus:ring-blue-500 cursor-pointer'
+                                  : item.role === 'editor'
+                                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/40 hover:border-purple-400 focus:ring-1 focus:ring-purple-500 cursor-pointer'
+                                  : item.role === 'viewer'
+                                  ? 'bg-slate-700/40 text-slate-300 border-slate-600 hover:border-slate-500 focus:ring-1 focus:ring-slate-400 cursor-pointer'
+                                  : 'bg-rose-500/10 text-rose-300 border-rose-500/40 hover:border-rose-400 focus:ring-1 focus:ring-rose-500 cursor-pointer'
                               } ${updatingUserId === item._id ? 'opacity-50 cursor-wait' : ''}`}
                             >
+                              {isSuper && <option value="superadmin" className="bg-slate-900 text-white">SuperAdmin</option>}
                               <option value="admin" className="bg-slate-900 text-white">Admin</option>
-                              <option value="superadmin" className="bg-slate-900 text-white">SuperAdmin</option>
+                              <option value="manager" className="bg-slate-900 text-white">Manager</option>
+                              <option value="editor" className="bg-slate-900 text-white">Editor</option>
+                              <option value="viewer" className="bg-slate-900 text-white">Viewer</option>
                               <option value="user" className="bg-slate-900 text-white">User (Revoke)</option>
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400">
@@ -370,16 +409,31 @@ const AdminManagement = () => {
                       </td>
 
                       {/* Date */}
-                      <td className="py-4 px-4 text-right pr-6 text-slate-400 text-[11px] font-mono">
+                      <td className="py-4 px-4 text-center text-slate-400 text-[11px] font-mono">
                         {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Active'}
                       </td>
 
+                      {/* Actions */}
+                      <td className="py-4 px-4 text-right pr-6">
+                        {!isSuper ? (
+                          <button
+                            onClick={() => handleDeleteAdmin(item._id, fullName)}
+                            disabled={deleteAdminMutation.isPending}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
+                            title="Delete Administrator"
+                          >
+                            <FaTrashAlt className="text-xs" />
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-amber-400/60 font-semibold italic">Protected</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-500">
+                  <td colSpan={6} className="text-center py-12 text-slate-500">
                     No administrators match the search criteria.
                   </td>
                 </tr>
@@ -479,7 +533,9 @@ const AdminManagement = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white outline-none focus:border-emerald-500 transition cursor-pointer"
                   >
                     <option value="admin">Admin (Catalog & Operations)</option>
-                    <option value="superadmin">SuperAdmin (Full Root Control)</option>
+                    <option value="manager">Manager (Management & Operations)</option>
+                    <option value="editor">Editor (Content & Catalog)</option>
+                    <option value="viewer">Viewer (Read-Only Access)</option>
                   </select>
                 </div>
                 <div>

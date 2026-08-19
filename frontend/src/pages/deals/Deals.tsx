@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaFire, FaClock, FaShoppingCart, FaPercent } from 'react-icons/fa';
 import Breadcrumbs from '../../components/reusable/Breadcrumps';
 import pulse from '../../assets/images/products/pulse.png';
+import SEO from '../../components/common/SEO';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../features/cartSlice';
 import { setButton } from '../../features/commonSlice';
@@ -62,6 +63,11 @@ const Deals = () => {
 
   return (
     <div className="bg-slate-50/50 min-h-screen">
+      <SEO
+        title="Exclusive Deals & Offers on Organic Grains & Pulses"
+        description="Grab limited-time discounts and flash sale bundles on 100% natural, unpolished dals, cold-pressed oils, and ancient grains at GrainPulse."
+        canonicalUrl="/deals"
+      />
       <Breadcrumbs />
 
       <div className="max-w-[95%] mx-auto py-8 sm:py-12">

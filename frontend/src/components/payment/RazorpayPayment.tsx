@@ -28,7 +28,7 @@ export interface RazorpayPaymentProps {
 
 export const openRazorpayPayment = ({
   amount = 1499,
-  name = "Annalaxmi",
+  name = "GrainPulse",
   description = "Product Payment",
   customerName = "Customer",
   customerEmail = "customer@example.com",
@@ -90,7 +90,7 @@ export const openRazorpayPayment = ({
 
 const RazorpayPayment: React.FC<RazorpayPaymentProps> = ({
   amount = 1499,
-  name = "Annalaxmi",
+  name = "GrainPulse",
   description = "Dummy Product Payment",
   customerName = "Dinesh Kumar",
   customerEmail = "test@example.com",

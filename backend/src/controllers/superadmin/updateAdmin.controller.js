@@ -9,4 +9,4 @@ exports.userRoleUpdate = asyncHandler(async (req, res) => {
         message: "User role updated successfully",
         data: roleUpdate,
     });
-});
+});

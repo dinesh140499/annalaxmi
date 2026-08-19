@@ -5,5 +5,5 @@ const SuperAdminUpdateRespository = require("./updateSuperAdmin.repository")
 module.exports = {
     getAllAdmins: () => superAdminReadRepository.getAllAdmins(),
     createAdmin: () => superAdminCreateRepository.createAdmin(),
-    updateAdminRole: (userId, role) => SuperAdminUpdateRespository.updateAdminRole(userId, role),
+    findUserById: (userId) => SuperAdminUpdateRespository.findById(userId),
 };
