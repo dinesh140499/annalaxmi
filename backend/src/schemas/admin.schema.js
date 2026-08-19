@@ -9,4 +9,10 @@ const updateAdminRoleSchema = z.object({
   ),
 });
 
-module.exports = { updateAdminRoleSchema };
+const updateAdminStatusSchema = z.object({
+  isActive: z.boolean({
+    required_error: "isActive is required and must be a boolean",
+  }),
+});
+
+module.exports = { updateAdminRoleSchema, updateAdminStatusSchema };

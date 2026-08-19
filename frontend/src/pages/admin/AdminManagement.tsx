@@ -40,6 +40,7 @@ const AdminManagement = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
   const [alertData, setAlertData] = useState<{
     message: string;
@@ -130,7 +131,39 @@ const AdminManagement = () => {
     updateRoleMutation.mutate({ id: userId, role: newRole });
   };
 
-  // 4. Delete Admin Mutation via DELETE /superadmin/delete-admin/:id
+  // 4. Update Admin Status Mutation via PATCH /superadmin/update-status/:id
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      patch('default', `superadmin/update-status/${id}`, { isActive }),
+    onMutate: ({ id }) => {
+      setUpdatingStatusId(id);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-admins'] });
+      setAlertData({
+        message: data?.message || 'Admin status updated successfully!',
+        variant: 'success',
+        show: true,
+      });
+    },
+    onError: (err: any) => {
+      setAlertData({
+        message: err?.response?.data?.message || err?.message || 'Failed to update admin status.',
+        variant: 'error',
+        show: true,
+      });
+    },
+    onSettled: () => {
+      setUpdatingStatusId(null);
+    },
+  });
+
+  const handleToggleStatus = (userId: string, currentStatus: boolean | undefined) => {
+    const nextStatus = currentStatus === false ? true : false;
+    updateStatusMutation.mutate({ id: userId, isActive: nextStatus });
+  };
+
+  // 5. Delete Admin Mutation via DELETE /superadmin/delete-admin/:id
   const deleteAdminMutation = useMutation({
     mutationFn: (id: string) => del('default', `superadmin/delete-admin/${id}`),
     onSuccess: (data: any) => {
@@ -402,10 +435,30 @@ const AdminManagement = () => {
 
                       {/* Status */}
                       <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                          <span>Active Access</span>
-                        </span>
+                        {isSuper ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                            <span>Active (Protected)</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStatus(item._id, item.isActive)}
+                            disabled={updatingStatusId === item._id}
+                            className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition cursor-pointer active:scale-95 ${
+                              item.isActive !== false
+                                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20'
+                                : 'text-rose-400 bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20'
+                            } ${updatingStatusId === item._id ? 'opacity-60 cursor-wait' : ''}`}
+                            title={item.isActive !== false ? 'Click to deactivate/suspend staff access' : 'Click to activate staff access'}
+                          >
+                            {updatingStatusId === item._id ? (
+                              <FaSpinner className="animate-spin text-[10px]" />
+                            ) : (
+                              <span className={`h-1.5 w-1.5 rounded-full ${item.isActive !== false ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                            )}
+                            <span>{item.isActive !== false ? 'Active' : 'Suspended'}</span>
+                          </button>
+                        )}
                       </td>
 
                       {/* Date */}

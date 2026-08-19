@@ -5,8 +5,8 @@ const { authorize } = require("../../middleware/role.middleware");
 
 const { createAdmin } = require("../../controllers/superadmin/createAdmin.controller");
 const { getAdmins } = require("../../controllers/superadmin/read.admin.controller");
-const { userRoleUpdate } = require("../../controllers/superadmin/updateAdmin.controller");
-const { updateAdminRoleSchema } = require("../../schemas/admin.schema");
+const { userRoleUpdate, adminStatusUpdate } = require("../../controllers/superadmin/updateAdmin.controller");
+const { updateAdminRoleSchema, updateAdminStatusSchema } = require("../../schemas/admin.schema");
 const { validate } = require("../../middleware/validate.middleware");
 const { deleteAdmin } = require("../../controllers/superadmin/deleteAdmin.controller");
 
@@ -27,8 +27,9 @@ router.post(
   createAdmin
 );
 
-// Role management
+// Role & Status management
 router.patch("/update-role/:id", validate(updateAdminRoleSchema), userRoleUpdate);
+router.patch("/update-status/:id", validate(updateAdminStatusSchema), adminStatusUpdate);
 router.delete("/delete-admin/:id", deleteAdmin);
 
 

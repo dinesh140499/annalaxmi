@@ -1,0 +1,23 @@
+info:
+  name: Update Admin Status
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{Local_URL}}superadmin/update-status/67b43f9641d91834e569941a"
+  body:
+    type: json
+    data: |-
+      {
+        "isActive": true
+      }
+  auth:
+    type: bearer
+    token: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
