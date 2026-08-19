@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { setUser } from '../../features/authSlice';
 import type { RootState } from '../../store/store';
 import { 
@@ -17,14 +18,17 @@ import {
 import Alert from '../../components/common/Alert';
 import { post } from '../../baseUrl';
 
+const ADMIN_ROLES = ['superadmin', 'admin', 'manager', 'editor', 'viewer'];
+
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const user = useSelector((state: RootState) => state.auth.user);
 
   // Auto-redirect if admin is already authenticated
   useEffect(() => {
-    if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+    if (user && ADMIN_ROLES.includes(user.role)) {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [user, navigate]);
@@ -49,7 +53,7 @@ const Login = () => {
     e.preventDefault();
     if (!identifier.trim()) {
       setAlertData({
-        message: authMethod === 'email' ? 'Please enter your registered email address.' : 'Please enter your registered phone number.',
+        message: 'Please enter your administrator Email or Registered Phone number.',
         variant: 'error',
         show: true,
       });
@@ -58,7 +62,7 @@ const Login = () => {
 
     if (!password) {
       setAlertData({
-        message: 'Please enter your password.',
+        message: 'Please provide your security access password.',
         variant: 'error',
         show: true,
       });
@@ -67,16 +71,15 @@ const Login = () => {
 
     setLoading(true);
 
-    const isEmail = identifier.includes('@') || authMethod === 'email';
-    const cleanPhone = !isEmail ? identifier.replace(/[^0-9]/g, '') : undefined;
-    const cleanEmail = isEmail ? identifier.trim().toLowerCase() : undefined;
+    const isEmail = identifier.includes('@');
+    const cleanPhone = identifier.replace(/[^0-9]/g, '');
 
     const payload: { email?: string; phoneNo?: string; password: string } = {
       password,
     };
 
-    if (cleanEmail) {
-      payload.email = cleanEmail;
+    if (isEmail) {
+      payload.email = identifier.trim().toLowerCase();
     } else if (cleanPhone) {
       payload.phoneNo = cleanPhone;
     }
@@ -93,7 +96,12 @@ const Login = () => {
             console.error('Error saving token to localStorage:', e);
           }
         }
+        
+        // Reset query cache to eliminate cross-session data leaks
+        queryClient.clear();
+        queryClient.setQueryData(['profile'], { user: response.user });
         dispatch(setUser(response.user));
+
         setAlertData({
           message: response.message || `Welcome! Authenticated as ${response.user.role?.toUpperCase() || 'ADMIN'}.`,
           variant: 'success',
@@ -101,7 +109,7 @@ const Login = () => {
         });
 
         setTimeout(() => {
-          if (response.user.role === 'admin' || response.user.role === 'superadmin') {
+          if (ADMIN_ROLES.includes(response.user.role)) {
             navigate('/admin/dashboard', { replace: true });
           } else {
             navigate('/account/dashboard', { replace: true });

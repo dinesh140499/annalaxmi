@@ -11,6 +11,7 @@ import { type SubMenuProps } from "./SubMenu";
 import SearchFilter from "./reusable/SearchFilter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { get } from "../baseUrl";
+import { logoutUser } from "../features/authSlice";
 import Alert from "./common/Alert";
 import { useState } from "react";
 
@@ -33,9 +34,8 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
   const logoutMutation = useMutation({
     mutationFn: () => get("default", "auth/logout"),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: ["profile"],
-      });
+      dispatch(logoutUser());
+      queryClient.clear();
       setAlertData({
         message: data?.message || "Logout Successful",
         variant: "success",
@@ -43,14 +43,17 @@ const Navbar = ({ setToggleSidebar }: SubMenuProps) => {
       });
       setTimeout(() => {
         navigate("/login");
-      }, 1000);
+      }, 500);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      dispatch(logoutUser());
+      queryClient.clear();
       setAlertData({
-        message: error.message || "Failed to logout",
-        variant: "error",
+        message: error?.message || "Logged out locally",
+        variant: "success",
         show: true,
       });
+      navigate("/login");
     },
   });
 

@@ -17,6 +17,9 @@ import {
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 import pulse from '../../assets/images/products/pulse.png';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
+import { getRoleConfig } from '../../utils/rbac';
 
 interface ProductImage {
   url: string;
@@ -85,6 +88,9 @@ const emptyProductForm = {
 
 const Products = () => {
   const queryClient = useQueryClient();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const roleConfig = getRoleConfig(user?.role);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
@@ -449,18 +455,20 @@ const Products = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setCreateFiles([]);
-            setCreatePreviews([]);
-            setCreateForm(emptyProductForm);
-            setCreateModalOpen(true);
-          }}
-          className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <FaPlus />
-          <span>Add New Product</span>
-        </button>
+        {roleConfig.canCreateProduct && (
+          <button
+            onClick={() => {
+              setCreateFiles([]);
+              setCreatePreviews([]);
+              setCreateForm(emptyProductForm);
+              setCreateModalOpen(true);
+            }}
+            className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
+          >
+            <FaPlus />
+            <span>Add New Product</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Toolbar */}
@@ -560,22 +568,32 @@ const Products = () => {
                     </div>
                   </td>
                   <td className="py-4 px-4 text-right pr-6">
-                    <div className="inline-flex items-center gap-1.5">
-                      <button
-                        onClick={() => handleOpenEdit(item)}
-                        className="p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 transition cursor-pointer"
-                        title="Edit Product"
-                      >
-                        <FaEdit className="text-xs" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenDelete(item)}
-                        className="p-2 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition cursor-pointer"
-                        title="Delete Product"
-                      >
-                        <FaTrashAlt className="text-xs" />
-                      </button>
-                    </div>
+                    {roleConfig.isReadOnly ? (
+                      <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">
+                        Read-Only
+                      </span>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5">
+                        {roleConfig.canEditProduct && (
+                          <button
+                            onClick={() => handleOpenEdit(item)}
+                            className="p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 transition cursor-pointer"
+                            title="Edit Product"
+                          >
+                            <FaEdit className="text-xs" />
+                          </button>
+                        )}
+                        {roleConfig.canDeleteProduct && (
+                          <button
+                            onClick={() => handleOpenDelete(item)}
+                            className="p-2 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition cursor-pointer"
+                            title="Delete Product"
+                          >
+                            <FaTrashAlt className="text-xs" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

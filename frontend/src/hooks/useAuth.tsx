@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { get } from "../baseUrl";
 
 export const useAuth = (enabled = true) => {
+  const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem("token"));
+
   return useQuery({
     queryKey: ["profile"],
     queryFn: () => get("default", "user/profile"),
     retry: false,
-    enabled,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // cache for 5 minute
+    enabled: enabled && hasToken,
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Always reflect the latest authenticated session
   });
 };

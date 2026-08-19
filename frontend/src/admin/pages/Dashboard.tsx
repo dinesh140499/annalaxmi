@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
+import { getRoleConfig } from '../../utils/rbac';
 
 const recentOrdersFeed = [
   { id: 'GP-90182', customer: 'Rahul Verma', amount: 505, items: '2x Toor Dal, 1x Mustard Oil', status: 'Processing' },
@@ -35,12 +36,14 @@ const categorySalesDistribution = [
 
 const Dashboard = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const roleConfig = getRoleConfig(user?.role);
   const isSuperAdmin = user?.role === 'superadmin';
 
-  // 1. Fetch Admins
+  // 1. Fetch Admins (Only if permitted)
   const { data: adminsData } = useQuery({
     queryKey: ['superadmin-admins'],
     queryFn: () => get('default', 'superadmin'),
+    enabled: roleConfig.canManageUsers,
     retry: 1,
   });
 
@@ -83,7 +86,7 @@ const Dashboard = () => {
       color: 'bg-white border-slate-200 hover:border-amber-500',
       link: '/admin/products',
     },
-    {
+    ...(roleConfig.canManageUsers ? [{
       title: 'Active Administrators',
       value: adminsCount,
       trend: 'RBAC Enforced',
@@ -92,7 +95,16 @@ const Dashboard = () => {
       bgIcon: 'bg-emerald-50 text-emerald-700',
       color: 'bg-white border-slate-200 hover:border-emerald-500',
       link: '/admin/users',
-    },
+    }] : [{
+      title: 'Average Order Value',
+      value: '₹648',
+      trend: '+5.2% basket size',
+      desc: 'Organic farm-to-kitchen cart',
+      icon: <FaShippingFast className="text-xl text-blue-700" />,
+      bgIcon: 'bg-blue-50 text-blue-700',
+      color: 'bg-white border-slate-200 hover:border-blue-500',
+      link: '/admin/orders',
+    }]),
     {
       title: 'Crop Taxonomy Clusters',
       value: categoriesCount,
@@ -108,38 +120,55 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto font-sans">
       
-      {/* Enterprise Welcome Banner */}
-      <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+      {/* Enterprise Welcome Banner - Dynamic based on login role */}
+      <div className={`text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden ${
+        isSuperAdmin 
+          ? 'bg-gradient-to-r from-amber-900 via-slate-900 to-emerald-950 border border-amber-500/30' 
+          : user?.role === 'manager'
+          ? 'bg-gradient-to-r from-blue-900 via-slate-900 to-emerald-950 border border-blue-500/30'
+          : user?.role === 'editor'
+          ? 'bg-gradient-to-r from-purple-900 via-slate-900 to-emerald-950 border border-purple-500/30'
+          : 'bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-950 border border-emerald-500/30'
+      }`}>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-1.5 text-amber-300 text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-xs border border-white/20 px-3 py-1 rounded-full mb-3">
               <FaBolt className="text-[10px]" />
-              <span>GrainPulse Operations Hub</span>
+              <span>GrainPulse Enterprise Console</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Executive Command Center
+              Welcome back, {user?.name || `${user?.firstname || 'Staff'} ${user?.lastname || ''}`.trim()}!
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100 mt-2 max-w-2xl leading-relaxed">
-              Logged in as <strong className="text-white font-bold">{user?.firstname || 'Admin'} {user?.lastname || ''}</strong> with <strong className="text-amber-300 uppercase">{user?.role || 'Admin'}</strong> privileges. Control administrative staff, provision catalog items, and monitor fulfillment lifecycle.
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl leading-relaxed">
+              Active Authorization: <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${roleConfig.pillClass}`}>{roleConfig.label}</span>. {roleConfig.description}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            {isSuperAdmin && (
+            {roleConfig.canManageUsers && (
               <Link
                 to="/admin/users"
-                className="bg-white text-emerald-900 hover:bg-emerald-50 active:scale-95 font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md transition cursor-pointer"
+                className="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md transition cursor-pointer"
               >
-                <FaUsersCog className="text-emerald-700" />
-                <span>Manage Staff</span>
+                <FaUsersCog className="text-slate-950" />
+                <span>Staff Management</span>
+              </Link>
+            )}
+            {roleConfig.canCreateProduct && (
+              <Link
+                to="/admin/products"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md transition"
+              >
+                <FaBoxes />
+                <span>Manage Catalog</span>
               </Link>
             )}
             <Link
               to="/admin/orders"
-              className="bg-emerald-900/60 hover:bg-emerald-900 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center gap-2 border border-emerald-600/40 transition"
+              className="bg-slate-800/80 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center gap-2 border border-slate-700 transition"
             >
               <FaShippingFast className="text-amber-300" />
-              <span>Live Orders</span>
+              <span>Fulfillment Feed</span>
             </Link>
           </div>
         </div>

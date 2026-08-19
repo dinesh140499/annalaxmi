@@ -15,6 +15,9 @@ import {
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
 import pulse from '../../assets/images/products/pulse.png';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
+import { getRoleConfig } from '../../utils/rbac';
 
 interface CategoryItem {
   id: string;
@@ -30,6 +33,9 @@ interface CategoryItem {
 
 const Categories = () => {
   const queryClient = useQueryClient();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const roleConfig = getRoleConfig(user?.role);
+
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modals state
@@ -266,17 +272,19 @@ const Categories = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setCreateImageFile(null);
-            setCreateImagePreview(null);
-            setCreateModalOpen(true);
-          }}
-          className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <FaPlus />
-          <span>Add New Category</span>
-        </button>
+        {roleConfig.canCreateProduct && (
+          <button
+            onClick={() => {
+              setCreateImageFile(null);
+              setCreateImagePreview(null);
+              setCreateModalOpen(true);
+            }}
+            className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
+          >
+            <FaPlus />
+            <span>Add New Category</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Toolbar */}
@@ -325,22 +333,32 @@ const Categories = () => {
                 </span>
 
                 {/* Action Buttons: Edit & Delete */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleOpenEdit(item)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 transition cursor-pointer"
-                    title="Edit Category"
-                  >
-                    <FaEdit className="text-xs" />
-                  </button>
-                  <button
-                    onClick={() => handleOpenDelete(item)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition cursor-pointer"
-                    title="Delete Category"
-                  >
-                    <FaTrashAlt className="text-xs" />
-                  </button>
-                </div>
+                {roleConfig.isReadOnly ? (
+                  <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                    Read-Only
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    {roleConfig.canEditProduct && (
+                      <button
+                        onClick={() => handleOpenEdit(item)}
+                        className="p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 transition cursor-pointer"
+                        title="Edit Category"
+                      >
+                        <FaEdit className="text-xs" />
+                      </button>
+                    )}
+                    {roleConfig.canDeleteProduct && (
+                      <button
+                        onClick={() => handleOpenDelete(item)}
+                        className="p-2 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition cursor-pointer"
+                        title="Delete Category"
+                      >
+                        <FaTrashAlt className="text-xs" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );

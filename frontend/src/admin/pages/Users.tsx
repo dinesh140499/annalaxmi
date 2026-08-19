@@ -16,6 +16,9 @@ import {
   FaTrashAlt
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
+import { getRoleConfig } from '../../utils/rbac';
 
 interface AdminUser {
   _id: string;
@@ -35,6 +38,9 @@ interface AdminUser {
 
 const Users = () => {
   const queryClient = useQueryClient();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const roleConfig = getRoleConfig(user?.role);
+  const isSuperAdmin = user?.role === 'superadmin';
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'superadmin' | 'admin' | 'manager' | 'editor' | 'viewer'>('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -200,6 +206,20 @@ const Users = () => {
   const superAdminCount = adminsList.filter((a) => a.role === 'superadmin').length;
   const adminCount = adminsList.filter((a) => a.role === 'admin').length;
 
+  if (!roleConfig.canManageUsers) {
+    return (
+      <div className="py-16 text-center max-w-md mx-auto space-y-4 font-sans">
+        <div className="h-16 w-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-2xl text-amber-600">
+          <FaShieldAlt />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Restricted Authorization</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Staff & Role Management is reserved for SuperAdministrators and Platform Administrators. Your active role is <strong className="text-slate-900 uppercase">{roleConfig.label}</strong>.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans">
 
@@ -218,13 +238,15 @@ const Users = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setModalOpen(true)}
-          className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <FaUserPlus />
-          <span>Provision New Admin</span>
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
+          >
+            <FaUserPlus />
+            <span>Provision New Admin</span>
+          </button>
+        )}
       </div>
 
       {/* Metrics Row */}
@@ -406,7 +428,7 @@ const Users = () => {
                       </td>
 
                       <td className="py-4 px-4 text-right pr-6">
-                        {!isSuper ? (
+                        {isSuperAdmin && !isSuper ? (
                           <button
                             onClick={() => handleDeleteAdmin(item._id, fullName)}
                             disabled={deleteAdminMutation.isPending}
@@ -415,8 +437,10 @@ const Users = () => {
                           >
                             <FaTrashAlt className="text-xs" />
                           </button>
-                        ) : (
+                        ) : isSuper ? (
                           <span className="text-[10px] text-amber-700/60 font-semibold italic">Protected</span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-semibold">Active</span>
                         )}
                       </td>
                     </tr>

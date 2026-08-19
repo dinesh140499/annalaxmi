@@ -23,6 +23,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get } from '../baseUrl';
 import { logoutUser } from '../features/authSlice';
+import { getRoleConfig } from '../utils/rbac';
 
 interface NavGroup {
   groupName: string;
@@ -31,71 +32,14 @@ interface NavGroup {
     path: string;
     icon: React.ReactNode;
     badge?: string;
-    isSuperAdminOnly?: boolean;
+    requiredPermission?: 'canManageUsers' | 'canCreateProduct' | 'canManageOrders';
   }[];
 }
 
-const navGroups: NavGroup[] = [
-  {
-    groupName: 'Command & Analytics',
-    items: [
-      {
-        name: 'Dashboard Overview',
-        path: '/admin/dashboard',
-        icon: <FaChartPie className="text-base" />,
-        badge: 'Live',
-      },
-    ],
-  },
-  {
-    groupName: 'Staff & Authorization',
-    items: [
-      {
-        name: 'Manage Admins & Staff',
-        path: '/admin/admins',
-        icon: <FaUsersCog className="text-base" />,
-        badge: 'SuperAdmin',
-        isSuperAdminOnly: true,
-      },
-    ],
-  },
-  {
-    groupName: 'Catalog & Storefront',
-    items: [
-      {
-        name: 'Products & Inventory',
-        path: '/admin/products',
-        icon: <FaBoxes className="text-base" />,
-      },
-      {
-        name: 'Category Taxonomy',
-        path: '/admin/categories',
-        icon: <FaTags className="text-base" />,
-      },
-      {
-        name: 'Orders & Dispatches',
-        path: '/admin/orders',
-        icon: <FaShippingFast className="text-base" />,
-        badge: '4 New',
-      },
-    ],
-  },
-  {
-    groupName: 'Platform Governance',
-    items: [
-      {
-        name: 'System & RBAC Policy',
-        path: '/admin/settings',
-        icon: <FaCog className="text-base" />,
-      },
-    ],
-  },
-];
-
 const mockNotifications = [
   { id: 1, text: 'New order #GP-90182 placed for ₹505', time: '10m ago', unread: true },
-  { id: 2, text: 'New Admin "Pooja Sharma" assigned Catalog role', time: '1h ago', unread: true },
-  { id: 3, text: 'Inventory low: Kashmiri Mamra Almonds (18 left)', time: '3h ago', unread: false },
+  { id: 2, text: 'System catalog inventory sync complete', time: '1h ago', unread: true },
+  { id: 3, text: 'Inventory alert: Kashmiri Mamra Almonds (18 left)', time: '3h ago', unread: false },
 ];
 
 const AdminLayout = () => {
@@ -111,7 +55,64 @@ const AdminLayout = () => {
   const queryClient = useQueryClient();
   const user = useSelector((state: RootState) => state.auth.user);
 
+  const roleConfig = getRoleConfig(user?.role);
   const isSuperAdmin = user?.role === 'superadmin';
+
+  const navGroups: NavGroup[] = [
+    {
+      groupName: 'Command & Analytics',
+      items: [
+        {
+          name: 'Dashboard Overview',
+          path: '/admin/dashboard',
+          icon: <FaChartPie className="text-base" />,
+          badge: roleConfig.isReadOnly ? 'Read-Only' : 'Live',
+        },
+      ],
+    },
+    ...(isSuperAdmin ? [{
+      groupName: 'Staff & Authorization',
+      items: [
+        {
+          name: 'Manage Staff & Roles',
+          path: '/admin/admins',
+          icon: <FaUsersCog className="text-base" />,
+          badge: 'SuperAdmin',
+        },
+      ],
+    }] : []),
+    {
+      groupName: 'Catalog & Storefront',
+      items: [
+        {
+          name: 'Products & Inventory',
+          path: '/admin/products',
+          icon: <FaBoxes className="text-base" />,
+        },
+        {
+          name: 'Category Taxonomy',
+          path: '/admin/categories',
+          icon: <FaTags className="text-base" />,
+        },
+        {
+          name: 'Orders & Dispatches',
+          path: '/admin/orders',
+          icon: <FaShippingFast className="text-base" />,
+          badge: '4 New',
+        },
+      ],
+    },
+    {
+      groupName: 'Platform Governance',
+      items: [
+        {
+          name: 'System & RBAC Policy',
+          path: '/admin/settings',
+          icon: <FaCog className="text-base" />,
+        },
+      ],
+    },
+  ];
 
   const logoutMutation = useMutation({
     mutationFn: () => get('default', 'auth/logout'),
@@ -122,6 +123,7 @@ const AdminLayout = () => {
     },
     onError: () => {
       dispatch(logoutUser());
+      queryClient.clear();
       navigate('/admin/login');
     },
   });
@@ -134,11 +136,14 @@ const AdminLayout = () => {
   };
 
   const quickLinks = [
-    { title: 'Provision Administrator', path: '/admin/admins', desc: 'Create new SuperAdmin or Staff account' },
-    { title: 'Add Catalog Product', path: '/admin/products', desc: 'Register harvest item into inventory' },
-    { title: 'Create Category Cluster', path: '/admin/categories', desc: 'Add organic crop category' },
+    ...(roleConfig.canManageUsers ? [{ title: 'Provision Administrator', path: '/admin/admins', desc: 'Create new SuperAdmin or Staff account' }] : []),
+    ...(roleConfig.canCreateProduct ? [
+      { title: 'Add Catalog Product', path: '/admin/products', desc: 'Register harvest item into inventory' },
+      { title: 'Create Category Cluster', path: '/admin/categories', desc: 'Add organic crop category' },
+    ] : []),
     { title: 'View Customer Orders', path: '/admin/orders', desc: 'Review fulfillment pipeline' },
-  ].filter((l) => (isSuperAdmin ? true : l.path !== '/admin/admins'));
+    { title: 'View Dashboard Metrics', path: '/admin/dashboard', desc: 'Real-time sales & harvest indicators' },
+  ];
 
   const filteredQuickLinks = quickLinks.filter((l) =>
     l.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -190,24 +195,29 @@ const AdminLayout = () => {
             </button>
           </div>
 
-          {/* User Status Card */}
+          {/* User Status Card - Dynamically Adapts to Login Role */}
           <div className="p-4 mx-3 my-3 bg-slate-950/80 border border-slate-800 rounded-2xl">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-900 text-white flex items-center justify-center font-bold text-sm shadow-inner">
-                {user?.firstname ? user.firstname.charAt(0).toUpperCase() : 'A'}
+              <div className={`h-11 w-11 rounded-xl text-white flex items-center justify-center font-black text-sm shadow-inner ${
+                isSuperAdmin 
+                  ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-slate-950' 
+                  : user?.role === 'manager'
+                  ? 'bg-gradient-to-br from-blue-600 to-blue-800'
+                  : user?.role === 'editor'
+                  ? 'bg-gradient-to-br from-purple-600 to-purple-800'
+                  : 'bg-gradient-to-br from-emerald-600 to-emerald-900'
+              }`}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : (user?.firstname ? user.firstname.charAt(0).toUpperCase() : 'A')}
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs font-bold text-white truncate">
-                  {user?.firstname || 'Admin'} {user?.lastname || ''}
+                  {user?.name || `${user?.firstname || 'Staff'} ${user?.lastname || ''}`.trim()}
                 </h4>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                    isSuperAdmin 
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  }`}>
+                <p className="text-[10px] text-slate-400 truncate -mt-0.5">{user?.email || 'authenticated'}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${roleConfig.pillClass}`}>
                     <FaShieldAlt className="text-[8px]" />
-                    <span>{user?.role || 'admin'}</span>
+                    <span>{roleConfig.badgeLabel}</span>
                   </span>
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 </div>
@@ -312,47 +322,53 @@ const AdminLayout = () => {
 
           <div className="flex items-center gap-3 relative">
             
-            {/* Quick Create Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setQuickCreateOpen(!quickCreateOpen)}
-                className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950 transition cursor-pointer"
-              >
-                <FaPlus className="text-[10px]" />
-                <span className="hidden sm:inline">Create</span>
-              </button>
-
-              {quickCreateOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in"
-                  onClick={() => setQuickCreateOpen(false)}
+            {/* Quick Create Dropdown - Dynamically Hidden for Read-Only Viewers */}
+            {!roleConfig.isReadOnly && (
+              <div className="relative">
+                <button
+                  onClick={() => setQuickCreateOpen(!quickCreateOpen)}
+                  className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950 transition cursor-pointer"
                 >
-                  {isSuperAdmin && (
-                    <Link
-                      to="/admin/admins"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
-                    >
-                      <FaUsersCog className="text-amber-400" />
-                      <span>Provision Admin</span>
-                    </Link>
-                  )}
-                  <Link
-                    to="/admin/products"
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                  <FaPlus className="text-[10px]" />
+                  <span className="hidden sm:inline">Create</span>
+                </button>
+
+                {quickCreateOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-scale-in"
+                    onClick={() => setQuickCreateOpen(false)}
                   >
-                    <FaBoxes className="text-emerald-400" />
-                    <span>Add Product</span>
-                  </Link>
-                  <Link
-                    to="/admin/categories"
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
-                  >
-                    <FaTags className="text-blue-400" />
-                    <span>Create Category</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+                    {roleConfig.canManageUsers && (
+                      <Link
+                        to="/admin/admins"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                      >
+                        <FaUsersCog className="text-amber-400" />
+                        <span>Provision Staff</span>
+                      </Link>
+                    )}
+                    {roleConfig.canCreateProduct && (
+                      <>
+                        <Link
+                          to="/admin/products"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                        >
+                          <FaBoxes className="text-emerald-400" />
+                          <span>Add Product</span>
+                        </Link>
+                        <Link
+                          to="/admin/categories"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                        >
+                          <FaTags className="text-blue-400" />
+                          <span>Create Category</span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notifications Popover */}
             <div className="relative">
@@ -383,10 +399,10 @@ const AdminLayout = () => {
               )}
             </div>
 
-            {/* Role Chip */}
+            {/* Dynamic Role Badge Chip in Header */}
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
               <FaShieldAlt className={isSuperAdmin ? 'text-amber-400' : 'text-emerald-400'} />
-              <span>Gateway: <strong className="text-white uppercase">{user?.role || 'Admin'}</strong></span>
+              <span>Role: <strong className="text-white uppercase">{roleConfig.badgeLabel}</strong></span>
             </div>
 
           </div>

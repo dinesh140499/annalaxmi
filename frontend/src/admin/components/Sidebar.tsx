@@ -98,6 +98,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
     },
     onError: () => {
       dispatch(logoutUser());
+      queryClient.clear();
       navigate('/admin/login');
     },
   });

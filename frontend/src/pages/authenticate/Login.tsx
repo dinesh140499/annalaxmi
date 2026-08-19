@@ -3,7 +3,7 @@ import Breadcrumbs from "../../components/reusable/Breadcrumps";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
 import Otp from "./Otp";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post } from "../../baseUrl";
 import Alert from "../../components/common/Alert";
 import { FaLeaf, FaShieldAlt, FaTruck, FaLock, FaEnvelope, FaKey, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../features/authSlice";
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../../store/store";
+
+const STAFF_ROLES = ["superadmin", "admin", "manager", "editor", "viewer"];
 
 export type PhoneInputState = {
   phone: string;
@@ -31,12 +33,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useSelector((state: RootState) => state.auth.user);
 
   // Auto-redirect if user is already authenticated
   useEffect(() => {
     if (user) {
-      if (user.role === "admin" || user.role === "superadmin") {
+      if (STAFF_ROLES.includes(user.role)) {
         navigate("/admin/dashboard", { replace: true });
       } else {
         navigate("/account/dashboard", { replace: true });
@@ -109,16 +112,21 @@ const Login = () => {
           console.error("Error storing token:", e);
         }
       }
+      
+      // Wipe stale session cache and establish current session
+      queryClient.clear();
       if (data?.user) {
+        queryClient.setQueryData(["profile"], { user: data.user });
         dispatch(setUser(data.user));
       }
+
       setAlertData({
         message: data?.message || "Signed in successfully! Welcome back.",
         variant: "success",
         show: true,
       });
       setTimeout(() => {
-        if (data?.user?.role === "admin" || data?.user?.role === "superadmin") {
+        if (STAFF_ROLES.includes(data?.user?.role)) {
           navigate("/admin/dashboard", { replace: true });
         } else {
           navigate("/account/dashboard", { replace: true });

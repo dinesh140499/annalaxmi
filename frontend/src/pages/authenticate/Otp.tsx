@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { post } from "../../baseUrl";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,8 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../../features/authSlice";
 import Alert from "../../components/common/Alert";
 import { FaLock, FaArrowLeft } from "react-icons/fa";
+
+const STAFF_ROLES = ["superadmin", "admin", "manager", "editor", "viewer"];
 
 type OtpProps = {
   phone: string;
@@ -16,6 +18,7 @@ type OtpProps = {
 const Otp = ({ phone, dialCode, onBack }: OtpProps) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [resendTimer, setResendTimer] = useState(45);
   const navigate = useNavigate();
   const [alertData, setAlertData] = useState({
@@ -46,16 +49,21 @@ const Otp = ({ phone, dialCode, onBack }: OtpProps) => {
           console.error("Error storing token:", e);
         }
       }
+      
+      // Wipe stale session cache and establish current session
+      queryClient.clear();
       if (data?.user) {
+        queryClient.setQueryData(["profile"], { user: data.user });
         dispatch(setUser(data.user));
       }
+
       setAlertData({
         message: data?.message || "Login Successful! Welcome to GrainPulse.",
         variant: "success",
         show: true,
       });
       setTimeout(() => {
-        if (data?.user?.role === "admin" || data?.user?.role === "superadmin") {
+        if (STAFF_ROLES.includes(data?.user?.role)) {
           navigate("/admin/dashboard", { replace: true });
         } else {
           navigate("/account/dashboard", { replace: true });

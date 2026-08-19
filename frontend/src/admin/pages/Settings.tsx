@@ -5,11 +5,18 @@ import {
   FaCheck, 
   FaTimes, 
   FaKey, 
-  FaSlidersH 
+  FaSlidersH,
+  FaUserCheck 
 } from 'react-icons/fa';
 import Alert from '../../components/common/Alert';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
+import { getRoleConfig } from '../../utils/rbac';
 
 const Settings = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const roleConfig = getRoleConfig(user?.role);
+
   const [alertData, setAlertData] = useState<{
     message: string;
     variant: 'success' | 'error';
@@ -21,12 +28,13 @@ const Settings = () => {
   });
 
   const permissions = [
-    { module: 'Manage SuperAdmins & Staff', superadmin: true, admin: false, user: false },
-    { module: 'Create & Edit Product Catalog', superadmin: true, admin: true, user: false },
-    { module: 'Update Category Taxonomy', superadmin: true, admin: true, user: false },
-    { module: 'Fulfill & Dispatch Orders', superadmin: true, admin: true, user: false },
-    { module: 'Modify System Rate Limiters', superadmin: true, admin: false, user: false },
-    { module: 'Access Customer Storefront & Cart', superadmin: true, admin: true, user: true },
+    { module: 'Provision & Assign Staff Roles', superadmin: true, admin: false, manager: false, editor: false, viewer: false },
+    { module: 'Delete Admin Credentials', superadmin: true, admin: false, manager: false, editor: false, viewer: false },
+    { module: 'Create & Edit Product Catalog', superadmin: true, admin: true, manager: true, editor: true, viewer: false },
+    { module: 'Delete Products & Categories', superadmin: true, admin: true, manager: false, editor: false, viewer: false },
+    { module: 'Fulfill, Dispatch & Update Orders', superadmin: true, admin: true, manager: true, editor: false, viewer: false },
+    { module: 'View Real-Time Dashboard & Analytics', superadmin: true, admin: true, manager: true, editor: true, viewer: true },
+    { module: 'Modify System Rate Limiters & Gateway', superadmin: true, admin: false, manager: false, editor: false, viewer: false },
   ];
 
   return (
@@ -45,6 +53,15 @@ const Settings = () => {
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Role-Based Access Control (RBAC) governance, API gateway thresholds, and system health status.
           </p>
+        </div>
+
+        {/* Current Active Role Indicator */}
+        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-sm">
+          <FaUserCheck className="text-amber-400 text-sm" />
+          <div className="text-left">
+            <span className="text-[10px] text-slate-400 block font-semibold">Your Active Role</span>
+            <span className="text-xs font-bold text-white uppercase">{roleConfig.label}</span>
+          </div>
         </div>
       </div>
 
@@ -67,16 +84,20 @@ const Settings = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
                 <th className="py-3 px-4">Operational Capability</th>
-                <th className="py-3 px-4 text-center text-amber-800">SuperAdmin (Root)</th>
-                <th className="py-3 px-4 text-center text-emerald-800">Staff Admin</th>
-                <th className="py-3 px-4 text-center text-slate-600">Customer</th>
+                <th className={`py-3 px-3 text-center ${user?.role === 'superadmin' ? 'bg-amber-100/60 text-amber-950 font-black rounded-t-xl' : 'text-amber-800'}`}>SuperAdmin</th>
+                <th className={`py-3 px-3 text-center ${user?.role === 'admin' ? 'bg-emerald-100/60 text-emerald-950 font-black rounded-t-xl' : 'text-emerald-800'}`}>Admin</th>
+                <th className={`py-3 px-3 text-center ${user?.role === 'manager' ? 'bg-blue-100/60 text-blue-950 font-black rounded-t-xl' : 'text-blue-800'}`}>Manager</th>
+                <th className={`py-3 px-3 text-center ${user?.role === 'editor' ? 'bg-purple-100/60 text-purple-950 font-black rounded-t-xl' : 'text-purple-800'}`}>Editor</th>
+                <th className={`py-3 px-3 text-center ${user?.role === 'viewer' ? 'bg-slate-200 text-slate-950 font-black rounded-t-xl' : 'text-slate-600'}`}>Viewer</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {permissions.map((p, i) => (
                 <tr key={i} className="hover:bg-slate-50/80 transition">
                   <td className="py-3 px-4 font-semibold text-slate-800">{p.module}</td>
-                  <td className="py-3 px-4 text-center">
+                  
+                  {/* SuperAdmin */}
+                  <td className={`py-3 px-3 text-center ${user?.role === 'superadmin' ? 'bg-amber-50/40' : ''}`}>
                     {p.superadmin ? (
                       <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-800 text-xs">
                         <FaCheck />
@@ -87,7 +108,9 @@ const Settings = () => {
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-center">
+
+                  {/* Admin */}
+                  <td className={`py-3 px-3 text-center ${user?.role === 'admin' ? 'bg-emerald-50/40' : ''}`}>
                     {p.admin ? (
                       <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-100 text-emerald-800 text-xs">
                         <FaCheck />
@@ -98,9 +121,37 @@ const Settings = () => {
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-center">
-                    {p.user ? (
+
+                  {/* Manager */}
+                  <td className={`py-3 px-3 text-center ${user?.role === 'manager' ? 'bg-blue-50/40' : ''}`}>
+                    {p.manager ? (
                       <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-800 text-xs">
+                        <FaCheck />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 text-slate-400 text-xs">
+                        <FaTimes />
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Editor */}
+                  <td className={`py-3 px-3 text-center ${user?.role === 'editor' ? 'bg-purple-50/40' : ''}`}>
+                    {p.editor ? (
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-purple-100 text-purple-800 text-xs">
+                        <FaCheck />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 text-slate-400 text-xs">
+                        <FaTimes />
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Viewer */}
+                  <td className={`py-3 px-3 text-center ${user?.role === 'viewer' ? 'bg-slate-100/60' : ''}`}>
+                    {p.viewer ? (
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-200 text-slate-800 text-xs">
                         <FaCheck />
                       </span>
                     ) : (

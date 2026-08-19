@@ -4,7 +4,10 @@ export type UserType = {
   _id?: string;
   id?: string;
   role: string;
+  name?: string;
+  firstName?: string;
   firstname?: string;
+  lastName?: string;
   lastname?: string;
   email?: string;
   avatar?: string;
